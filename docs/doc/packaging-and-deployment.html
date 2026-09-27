@@ -75,23 +75,18 @@ budo my-app</code></pre></div></div>
 budo init my-app</code></pre></div></div>
 <p>It creates <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, a copy of the developer API reference, and TypeScript declarations. This is the quickest way to get editor autocompletion for the runtime globals.</p>
 <h2 id="web-export" class="has-anchor">Web export <a class="heading-anchor" href="#web-export" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The web target supports JavaScript, TypeScript, and Lua entrypoints. It packages a self-contained static folder with the Emscripten runtime and your project assets.</p>
+<p>An option to run your application is to package it for the Web. In this case, the <code>web-export</code> command will export your application as a static html/css/js content that you can integrate in any Web page. And the <code>web-serve</code> command launches a small HTTP server to serve your application from your computer.</p>
+<p>The web target packages a self-contained static folder with the Emscripten runtime and your project assets.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export a self-contained static web folder.
 budo web-export my-app -o dist/my-app-web</code></pre></div></div>
-<p>To export and serve locally:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export the project and serve it locally for browser testing.
-budo web-serve my-app</code></pre></div></div>
-<p>The Makefile also provides web helpers for rebuilding the base runtime and staging the playground.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Rebuild the base web runtime.
-make web-build-runtime
-# Export the project named by WEB_APP.
-make web-export WEB_APP=examples/demo
-# Rebuild the website playground assets.
-make playground</code></pre></div></div>
-<p>Web builds use QuickJS and Lua compiled through Emscripten. The Wasmtime runtime is not available in the browser build. Raw UDP and RTP-MIDI are also unavailable on web because browsers do not expose UDP sockets.</p>
+<p>To serve locally:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Serves your application as a local website 
+budo web-serve DIRECTORY</code></pre></div></div>
+<p>Web builds use QuickJS and Lua compiled through Emscripten. Raw UDP and RTP-MIDI are unavailable on web because browsers do not expose UDP sockets.</p>
 <h2 id="android-packaging" class="has-anchor">Android packaging <a class="heading-anchor" href="#android-packaging" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <blockquote><p><strong>Budo Pro:</strong> Android APK/AAB packaging is a paid feature. Public builds keep these commands visible, but require the private Android feature pack under <code>private/android</code> before packaging is enabled.</p></blockquote>
-<p>Android packaging is driven by the desktop <code>budo</code> binary. The public contract is the command surface, supported entrypoints, project assets, and <code>app.json</code> metadata; the Android runtime architecture and build backend are private to the Budo Pro feature pack.</p>
+<p>To package your application for Android, you can use the <code>android-apk</code> command. It will produce an <code>.apk</code> file that you can upload on your device with <code>adb</code>. The <code>andoid-aab</code> command produces a signed Android <code>.aab</code> file that is directly usable in the Google Console.</p>
+<p>Android packaging is driven by the desktop <code>budo</code> binary.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build a debug APK for local testing.
 budo android-apk my-app
 # Build a release APK.

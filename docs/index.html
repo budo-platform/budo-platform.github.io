@@ -107,8 +107,7 @@
             </div>
             <div class="hero-actions">
                 <a href="playground.html" class="btn btn-primary">Try the playground</a>
-                <a href="#demos" class="btn btn-secondary">See experiments</a>
-                <a href="#download" class="btn btn-secondary">Download</a>
+                <a href="doc/index.html" class="btn btn-secondary">Documentation</a>
             </div>
         </div>
     </section>
@@ -178,7 +177,8 @@
                 </div>
             </a>
             <a href="demos/08_wasm_shader_pixelate/" class="demo-card">
-                <div class="demo-thumb"><img src="demos/08_wasm_shader_pixelate/icon.svg" alt="WASM Shader Pixelate"></div>
+                <div class="demo-thumb"><img src="demos/08_wasm_shader_pixelate/icon.svg" alt="WASM Shader Pixelate">
+                </div>
                 <div class="demo-meta">
                     <h3>WASM Shader Pixelate</h3>
                     <span class="demo-slug">08_wasm_shader_pixelate</span>
@@ -472,7 +472,8 @@
                 </div>
             </a>
             <a href="demos/wasm_shader_kaleidoscope/" class="demo-card">
-                <div class="demo-thumb"><img src="demos/wasm_shader_kaleidoscope/icon.svg" alt="WASM Shader Kaleidoscope"></div>
+                <div class="demo-thumb"><img src="demos/wasm_shader_kaleidoscope/icon.svg"
+                        alt="WASM Shader Kaleidoscope"></div>
                 <div class="demo-meta">
                     <h3>WASM Shader Kaleidoscope</h3>
                     <span class="demo-slug">wasm_shader_kaleidoscope</span>
@@ -510,6 +511,7 @@
                 <p>
                     Budo exists for the moment you have a visual idea, a synth toy, an educational
                     project, a shader sketch or a weird prototype you want to run on desktop, mobile or web.
+                    It's also perfect when you want to teach programming to your kids!
                 </p>
                 <p>
                     Budo provides an immediate mode graphic 2D API, 3D GL primitives and a handful
@@ -537,46 +539,19 @@
      ════════════════════════════════════════════════════════════════════ -->
     <section id="start-fast">
         <div class="section-inner section-center">
-            <h2 class="section-title">Getting started</h2>
-            <p class="section-subtitle centered-subtitle">
-                First of all, you can run most of the code snippets of this website
-                directly in the page with the <span class="code-run-button">run</span> button on the top right
-                of them. You can also go to the <a href="playground.html">playground</a> to directly
-                experience the Budo programming feeling.
-            </p>
+            <p class="section-eyebrow">STARTER</p>
+            <h2 class="section-title">A Glimpse of Budo...</h2>
 
-            <p class=" section-subtitle centered-subtitle">
-                For the next steps, you'll need to install Budo with the Linux/macOS CLI installer. No root, no
-                shell profile edits. It installs to <code class="inline-code">~/.local/bin/budo</code> (you can also
-                clone the sources and build Budo yourself).
-            </p>
-
-            <div class="content-narrow">
-                <div class="code-block code-block-flush">
-                    <div class="code-header">
-                        <span class="circle circle-red"></span>
-                        <span class="circle circle-yellow"></span>
-                        <span class="circle circle-green"></span>
-                        <span class="code-title">Terminal</span>
-                    </div>
-                    <div class="code-body">
-                        <pre><code class="language-bash">curl -fsSL https://budo-platform.dev/install.sh | bash</code></pre>
-                    </div>
-                </div>
-            </div>
-
-            <p class=" section-subtitle centered-subtitle">
-                Now you can use the installed CLI for mainly three things: run your application on your desktop, create
-                an Android application file and export your application to the web.
-            </p>
-
-            <p class="section-eyebrow">DESKTOP</p>
 
             <div class="content-narrow">
                 <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
-                    Create a <code class="inline-code">main.js</code> file in an empty directory with the following
-                    content. You can also simply call <code class="inline-code">budo init DIRECTORY</code> to initiate a
-                    standard Budo project.
+                    A Budo application can begin with a small <code class="inline-code">main.js</code> file like this
+                    one:
+                </p>
+
+                <p class="section-center text-muted-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    (you don't have to install the desktop version to try it, you can simply
+                    use the <code class="inline-code">run</code> button on the top right of the code just below)
                 </p>
 
                 <div class="code-block code-block-spaced" data-budo-entry="main.js">
@@ -584,7 +559,7 @@
                         <span class="circle circle-red"></span>
                         <span class="circle circle-yellow"></span>
                         <span class="circle circle-green"></span>
-                        <span class="code-title">DIRECTORY/main.js</span>
+                        <span class="code-title">main.js</span>
                         <button class="code-run-button" type="button">run</button>
                     </div>
                     <div class="code-body">
@@ -607,80 +582,19 @@ sys.animation.requestFrame(frame);</code></pre>
                 </div>
 
                 <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
-                    Now, use the Budo CLI to run your application on your desktop with the following command:
+                    Does this code feel natural? That's because many of the software
+                    bricks used by Budo are also used in Web technologies! But keep in mind that
+                    we are not using Web APIs here. There is no DOM, no CSS, no HTML, no
+                    browser view wrapping in desktop mode or Android. Budo has its own execution model.
                 </p>
-
-                <div class="code-block code-block-flush">
-                    <div class="code-header">
-                        <span class="circle circle-red"></span>
-                        <span class="circle circle-yellow"></span>
-                        <span class="circle circle-green"></span>
-                        <span class="code-title">Terminal</span>
-                    </div>
-                    <div class="code-body">
-                        <pre><code class="language-bash"># runs your application
-budo run DIRECTORY</code></pre>
-                    </div>
-                </div>
 
                 <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
-                    This should display a new window with a bouncing circle inside.
+                    There are plenty more APIs than drawing text and circles, use the
+                    <a href="doc/getting-started.html">getting started</a> guide and the <a
+                        href="playground.html">playground</a> to get familiar with
+                    the
+                    capabilites.
                 </p>
-            </div>
-
-            <p>&nbsp;</p>
-            <p class="section-eyebrow">ANDROID PACKAGING</p>
-
-            <div class="content-narrow">
-                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
-                    To package your application for Android, you can use the <code
-                        class="inline-code">android-apk</code> command. It will produce an <code
-                        class="inline-code">.apk</code> file that you can upload on your device with
-                    <code class="inline-code">adb</code>. The <code class="inline-code">andoid-aab</code> command
-                    produces a signed Android <code class="inline-code">.aab</code> file that is directly usable in the
-                    Google Console.
-                </p>
-
-                <div class="code-block code-block-flush">
-                    <div class="code-header">
-                        <span class="circle circle-red"></span>
-                        <span class="circle circle-yellow"></span>
-                        <span class="circle circle-green"></span>
-                        <span class="code-title">Terminal</span>
-                    </div>
-                    <div class="code-body">
-                        <pre><code class="language-bash"># creates the Android .apk version of your application 
-budo android-apk DIRECTORY</code></pre>
-                    </div>
-                </div>
-
-            </div>
-
-            <p>&nbsp;</p>
-            <p class="section-eyebrow">WEB EXPORT</p>
-
-            <div class="content-narrow">
-
-                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
-                    The third option is to package your application for the Web. In this case, the <code
-                        class="inline-code">web-export</code> command will export your application as a static
-                    html/css/js content that you can integrate in any Web page. And the <code
-                        class="inline-code">web-serve</code> command launches a small HTTP server to serve your
-                    application from your computer.
-                </p>
-
-                <div class="code-block code-block-flush">
-                    <div class="code-header">
-                        <span class="circle circle-red"></span>
-                        <span class="circle circle-yellow"></span>
-                        <span class="circle circle-green"></span>
-                        <span class="code-title">Terminal</span>
-                    </div>
-                    <div class="code-body">
-                        <pre><code class="language-bash"># Serves your application as a local website 
-budo web-serve DIRECTORY</code></pre>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -763,7 +677,7 @@ budo web-serve DIRECTORY</code></pre>
                 <p>
                     That matters. When the API surface is small and the documentation fits in one small file, assistants
                     are much less likely to invent APIs or imaginary engine calls, and they generate better
-                    working code.
+                    code.
                 </p>
                 <p class="terminal-note">
                     To generate the text to add in your agent/llm context when you work on a Budo application,
@@ -936,6 +850,7 @@ budo web-serve DIRECTORY</code></pre>
     <!-- ════════════════════════════════════════════════════════════════════
      CONTACT
      ════════════════════════════════════════════════════════════════════ -->
+    <!-- 
     <section id="contact">
         <div class="section-inner section-center">
             <p class="section-eyebrow">Feedback welcome</p>
@@ -960,6 +875,7 @@ budo web-serve DIRECTORY</code></pre>
             </form>
         </div>
     </section>
+-->
 
     <!-- ════════════════════════════════════════════════════════════════════
      FOOTER
@@ -974,7 +890,7 @@ budo web-serve DIRECTORY</code></pre>
                 <li><a href="playground.html">Playground</a></li>
                 <li><a href="blog.html">Blog</a></li>
                 <li><a href="#download">Download</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <!--<li><a href="#contact">Contact</a></li>-->
             </ul>
             <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
         </div>
