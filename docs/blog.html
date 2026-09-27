@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <title>Budo — Blog</title>
+    <link rel="stylesheet" href="theme-base.css">
+    <link rel="stylesheet" href="theme-playful.css">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            line-height: 1.6;
+        }
+
+        /* ── NAV ─────────────────────────────────────────── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(14, 14, 18, .85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-inner {
+            max-width: var(--max-w);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .9rem 1.5rem;
+        }
+
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            color: var(--color-text);
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .nav-logo a {
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .nav-logo img {
+            width: 26px;
+            height: 26px;
+            display: block;
+        }
+
+        .nav-logo a:hover {
+            text-decoration: none;
+        }
+
+        .nav-logo span {
+            color: var(--color-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.6rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--color-muted);
+            font-size: .9rem;
+            font-weight: 500;
+            transition: color .2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-text);
+            text-decoration: none;
+        }
+
+        /* ── PAGE HEADER ─────────────────────────────────── */
+        .page-header {
+            padding: 8rem 1.5rem 3rem;
+            text-align: center;
+            background:
+                radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124, 111, 247, .12) 0%, transparent 70%),
+                var(--color-bg);
+        }
+
+        .page-header h1 {
+            font-size: clamp(2rem, 4vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -.03em;
+            margin-bottom: .8rem;
+        }
+
+        .page-header p {
+            color: var(--color-muted);
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ── SECTIONS ────────────────────────────────────── */
+        section {
+            padding: 3rem 1.5rem 5rem;
+        }
+
+        .section-inner {
+            max-width: var(--max-w);
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            margin-bottom: 1.6rem;
+        }
+
+        /* ── BLOG ─────────────────────────────────────────── */
+        .blog-wrap {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .blog-empty {
+            background: var(--color-card);
+            border: 2px dashed var(--color-border);
+            border-radius: 14px;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--color-muted);
+            margin-bottom: 3rem;
+        }
+
+        .blog-empty .empty-icon {
+            font-size: 2.5rem;
+            opacity: .5;
+            margin-bottom: 1rem;
+        }
+
+        .blog-empty p {
+            font-size: 1rem;
+            margin-bottom: .4rem;
+        }
+
+        .blog-empty .badge {
+            display: inline-block;
+            font-size: .75rem;
+            background: rgba(124, 111, 247, .15);
+            color: var(--color-primary-glow);
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .ideas-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .idea-card {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 1.2rem 1.4rem;
+            transition: border-color .2s, transform .2s;
+        }
+
+        .idea-card:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-1px);
+        }
+
+        .idea-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: .35rem;
+            color: var(--color-text);
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .idea-card .tag {
+            font-size: .68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--color-primary-glow);
+            background: rgba(124, 111, 247, .12);
+            padding: .15rem .5rem;
+            border-radius: 4px;
+        }
+
+        .idea-card p {
+            color: var(--color-muted);
+            font-size: .92rem;
+            margin: 0;
+        }
+
+        /* ── FOOTER ───────────────────────────────────────── */
+        footer {
+            border-top: 1px solid var(--color-border);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            color: var(--color-muted);
+            font-size: .85rem;
+        }
+
+        /* ── RESPONSIVE ───────────────────────────────────── */
+        @media (max-width: 640px) {
+            .nav-inner {
+                padding: .7rem 1rem;
+            }
+
+            .nav-logo {
+                font-size: 1.1rem;
+            }
+
+            .nav-links {
+                gap: .9rem;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                max-width: 60%;
+            }
+
+            .nav-links::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-links a {
+                font-size: .8rem;
+                white-space: nowrap;
+            }
+
+            section {
+                padding: 2rem 1rem 3.5rem;
+            }
+
+            .page-header {
+                padding: 6rem 1rem 2rem;
+            }
+
+            .blog-empty {
+                padding: 2rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="index.html"><img src="budo-icon.svg" alt="" aria-hidden="true">
+                    Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="doc/index.html">Documentation</a></li>
+                <li><a href="playground.html">Playground</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="index.html#pricing">Pricing</a></li>
+                <li><a href="index.html#download">Download</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+        <h1>Blog</h1>
+        <p>News, deep-dives, and behind-the-scenes notes from the Budo project.</p>
+    </header>
+
+    <!-- BLOG -->
+    <section>
+        <div class="section-inner blog-wrap">
+
+            <div class="blog-empty">
+                <div class="empty-icon">📝</div>
+                <p>No posts yet — but plenty cooking.</p>
+                <p>Check back soon for write-ups on rendering, scripting, mobile packaging, and more.</p>
+                <span class="badge">Coming soon</span>
+            </div>
+
+            <h2 class="section-title">Idea store</h2>
+            <p style="color:var(--color-muted);font-size:.95rem;margin-bottom:1.6rem;">
+                A working list of post ideas we want to write up.
+            </p>
+
+            <div class="ideas-list">
+                <article class="idea-card">
+                    <h3><span class="tag">Intro</span> Why Budo?</h3>
+                    <p>The motivation behind a tiny multi-language runtime in 2026, and what problem it actually solves.
+                    </p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Tutorial</span> Your first app in 5 minutes</h3>
+                    <p>A walk-through from <code>budo init</code> to a running window with bouncing text.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Deep-dive</span> Bridging JavaScript, Lua and WASM</h3>
+                    <p>How the same <code>sys</code> API surface is exposed to three very different language runtimes.
+                    </p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Graphics</span> Building a multi-pass shader pipeline on Skia</h3>
+                    <p>Notes on offscreen surfaces, ping-pong buffers, and GLSL post-processing.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Audio</span> Synths, ADSR and MIDI in a portable runtime</h3>
+                    <p>How the audio stack works across desktop, web and Android.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Mobile</span> Shipping a Budo app to the Play Store</h3>
+                    <p>From <code>app.json</code> to signed AAB — the full Android packaging pipeline.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Web</span> Compiling the runtime to WebAssembly with Emscripten</h3>
+                    <p>Trade-offs, file system quirks, and how the playground works under the hood.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">AI</span> On-device ML with ONNX Runtime</h3>
+                    <p>Running small models with CoreML and NNAPI acceleration from a scripting language.</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Education</span> Teaching kids to code with Budo</h3>
+                    <p>Workshops, classroom feedback, and what makes a runtime "kid-friendly".</p>
+                </article>
+
+                <article class="idea-card">
+                    <h3><span class="tag">Showcase</span> Community demos worth your time</h3>
+                    <p>A roundup of the most creative apps built by early users.</p>
+                </article>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

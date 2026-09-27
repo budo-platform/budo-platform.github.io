@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <title>Budo — A small runtime for creative coding, tools and experiments</title>
+    <meta name="description"
+        content="Budo is an early-stage MIT-licensed runtime for interactive visuals, audio, shaders, tools and experiments. No build system, instant feedback, JavaScript, Lua and WebAssembly.">
+    <meta name="keywords"
+        content="Budo, creative coding runtime, multimedia runtime, JavaScript runtime, Lua runtime, WebAssembly, Skia, shaders, audio, MIDI, SQLite, prototyping, AI coding">
+    <meta name="author" content="Budo">
+    <meta name="theme-color" content="#0e0e12">
+    <link rel="canonical" href="https://budo-platform.dev/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Budo">
+    <meta property="og:title" content="Budo — A small runtime for creative coding, tools and experiments">
+    <meta property="og:description"
+        content="Early-stage MIT-licensed runtime for interactive visuals, audio, shaders, tools and experiments. No build system, instant feedback, JavaScript, Lua and WebAssembly.">
+    <meta property="og:url" content="https://budo-platform.dev/">
+    <meta property="og:image" content="https://budo-platform.dev/favicon.png">
+    <meta property="og:image:alt" content="Budo logo">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Budo — A small runtime for creative coding, tools and experiments">
+    <meta name="twitter:description"
+        content="Early-stage MIT-licensed runtime for interactive visuals, audio, shaders, tools and experiments. No build system, instant feedback, JavaScript, Lua and WebAssembly.">
+    <meta name="twitter:image" content="https://budo-platform.dev/favicon.png">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Budo",
+        "description": "Early-stage MIT-licensed runtime for interactive visuals, audio, shaders, tools and experiments. Write JavaScript, Lua, or WebAssembly without a build system.",
+        "url": "https://budo-platform.dev/",
+        "image": "https://budo-platform.dev/favicon.png",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Linux, macOS, Windows, Android, Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
+
+    <link rel="stylesheet" href="theme-base.css">
+    <link rel="stylesheet" href="theme-playful.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     NAV
+     ════════════════════════════════════════════════════════════════════ -->
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><img src="budo-icon.svg" alt="" aria-hidden="true"> Budo</div>
+            <ul class="nav-links">
+                <li><a href="#demos">Demos</a></li>
+                <li><a href="#what">About</a></li>
+                <li><a href="doc/index.html">Docs</a></li>
+                <li><a href="playground.html">Playground</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="#download">Download</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     HERO
+     ════════════════════════════════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Budo</h1>
+            <h1>Run creative multimedia applications with a nice API and multiple language support
+            </h1>
+            <p class="hero-lead">
+                Budo is a small multi-platform runtime for creative coding, 2D/3D/audio tools, game
+                development and quick prototypes.
+                Your application code uses a convenient API to control
+                Graphics, Audio, Midi, Text/Mouse/Gestures input and more.
+                Multiple languages are supported: Typescript (*), Javascript, Lua and Web Assembly.
+                The same code runs on Desktop, Web and Mobile.
+                Budo is LLM ready with a small 30kb instruction file to guide your agents,
+                leaving their context free for creativity.
+            </p>
+            <p class="hero-kicker">Open-source MIT core. Early-stage. Built by a solo developer.</p>
+            <div class="hero-pills" aria-label="Budo highlights">
+                <span class="platform-pill platform-pill-desktop">No build step</span>
+                <span class="platform-pill platform-pill-web">Instant feedback</span>
+                <span class="platform-pill platform-pill-mobile">2D/3D, audio, midi, files, network, sql, llm & ai
+                    inference</span>
+            </div>
+            <div class="hero-actions">
+                <a href="playground.html" class="btn btn-primary">Try the playground</a>
+                <a href="#demos" class="btn btn-secondary">See experiments</a>
+                <a href="#download" class="btn btn-secondary">Download</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     DEMOS
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="demos">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Start with the output</p>
+            <h2 class="section-title">Little experiments, real runtime</h2>
+            <p class="section-subtitle">
+                Shaders, clocks, synths, games, MIDI, small tools, WebAssembly sketches. A small script can quickly
+                become something you can touch, hear or remix.
+            </p>
+        </div>
+
+        <div class="demos-carousel" id="demos-carousel">
+            <!-- DEMOS:START -->
+            <a href="demos/01_audio_drums/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/01_audio_drums/icon.svg" alt="Audio Drums"></div>
+                <div class="demo-meta">
+                    <h3>Audio Drums</h3>
+                    <span class="demo-slug">01_audio_drums</span>
+                </div>
+            </a>
+            <a href="demos/02_terrain_physics/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/02_terrain_physics/icon.svg" alt="Terrain Physics"></div>
+                <div class="demo-meta">
+                    <h3>Terrain Physics</h3>
+                    <span class="demo-slug">02_terrain_physics</span>
+                </div>
+            </a>
+            <a href="demos/03_lua_game/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/03_lua_game/icon.svg" alt="Lua Spaceshooter"></div>
+                <div class="demo-meta">
+                    <h3>Lua Spaceshooter</h3>
+                    <span class="demo-slug">03_lua_game</span>
+                </div>
+            </a>
+            <a href="demos/04_magneto/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/04_magneto/logo.svg" alt="Magneto Acceleropass"></div>
+                <div class="demo-meta">
+                    <h3>Magneto Acceleropass</h3>
+                    <span class="demo-slug">04_magneto</span>
+                </div>
+            </a>
+            <a href="demos/05_pong/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/05_pong/icon.svg" alt="Pong"></div>
+                <div class="demo-meta">
+                    <h3>Pong</h3>
+                    <span class="demo-slug">05_pong</span>
+                </div>
+            </a>
+            <a href="demos/06_tetris/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/06_tetris/icon.svg" alt="Tetris"></div>
+                <div class="demo-meta">
+                    <h3>Tetris</h3>
+                    <span class="demo-slug">06_tetris</span>
+                </div>
+            </a>
+            <a href="demos/07_file_explorer/" class="demo-card">
+                <div class="demo-thumb"><span class="demo-thumb-placeholder" aria-hidden="true">F</span></div>
+                <div class="demo-meta">
+                    <h3>File Explorer</h3>
+                    <span class="demo-slug">07_file_explorer</span>
+                </div>
+            </a>
+            <a href="demos/08_wasm_shader_pixelate/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/08_wasm_shader_pixelate/icon.svg" alt="WASM Shader Pixelate"></div>
+                <div class="demo-meta">
+                    <h3>WASM Shader Pixelate</h3>
+                    <span class="demo-slug">08_wasm_shader_pixelate</span>
+                </div>
+            </a>
+            <a href="demos/09_typescript_hello/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/09_typescript_hello/icon.svg" alt="TypeScript Hello"></div>
+                <div class="demo-meta">
+                    <h3>TypeScript Hello</h3>
+                    <span class="demo-slug">09_typescript_hello</span>
+                </div>
+            </a>
+            <a href="demos/10_audio_synth/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/10_audio_synth/icon.svg" alt="Piano synth"></div>
+                <div class="demo-meta">
+                    <h3>Piano synth</h3>
+                    <span class="demo-slug">10_audio_synth</span>
+                </div>
+            </a>
+            <a href="demos/11_midi/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/11_midi/icon.svg" alt="MIDI"></div>
+                <div class="demo-meta">
+                    <h3>MIDI</h3>
+                    <span class="demo-slug">11_midi</span>
+                </div>
+            </a>
+            <a href="demos/18_llamacpp_chat/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/18_llamacpp_chat/icon.svg" alt="Tiny Local LLM"></div>
+                <div class="demo-meta">
+                    <h3>Tiny Local LLM</h3>
+                    <span class="demo-slug">18_llamacpp_chat</span>
+                </div>
+            </a>
+            <a href="demos/3d_cube/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/3d_cube/icon.svg" alt="3D Cube"></div>
+                <div class="demo-meta">
+                    <h3>3D Cube</h3>
+                    <span class="demo-slug">3d_cube</span>
+                </div>
+            </a>
+            <a href="demos/3d_mesh_cube/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/3d_mesh_cube/icon.svg" alt="3D Mesh Cube"></div>
+                <div class="demo-meta">
+                    <h3>3D Mesh Cube</h3>
+                    <span class="demo-slug">3d_mesh_cube</span>
+                </div>
+            </a>
+            <a href="demos/3d_mesh_obj/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/3d_mesh_obj/icon.svg" alt="3D Mesh from OBJ"></div>
+                <div class="demo-meta">
+                    <h3>3D Mesh from OBJ</h3>
+                    <span class="demo-slug">3d_mesh_obj</span>
+                </div>
+            </a>
+            <a href="demos/3d_textured_cube/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/3d_textured_cube/icon.svg" alt="3D Textured Cube"></div>
+                <div class="demo-meta">
+                    <h3>3D Textured Cube</h3>
+                    <span class="demo-slug">3d_textured_cube</span>
+                </div>
+            </a>
+            <a href="demos/amstrad-cpc/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/amstrad-cpc/icon.svg" alt="Amstrad CPC6128"></div>
+                <div class="demo-meta">
+                    <h3>Amstrad CPC6128</h3>
+                    <span class="demo-slug">amstrad-cpc</span>
+                </div>
+            </a>
+            <a href="demos/audio_player/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/audio_player/icon.svg" alt="The Golden Dial"></div>
+                <div class="demo-meta">
+                    <h3>The Golden Dial</h3>
+                    <span class="demo-slug">audio_player</span>
+                </div>
+            </a>
+            <a href="demos/BUG-init-exception/" class="demo-card">
+                <div class="demo-thumb"><span class="demo-thumb-placeholder" aria-hidden="true">B</span></div>
+                <div class="demo-meta">
+                    <h3>Bug Init Exception</h3>
+                    <span class="demo-slug">BUG-init-exception</span>
+                </div>
+            </a>
+            <a href="demos/canvas_texture/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/canvas_texture/icon.svg" alt="Canvas Texture"></div>
+                <div class="demo-meta">
+                    <h3>Canvas Texture</h3>
+                    <span class="demo-slug">canvas_texture</span>
+                </div>
+            </a>
+            <a href="demos/chronometer/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/chronometer/icon.svg" alt="Chronometer"></div>
+                <div class="demo-meta">
+                    <h3>Chronometer</h3>
+                    <span class="demo-slug">chronometer</span>
+                </div>
+            </a>
+            <a href="demos/clock_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/clock_demo/icon.svg" alt="Clock Demo"></div>
+                <div class="demo-meta">
+                    <h3>Clock Demo</h3>
+                    <span class="demo-slug">clock_demo</span>
+                </div>
+            </a>
+            <a href="demos/demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/demo/icon.svg" alt="Demo"></div>
+                <div class="demo-meta">
+                    <h3>Demo</h3>
+                    <span class="demo-slug">demo</span>
+                </div>
+            </a>
+            <a href="demos/gui-framework/" class="demo-card">
+                <div class="demo-thumb"><span class="demo-thumb-placeholder" aria-hidden="true">R</span></div>
+                <div class="demo-meta">
+                    <h3>Retained GUI Framework</h3>
+                    <span class="demo-slug">gui-framework</span>
+                </div>
+            </a>
+            <a href="demos/hello_world/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/hello_world/icon.svg" alt="Hello World"></div>
+                <div class="demo-meta">
+                    <h3>Hello World</h3>
+                    <span class="demo-slug">hello_world</span>
+                </div>
+            </a>
+            <a href="demos/hello_world_animated/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/hello_world_animated/icon.svg" alt="Hello World Animated"></div>
+                <div class="demo-meta">
+                    <h3>Hello World Animated</h3>
+                    <span class="demo-slug">hello_world_animated</span>
+                </div>
+            </a>
+            <a href="demos/information-theory/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/information-theory/icon.svg" alt="Information Theory Lab"></div>
+                <div class="demo-meta">
+                    <h3>Information Theory Lab</h3>
+                    <span class="demo-slug">information-theory</span>
+                </div>
+            </a>
+            <a href="demos/layout_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/layout_demo/icon.svg" alt="Layout Demo"></div>
+                <div class="demo-meta">
+                    <h3>Layout Demo</h3>
+                    <span class="demo-slug">layout_demo</span>
+                </div>
+            </a>
+            <a href="demos/lua_3d_cube/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/lua_3d_cube/icon.svg" alt="Lua 3D Cube"></div>
+                <div class="demo-meta">
+                    <h3>Lua 3D Cube</h3>
+                    <span class="demo-slug">lua_3d_cube</span>
+                </div>
+            </a>
+            <a href="demos/lua_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/lua_demo/icon.svg" alt="Lua Demo"></div>
+                <div class="demo-meta">
+                    <h3>Lua Demo</h3>
+                    <span class="demo-slug">lua_demo</span>
+                </div>
+            </a>
+            <a href="demos/midi_preset_saver/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/midi_preset_saver/icon.svg" alt="MIDI Preset Saver"></div>
+                <div class="demo-meta">
+                    <h3>MIDI Preset Saver</h3>
+                    <span class="demo-slug">midi_preset_saver</span>
+                </div>
+            </a>
+            <a href="demos/module/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/module/icon.svg" alt="Module"></div>
+                <div class="demo-meta">
+                    <h3>Module</h3>
+                    <span class="demo-slug">module</span>
+                </div>
+            </a>
+            <a href="demos/network/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/network/icon.svg" alt="Network"></div>
+                <div class="demo-meta">
+                    <h3>Network</h3>
+                    <span class="demo-slug">network</span>
+                </div>
+            </a>
+            <a href="demos/neural/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/neural/icon.svg" alt="Neural Demo"></div>
+                <div class="demo-meta">
+                    <h3>Neural Demo</h3>
+                    <span class="demo-slug">neural</span>
+                </div>
+            </a>
+            <a href="demos/neural_staged/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/neural_staged/icon.svg" alt="Neural Staged Demo"></div>
+                <div class="demo-meta">
+                    <h3>Neural Staged Demo</h3>
+                    <span class="demo-slug">neural_staged</span>
+                </div>
+            </a>
+            <a href="demos/particles/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/particles/icon.svg" alt="Particles"></div>
+                <div class="demo-meta">
+                    <h3>Particles</h3>
+                    <span class="demo-slug">particles</span>
+                </div>
+            </a>
+            <a href="demos/persistence/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/persistence/icon.svg" alt="Persistence"></div>
+                <div class="demo-meta">
+                    <h3>Persistence</h3>
+                    <span class="demo-slug">persistence</span>
+                </div>
+            </a>
+            <a href="demos/ruler/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/ruler/icon.svg" alt="Ruler"></div>
+                <div class="demo-meta">
+                    <h3>Ruler</h3>
+                    <span class="demo-slug">ruler</span>
+                </div>
+            </a>
+            <a href="demos/shader_bloom/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shader_bloom/icon.svg" alt="Shader Bloom"></div>
+                <div class="demo-meta">
+                    <h3>Shader Bloom</h3>
+                    <span class="demo-slug">shader_bloom</span>
+                </div>
+            </a>
+            <a href="demos/shader_crt/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shader_crt/icon.svg" alt="Shader CRT"></div>
+                <div class="demo-meta">
+                    <h3>Shader CRT</h3>
+                    <span class="demo-slug">shader_crt</span>
+                </div>
+            </a>
+            <a href="demos/shader_debug/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shader_debug/icon.svg" alt="Shader Debug"></div>
+                <div class="demo-meta">
+                    <h3>Shader Debug</h3>
+                    <span class="demo-slug">shader_debug</span>
+                </div>
+            </a>
+            <a href="demos/shader_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shader_demo/icon.svg" alt="Shader Demo"></div>
+                <div class="demo-meta">
+                    <h3>Shader Demo</h3>
+                    <span class="demo-slug">shader_demo</span>
+                </div>
+            </a>
+            <a href="demos/shader_plasma/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shader_plasma/icon.svg" alt="Shader Plasma"></div>
+                <div class="demo-meta">
+                    <h3>Shader Plasma</h3>
+                    <span class="demo-slug">shader_plasma</span>
+                </div>
+            </a>
+            <a href="demos/shapes_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/shapes_demo/icon.svg" alt="Shapes Demo"></div>
+                <div class="demo-meta">
+                    <h3>Shapes Demo</h3>
+                    <span class="demo-slug">shapes_demo</span>
+                </div>
+            </a>
+            <a href="demos/text_demo/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/text_demo/icon.svg" alt="Text Demo"></div>
+                <div class="demo-meta">
+                    <h3>Text Demo</h3>
+                    <span class="demo-slug">text_demo</span>
+                </div>
+            </a>
+            <a href="demos/wasm_3d_cube/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_3d_cube/icon.svg" alt="WASM 3D Cube"></div>
+                <div class="demo-meta">
+                    <h3>WASM 3D Cube</h3>
+                    <span class="demo-slug">wasm_3d_cube</span>
+                </div>
+            </a>
+            <a href="demos/wasm_animation/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_animation/icon.svg" alt="WASM Animation"></div>
+                <div class="demo-meta">
+                    <h3>WASM Animation</h3>
+                    <span class="demo-slug">wasm_animation</span>
+                </div>
+            </a>
+            <a href="demos/wasm_interactive/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_interactive/icon.svg" alt="WASM Interactive"></div>
+                <div class="demo-meta">
+                    <h3>WASM Interactive</h3>
+                    <span class="demo-slug">wasm_interactive</span>
+                </div>
+            </a>
+            <a href="demos/wasm_network/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_network/icon.svg" alt="WASM fetch demo"></div>
+                <div class="demo-meta">
+                    <h3>WASM fetch demo</h3>
+                    <span class="demo-slug">wasm_network</span>
+                </div>
+            </a>
+            <a href="demos/wasm_shader_kaleidoscope/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_shader_kaleidoscope/icon.svg" alt="WASM Shader Kaleidoscope"></div>
+                <div class="demo-meta">
+                    <h3>WASM Shader Kaleidoscope</h3>
+                    <span class="demo-slug">wasm_shader_kaleidoscope</span>
+                </div>
+            </a>
+            <a href="demos/wasm_shader_vortex/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_shader_vortex/icon.svg" alt="WASM Shader Vortex"></div>
+                <div class="demo-meta">
+                    <h3>WASM Shader Vortex</h3>
+                    <span class="demo-slug">wasm_shader_vortex</span>
+                </div>
+            </a>
+            <a href="demos/wasm_shapes/" class="demo-card">
+                <div class="demo-thumb"><img src="demos/wasm_shapes/icon.svg" alt="WASM Shapes"></div>
+                <div class="demo-meta">
+                    <h3>WASM Shapes</h3>
+                    <span class="demo-slug">wasm_shapes</span>
+                </div>
+            </a>
+            <!-- DEMOS:END -->
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     WHAT BUDO IS
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="what">
+        <div class="section-inner split-section">
+            <div>
+                <p class="section-eyebrow">What Budo is</p>
+                <h2 class="section-title">Budo is a lightweight runtime for interactive tools and prototypes.
+                </h2>
+            </div>
+            <div class="prose-stack">
+                <p>
+                    Budo exists for the moment you have a visual idea, a synth toy, an educational
+                    project, a shader sketch or a weird prototype you want to run on desktop, mobile or web.
+                </p>
+                <p>
+                    Budo provides an immediate mode graphic 2D API, 3D GL primitives and a handful
+                    of native systems: canvas drawing, GL shaders and primitives, audio, MIDI,
+                    db layer, files, networking, LLM inference (llamacpp) and ONNX inference.
+                    Although similar or at least inspired from, the Budo API is different from the Web Browser APIs:
+                    there is no DOM nor CSS for instance. All the available functions are organized under the <code
+                        class="inline-code">sys</code> global object, designed with simplicity
+                    in mind.
+                </p>
+                <p>
+                    The Budo CLI is multipurpose. It executes your JavaScript, Lua or WebAssembly code right away on
+                    Desktop. It can also package your code as an Android aplication or export it for the web.
+                </p>
+                <p>
+                    It is intentionally small and hackable. The project is early-stage, actively maintained, and built
+                    by a solo developer who cares about keeping the code maintainable and well structured.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     START FAST
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="start-fast">
+        <div class="section-inner section-center">
+            <h2 class="section-title">Getting started</h2>
+            <p class="section-subtitle centered-subtitle">
+                First of all, you can run most of the code snippets of this website
+                directly in the page with the <span class="code-run-button">run</span> button on the top right
+                of them. You can also go to the <a href="playground.html">playground</a> to directly
+                experience the Budo programming feeling.
+            </p>
+
+            <p class=" section-subtitle centered-subtitle">
+                For the next steps, you'll need to install Budo with the Linux/macOS CLI installer. No root, no
+                shell profile edits. It installs to <code class="inline-code">~/.local/bin/budo</code> (you can also
+                clone the sources and build Budo yourself).
+            </p>
+
+            <div class="content-narrow">
+                <div class="code-block code-block-flush">
+                    <div class="code-header">
+                        <span class="circle circle-red"></span>
+                        <span class="circle circle-yellow"></span>
+                        <span class="circle circle-green"></span>
+                        <span class="code-title">Terminal</span>
+                    </div>
+                    <div class="code-body">
+                        <pre><code class="language-bash">curl -fsSL https://budo-platform.dev/install.sh | bash</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <p class=" section-subtitle centered-subtitle">
+                Now you can use the installed CLI for mainly three things: run your application on your desktop, create
+                an Android application file and export your application to the web.
+            </p>
+
+            <p class="section-eyebrow">DESKTOP</p>
+
+            <div class="content-narrow">
+                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    Create a <code class="inline-code">main.js</code> file in an empty directory with the following
+                    content. You can also simply call <code class="inline-code">budo init DIRECTORY</code> to initiate a
+                    standard Budo project.
+                </p>
+
+                <div class="code-block code-block-spaced" data-budo-entry="main.js">
+                    <div class="code-header">
+                        <span class="circle circle-red"></span>
+                        <span class="circle circle-yellow"></span>
+                        <span class="circle circle-green"></span>
+                        <span class="code-title">DIRECTORY/main.js</span>
+                        <button class="code-run-button" type="button">run</button>
+                    </div>
+                    <div class="code-body">
+                        <pre><code class="language-javascript">function frame(t) {
+  const w = sys.window.getWidth();
+  const h = sys.window.getHeight();
+  const pulse = 40 + Math.sin(t * 0.006) * 18;
+
+  sys.canvas.clear('#111216');
+  sys.canvas.setFillColor('#f7a84c');
+  sys.canvas.drawCircle(w * 0.5, h * 0.5, pulse);
+  sys.canvas.setFillColor('#9b8aff');
+  sys.canvas.drawText('change me', 32, 56, 28);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);</code></pre>
+                    </div>
+                </div>
+
+                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    Now, use the Budo CLI to run your application on your desktop with the following command:
+                </p>
+
+                <div class="code-block code-block-flush">
+                    <div class="code-header">
+                        <span class="circle circle-red"></span>
+                        <span class="circle circle-yellow"></span>
+                        <span class="circle circle-green"></span>
+                        <span class="code-title">Terminal</span>
+                    </div>
+                    <div class="code-body">
+                        <pre><code class="language-bash"># runs your application
+budo run DIRECTORY</code></pre>
+                    </div>
+                </div>
+
+                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    This should display a new window with a bouncing circle inside.
+                </p>
+            </div>
+
+            <p>&nbsp;</p>
+            <p class="section-eyebrow">ANDROID PACKAGING</p>
+
+            <div class="content-narrow">
+                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    To package your application for Android, you can use the <code
+                        class="inline-code">android-apk</code> command. It will produce an <code
+                        class="inline-code">.apk</code> file that you can upload on your device with
+                    <code class="inline-code">adb</code>. The <code class="inline-code">andoid-aab</code> command
+                    produces a signed Android <code class="inline-code">.aab</code> file that is directly usable in the
+                    Google Console.
+                </p>
+
+                <div class="code-block code-block-flush">
+                    <div class="code-header">
+                        <span class="circle circle-red"></span>
+                        <span class="circle circle-yellow"></span>
+                        <span class="circle circle-green"></span>
+                        <span class="code-title">Terminal</span>
+                    </div>
+                    <div class="code-body">
+                        <pre><code class="language-bash"># creates the Android .apk version of your application 
+budo android-apk DIRECTORY</code></pre>
+                    </div>
+                </div>
+
+            </div>
+
+            <p>&nbsp;</p>
+            <p class="section-eyebrow">WEB EXPORT</p>
+
+            <div class="content-narrow">
+
+                <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
+                    The third option is to package your application for the Web. In this case, the <code
+                        class="inline-code">web-export</code> command will export your application as a static
+                    html/css/js content that you can integrate in any Web page. And the <code
+                        class="inline-code">web-serve</code> command launches a small HTTP server to serve your
+                    application from your computer.
+                </p>
+
+                <div class="code-block code-block-flush">
+                    <div class="code-header">
+                        <span class="circle circle-red"></span>
+                        <span class="circle circle-yellow"></span>
+                        <span class="circle circle-green"></span>
+                        <span class="code-title">Terminal</span>
+                    </div>
+                    <div class="code-body">
+                        <pre><code class="language-bash"># Serves your application as a local website 
+budo web-serve DIRECTORY</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     FEELS DIFFERENT
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="feels">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Why it feels different</p>
+            <h2 class="section-title">Remarkable features</h2>
+            <p class="section-subtitle">
+                Budo comes with characteristics that make it perfect in many situations. Support for multiple languages
+                on desktop/mobile/web platforms for 2D/3D, drawing, audio, persistence, AI out of the box are one of
+                those.
+            </p>
+
+            <div class="features-grid story-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">01</div>
+                    <h3>2D Graphics are immediate mode</h3>
+                    <p>The 2D graphic API is really close to the Web Canvas API. Everything goes through the provided
+                        <code>sys.canvas</code> object.
+                        The mental model is closer to ImGui than to a frontend framework.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">02</div>
+                    <h3>WebGL style 3D</h3>
+                    <p>
+                        GLSL shaders, and many other 3D primitives are available to compose with the main application
+                        scene. Shader passes can be applied after UI rendering, in between or in the other way around.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">03</div>
+                    <h3>Modules available out of the box</h3>
+                    <p>Here is a list of available modules in the API:
+                        2D Graphics (backed by Skia),
+                        3D Graphics (WebGL like),
+                        Audio/Midi/Synth,
+                        Device (orientation, compass, magneto, ...),
+                        Persistence (SQLite),
+                        File,
+                        Networking,
+                        Llamacpp (LLMs supported out-of-the-box),
+                        ONNX neural models inference,
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">04</div>
+                    <h3>One runtime, several languages</h3>
+                    <p>Use JavaScript or TypeScript when you want quick scripting, Lua when you want tiny expressive
+                        code, and WebAssembly when you want a lower-level path.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">05</div>
+                    <h3>One runtime, several platforms</h3>
+                    <p>The same application code can be deployed to Desktop (Linux and MacOS), Web and Android. Future
+                        support for Windows and iOS is planed.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     AI CODING
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="ai-coding">
+        <div class="section-inner split-section">
+            <div>
+                <p class="section-eyebrow">AI-assisted coding</p>
+                <h2 class="section-title">A runtime small enough for an assistant to actually understand.</h2>
+            </div>
+            <div class="prose-stack">
+                <p>
+                    Budo ships with <code>budo-llm.md</code>, a compact markdown file that documents the API,
+                    runtime rules and common traps for coding assistants.
+                </p>
+                <p>
+                    That matters. When the API surface is small and the documentation fits in one small file, assistants
+                    are much less likely to invent APIs or imaginary engine calls, and they generate better
+                    working code.
+                </p>
+                <p class="terminal-note">
+                    To generate the text to add in your agent/llm context when you work on a Budo application,
+                    use this command: <code>budo budo-llm.md</code>. In the case of projects generated with the
+                    <code>init</code> command, this file is already generated.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     OPEN SOURCE
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="open">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Open core, clear boundaries</p>
+            <h2 class="section-title">The runtime is open source and MIT licensed.</h2>
+            <p class="section-subtitle">
+                The part that runs your app is open. You can inspect it, modify it, fork it, learn from it and build on
+                it without vendor lock-in.
+            </p>
+
+            <div class="philosophy-grid">
+                <div class="philosophy-card">
+                    <h3>Open runtime</h3>
+                    <p>The core runtime is MIT licensed. Transparency is part of the design, especially while the
+                        project is young.</p>
+                </div>
+                <div class="philosophy-card">
+                    <h3>Paid Android packaging</h3>
+                    <p>The Android APK/AAB packager is paid tooling. It helps fund development and removes the most
+                        annoying Android Studio and Gradle work from small projects.</p>
+                </div>
+                <div class="philosophy-card">
+                    <h3>APK and AAB artifacts</h3>
+                    <p>The packager generates Android build artifacts. You still own signing choices, testing and Play
+                        Console submission.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     GIANTS
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="giants">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Under the hood</p>
+            <h2 class="section-title">Small surface, real machinery.</h2>
+            <p class="giants-prose">
+                Budo is built on battle-tested pieces:
+                <a href="https://skia.org" target="_blank" rel="noopener">Skia</a> for 2D/GPU rendering,
+                <a href="https://www.libsdl.org" target="_blank" rel="noopener">SDL2</a> for windowing and input,
+                <a href="https://bellard.org/quickjs/" target="_blank" rel="noopener">QuickJS</a> for JavaScript,
+                <a href="https://www.lua.org" target="_blank" rel="noopener">Lua 5.4</a> for scripting,
+                <a href="https://wasmtime.dev" target="_blank" rel="noopener">Wasmtime</a> for WebAssembly,
+                <a href="https://www.sqlite.org" target="_blank" rel="noopener">SQLite</a> for persistence,
+                <a href="https://onnxruntime.ai" target="_blank" rel="noopener">ONNX Runtime</a> and <a
+                    href="https://llama.app/" target="_blank" rel="noopener">llamacpp</a> for
+                on-device ML,
+                <a href="https://emscripten.org" target="_blank" rel="noopener">Emscripten</a> for the web build,
+                and the <a href="https://developer.android.com/ndk" target="_blank" rel="noopener">Android NDK</a> for
+                native mobile runtime.
+            </p>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     EARLY STAGE
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="early-stage">
+        <div class="section-inner split-section">
+            <div>
+                <p class="section-eyebrow">Current state</p>
+                <h2 class="section-title">Early-stage, real, and moving.</h2>
+            </div>
+            <div class="prose-stack">
+                <p>
+                    Budo is usable today, and still early. APIs may evolve while the runtime finds its cleanest
+                    shape.
+                </p>
+                <p>
+                    Feedback is welcome, especially from people building visual sketches, audio toys, shader studies,
+                    tiny tools, teaching demos and AI-generated prototypes. Sharp bug reports and small contributions
+                    are genuinely useful at this stage.
+                </p>
+                <p>
+                    The roadmap is deliberately practical: better docs, more examples, steadier platform builds, tighter
+                    LLM context, improved packaging and a runtime that stays pleasant to hack on.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     DOWNLOAD
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="download">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Try it locally</p>
+            <h2 class="section-title">Download Budo</h2>
+            <p class="section-subtitle">
+                A self-contained runtime for quick experiments with 2D/3D/audio/midi/storage/AI capabilites. Pick a
+                build, open the docs, and start with a small
+                script.
+            </p>
+
+            <div class="download-placeholder">
+                <div class="install-command">
+                    <p class="install-note">
+                        Command line installation for Linux and MacOS:
+                    </p>
+                    <code>curl -fsSL https://budo-platform.dev/install.sh | bash</code>
+                    <p class="install-note">
+                        Linux/macOS CLI installer. No root, no shell profile edits. Installs to
+                        <span class="install-path">~/.local/bin/budo</span>.
+                    </p>
+                </div>
+
+                <!--
+                    Download links are consumed by release/website automation.
+                    Keep hrefs and filenames stable unless the pipeline changes too.
+                -->
+                <div class="download-grid">
+                    <a href="download/budo-linux-x86_64" class="download-card">
+                        <span class="download-card-icon">⌨️</span>
+                        <strong class="download-card-title">Linux binary</strong>
+                        <span class="download-card-meta">x86_64</span>
+                    </a>
+                    <a href="install.sh" class="download-card">
+                        <span class="download-card-icon">📜</span>
+                        <strong class="download-card-title">install.sh</strong>
+                        <span class="download-card-meta">read before running</span>
+                    </a>
+                    <a href="download/Budo-linux.AppImage" class="download-card">
+                        <span class="download-card-icon">🐧</span>
+                        <strong class="download-card-title">Linux AppImage</strong>
+                        <span class="download-card-meta">desktop bundle</span>
+                    </a>
+                    <a href="download/Budo.flatpak" class="download-card">
+                        <span class="download-card-icon">📦</span>
+                        <strong class="download-card-title">Linux Flatpak</strong>
+                        <span class="download-card-meta">desktop bundle</span>
+                    </a>
+                    <a href="download/budo-linux-flatpak" class="download-card">
+                        <span class="download-card-icon">⌨️</span>
+                        <strong class="download-card-title">Flatpak CLI</strong>
+                        <span class="download-card-meta">install as budo</span>
+                    </a>
+                    <a href="download/Budo.dmg" class="download-card">
+                        <span class="download-card-icon">🍎</span>
+                        <strong class="download-card-title">macOS</strong>
+                        <span class="download-card-meta">universal DMG</span>
+                    </a>
+                    <a href="download/Budo-windows-x64.zip" class="download-card">
+                        <span class="download-card-icon">🪟</span>
+                        <strong class="download-card-title">Windows</strong>
+                        <span class="download-card-meta">x64 zip</span>
+                    </a>
+                </div>
+
+                <div class="download-actions">
+                    <a href="doc/index.html" class="btn btn-secondary">Read the docs</a>
+                    <a href="playground.html" class="btn btn-primary">Open the playground</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     CONTACT
+     ════════════════════════════════════════════════════════════════════ -->
+    <section id="contact">
+        <div class="section-inner section-center">
+            <p class="section-eyebrow">Feedback welcome</p>
+            <h2 class="section-title">Building something strange with it?</h2>
+            <p class="section-subtitle">
+                Send a note for Android packaging, bug reports, demo ideas, contributions, or just to show what you
+                made.
+            </p>
+
+            <form class="contact-form" action="#" method="POST" onsubmit="return handleSubmit(event)">
+                <input type="text" name="name" placeholder="Your name" required autocomplete="name">
+                <input type="email" name="email" placeholder="Email address" required autocomplete="email">
+                <select name="interest">
+                    <option value="" disabled selected>I'm interested in...</option>
+                    <option value="android">Android packaging</option>
+                    <option value="feedback">Feedback or bug report</option>
+                    <option value="contribution">Contribution</option>
+                    <option value="general">General note</option>
+                </select>
+                <textarea name="message" placeholder="Your message" rows="5"></textarea>
+                <button type="submit" class="btn btn-primary">Send message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════════════════════════════ -->
+    <footer>
+        <div class="section-inner">
+            <div class="footer-logo"><img src="budo-icon.svg" alt="" aria-hidden="true"> Budo</div>
+            <ul class="footer-links">
+                <li><a href="#demos">Demos</a></li>
+                <li><a href="#what">About</a></li>
+                <li><a href="doc/index.html">Documentation</a></li>
+                <li><a href="playground.html">Playground</a></li>
+                <li><a href="blog.html">Blog</a></li>
+                <li><a href="#download">Download</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // Only highlight the code blocks inside .code-body containers.
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('.code-body code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Style `sys` and its known sub-namespaces as recognized types,
+        // mimicking how an IDE renders them when the .d.ts file is loaded.
+        (function () {
+            const SYS_MEMBERS = new Set([
+                'canvas', 'paint', 'window', 'animation', 'audio',
+                'midi', 'network', 'sqlite', 'neural', 'file',
+                'sensor', 'shader', 'input', 'storage'
+            ]);
+
+            document.querySelectorAll('.code-body code').forEach(function (block) {
+                // 1. Walk text nodes and wrap the bare word `sys`.
+                const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+                const texts = [];
+                let n;
+                while ((n = walker.nextNode())) texts.push(n);
+
+                texts.forEach(function (textNode) {
+                    if (!/\bsys\b/.test(textNode.nodeValue)) return;
+                    const frag = document.createDocumentFragment();
+                    const parts = textNode.nodeValue.split(/(\bsys\b)/);
+                    parts.forEach(function (part) {
+                        if (part === 'sys') {
+                            const span = document.createElement('span');
+                            span.className = 'hljs-sys';
+                            span.textContent = 'sys';
+                            frag.appendChild(span);
+                        } else if (part) {
+                            frag.appendChild(document.createTextNode(part));
+                        }
+                    });
+                    textNode.parentNode.replaceChild(frag, textNode);
+                });
+
+                // 2. Promote known sub-namespaces (sys.canvas, sys.canvas, ...)
+                //    by re-classing the hljs-property spans that contain them.
+                block.querySelectorAll('.hljs-property').forEach(function (el) {
+                    const name = el.textContent.replace(/^\./, '').trim();
+                    if (SYS_MEMBERS.has(name)) {
+                        el.classList.remove('hljs-property');
+                        el.classList.add('hljs-sys');
+                    }
+                });
+            });
+        })();
+    </script>
+    <script>
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = 'playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('not implemented yet')
+            // TODO: wire to actual backend / email service
+            const form = e.target;
+            const data = new FormData(form);
+            console.log('Contact form submitted:', Object.fromEntries(data));
+            form.reset();
+            const btn = form.querySelector('button[type="submit"]');
+            const original = btn.textContent;
+            btn.textContent = 'Message sent ✓';
+            btn.disabled = true;
+            setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 3000);
+            return false;
+        }
+    </script>
+
+</body>
+
+</html>

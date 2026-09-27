@@ -1,0 +1,103 @@
+/* ════════════════════════════════════════════════════════════════════
+   Budo — shared theme tokens & base styles
+   --------------------------------------------------------------------
+   This file holds the design tokens (colors, fonts) and the minimal
+   element resets / base rules shared across all pages of the site.
+   To try a new color theme or layout, override the CSS variables
+   below in a sibling stylesheet (e.g. `theme-light.css`) loaded
+   after this one.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── Colors ──────────────────────────────────────── */
+    --color-bg: #0e0e12;
+    --color-surface: #16161d;
+    --color-border: #2a2a35;
+    --color-primary: #7c6ff7;
+    --color-primary-glow: #9b8aff;
+    --color-accent: #f7a84c;
+    --color-text: #e8e6f0;
+    --color-muted: #9895a8;
+    --color-card: #1c1c26;
+    --color-success: #28c840;
+    --color-error: #ff5f57;
+
+    /* ── Typography ──────────────────────────────────── */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* ── Layout ──────────────────────────────────────── */
+    --max-w: 1120px;
+}
+
+/* ── Reset ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Base ───────────────────────────────────────────── */
+body {
+    font-family: var(--font-sans);
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    /* Prevent rotated/shadowed elements from causing horizontal scroll on mobile */
+    overflow-x: hidden;
+}
+
+/* Make sure media never overflows their container on small screens. */
+img,
+svg,
+video,
+canvas,
+iframe {
+    max-width: 100%;
+}
+
+a {
+    color: var(--color-primary-glow);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ── Button base ────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(124, 111, 247, .3);
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-glow);
+    box-shadow: 0 0 30px rgba(124, 111, 247, .45);
+    text-decoration: none;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary-glow);
+    text-decoration: none;
+}

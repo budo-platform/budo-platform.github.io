@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Data, Files, and Network — Budo Documentation</title>
+    <meta name="description" content="Use SQLite, project files, HTTP fetch, UDP sockets, and app policy safely.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html" class="current">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="data-files-and-network" class="has-anchor">Data, Files, and Network <a class="heading-anchor" href="#data-files-and-network" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo gives apps practical I/O without asking them to become platform specialists. You can persist data with SQLite, read bundled files, fetch HTTP resources, and exchange UDP datagrams. The APIs are small, but they have real policy boundaries so projects remain portable and packageable.</p>
+<h2 id="sqlite-persistence" class="has-anchor">SQLite persistence <a class="heading-anchor" href="#sqlite-persistence" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.db</code> opens SQLite databases stored as <code>.db</code> files in the project directory. Database names are sanitized and may contain only letters, numbers, underscores, and hyphens.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
+sys.db.execute(db, `
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0
+  )
+`);
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+sys.canvas.setFillColor(&#x27;#111318&#x27;);
+sys.canvas.drawText(&#x27;notes.db is ready&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Open or create a SQLite database named notes.db.
+const db = sys.db.open(&#x27;notes&#x27;);
+
+// Create the table once if it does not already exist.
+sys.db.execute(db, `
+  CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    done INTEGER NOT NULL DEFAULT 0
+  )
+`);</code></pre></div></div>
+<p>Use <code>run</code> for parameterized statements that change data.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
+sys.db.execute(db, &#x27;DROP TABLE IF EXISTS notes&#x27;);
+sys.db.execute(db, &#x27;CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0)&#x27;);
+sys.db.run(db, &#x27;INSERT INTO notes (title) VALUES (?)&#x27;, &#x27;Sketch the menu&#x27;);
+sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, 1);
+const rows = sys.db.query(db, &#x27;SELECT title, done FROM notes&#x27;);
+sys.canvas.clear(&#x27;#101116&#x27;);
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(rows[0].title + &#x27; done=&#x27; + rows[0].done, 32, 72, 20);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Insert a new note using a parameter instead of string concatenation.
+sys.db.run(db, &#x27;INSERT INTO notes (title) VALUES (?)&#x27;, &#x27;Sketch the menu&#x27;);
+// Update the note with id 1 and store true as SQLite integer 1.
+sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, 1);</code></pre></div></div>
+<p>Use <code>query</code> for results. Rows come back as JavaScript objects.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
+sys.db.execute(db, &#x27;DROP TABLE IF EXISTS notes&#x27;);
+sys.db.execute(db, &#x27;CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0)&#x27;);
+sys.db.run(db, &#x27;INSERT INTO notes (title, done) VALUES (?, ?)&#x27;, &#x27;Sketch the menu&#x27;, false);
+sys.db.run(db, &#x27;INSERT INTO notes (title, done) VALUES (?, ?)&#x27;, &#x27;Tune the colors&#x27;, true);
+const rows = sys.db.query(db, &#x27;SELECT id, title, done FROM notes ORDER BY id DESC&#x27;);
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+sys.canvas.setFillColor(&#x27;#111318&#x27;);
+for (let i = 0; i &lt; rows.length; i++) {
+  sys.canvas.drawText(rows[i].id + &#x27;: &#x27; + rows[i].title, 32, 48 + i * 28, 18);
+}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Query rows as JavaScript objects.
+const rows = sys.db.query(db, &#x27;SELECT id, title, done FROM notes ORDER BY id DESC&#x27;);
+// Iterate through every returned row.
+for (const row of rows) {
+  // Log a compact representation for development.
+  console.log(row.id + &#x27;: &#x27; + row.title);
+}</code></pre></div></div>
+<p>Close database handles when a long-lived tool no longer needs them.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
+sys.db.close(db);
+sys.canvas.clear(&#x27;#101116&#x27;);
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(&#x27;Database handle closed&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Close the database handle when the app no longer needs it.
+sys.db.close(db);</code></pre></div></div>
+<p>SQLite errors throw in JavaScript and Lua when the call violates the contract or the statement fails. <code>sys.db.getError()</code> returns the last wrapper error string.</p>
+<h2 id="files" class="has-anchor">Files <a class="heading-anchor" href="#files" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.files</code> exposes one virtual root containing two folders: <code>assets/</code> maps to immutable files bundled with the application, while <code>files/</code> maps to persistent, sandboxed host storage. Only paths under <code>files/</code> can be written. <code>sys.assets</code> is a read-only convenience wrapper over the <code>assets/</code> mount.</p>
+<p>On desktop, assets resolve from the project directory and files resolve from <code>--file-root</code>, which defaults to the project directory. On Android, assets resolve from the extracted bundle and files default to the app-specific external-files directory. Broad external storage requires an explicit <code>filesystem</code> policy in <code>app.json</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;filesystem&quot;: true
+}</code></pre></div></div>
+<p>Paths passed to <code>sys.files</code> must start with <code>assets/</code> or <code>files/</code>. Calling <code>sys.files.list()</code> without a path returns those two virtual folders. Paths passed to <code>sys.assets</code> are relative to the bundle root and do not include <code>assets/</code>; <code>sys.assets.list()</code> lists that bundle root. Absolute paths and <code>..</code> traversal are rejected by both APIs.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a bundled text file.
+const text = sys.files.readText(&#x27;assets/levels/intro.json&#x27;);
+// Equivalent convenience form; paths are relative to the assets root.
+const sameText = sys.assets.readText(&#x27;levels/intro.json&#x27;);
+// Read a bundled binary file as an ArrayBuffer.
+const bytes = sys.files.readBinary(&#x27;assets/images/title.png&#x27;);
+
+// Check for a persistent settings file before reading it.
+if (sys.files.exists(&#x27;files/settings.json&#x27;)) {
+  // Print the file size in bytes.
+  console.log(sys.files.size(&#x27;files/settings.json&#x27;) + &#x27; bytes&#x27;);
+}
+
+sys.files.writeText(&#x27;files/settings.json&#x27;, JSON.stringify({ volume: 0.8 }));</code></pre></div></div>
+<p>Listings return entries with a name, type, and size for files.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// List entries in a bundled folder.
+for (const entry of sys.files.list(&#x27;assets/levels&#x27;)) {
+  // Each entry reports its type and name.
+  console.log(entry.type + &#x27;: &#x27; + entry.name);
+}
+
+// Equivalent convenience form.
+const sameEntries = sys.assets.list(&#x27;levels&#x27;);</code></pre></div></div>
+<p>Hidden files are excluded from listings. <code>exists()</code> checks regular files; use <code>isDirectory()</code> when you care about folders.</p>
+<p><code>sys.assets</code> exposes no write methods. It shares the same underlying context and error state as <code>sys.files</code>, so either <code>getError()</code> method returns the last file error. Missing or unavailable files return a falsy result and set that error; invalid paths and attempts to write outside the <code>files/</code> mount are programmer errors.</p>
+<h2 id="system-text-file-picker" class="has-anchor">System text-file picker <a class="heading-anchor" href="#system-text-file-picker" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript apps can import a user-selected text file from outside the virtual mounts without requesting broad filesystem access:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const launched = sys.files.pickText((file, error) =&gt; {
+  if (file) console.log(file.name + &#x27;: &#x27; + file.text.length + &#x27; bytes&#x27;);
+  else if (error) console.log(error);
+}, &#x27;.json&#x27;);</code></pre></div></div>
+<p>The picker is a native dialog on desktop, an <code>&lt;input type=&quot;file&quot;&gt;</code> on web, and Android's Storage Access Framework on Android, which includes Downloads, SD cards, and document/cloud providers. The optional extension filters compatible platform pickers and is always enforced against the returned display name. It returns <code>false</code> if unavailable or another picker is active. The callback receives <code>{name,text}</code> or an error; selected files are capped at 8 MiB.</p>
+<p>To export text to a location selected by the user, use the system Save As flow:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.files.saveText(&#x27;backup.json&#x27;, JSON.stringify(data), (error) =&gt; {
+  if (error) console.log(error);
+});</code></pre></div></div>
+<p>On Android this uses <code>ACTION_CREATE_DOCUMENT</code>, so the user can choose Downloads, an SD card, or a document/cloud provider instead of the app-only <code>Android/data</code> directory. Picker and Save As access are based on explicit user consent and do not require or open <code>&quot;filesystem&quot;: true</code> all-files settings. These APIs are currently JS-only.</p>
+<p>On web, the physical <code>files/</code> mount persists through IDBFS and successful writes also trigger browser downloads. The <code>assets/</code> mount and <code>sys.assets</code> read the preloaded application files.</p>
+<h2 id="http-fetch" class="has-anchor">HTTP fetch <a class="heading-anchor" href="#http-fetch" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The global <code>fetch</code> function and <code>sys.net.fetch</code> use the same network policy. By default, HTTP access is disabled. Declare allowed domains in <code>app.json</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;network&quot;: [&quot;api.example.com&quot;, &quot;cdn.example.com&quot;]
+}</code></pre></div></div>
+<p>Use <code>&quot;*&quot;</code> for unrestricted network access during a prototype, then narrow it before release.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load scores asynchronously from an allowed domain.
+async function loadScores() {
+  // Make the HTTP request using the runtime fetch implementation.
+  const response = await fetch(&#x27;https://api.example.com/scores&#x27;);
+  // Treat non-2xx responses as app-level failures.
+  if (!response.ok) {
+    // Include the status code so logs are useful.
+    throw new Error(&#x27;HTTP &#x27; + response.status);
+  }
+  // Parse and return the JSON response body.
+  return response.json();
+}</code></pre></div></div>
+<p>Request options support method, headers, and a string or <code>ArrayBuffer</code> body.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Send a JSON event to an allowed domain.
+const response = await fetch(&#x27;https://api.example.com/events&#x27;, {
+  // Choose the HTTP method.
+  method: &#x27;POST&#x27;,
+  // Tell the server that the request body is JSON.
+  headers: { &#x27;Content-Type&#x27;: &#x27;application/json&#x27; },
+  // Serialize the event object into the request body.
+  body: JSON.stringify({ name: &#x27;start&#x27; })
+});</code></pre></div></div>
+<p>The JavaScript response object follows the familiar browser shape: <code>ok</code>, <code>status</code>, <code>statusText</code>, <code>url</code>, <code>redirected</code>, <code>type</code>, <code>bodyUsed</code>, <code>headers</code>, and body readers for <code>text</code>, <code>json</code>, and <code>arrayBuffer</code>.</p>
+<p>Lua uses a callback form because Lua does not have JavaScript promises in the runtime.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Fetch data from an allowed domain.
+fetch(&#x27;https://api.example.com/scores&#x27;, function(response, error)
+  -- Handle transport or policy errors first.
+  if error then
+    -- Log the error and stop this callback.
+    console.log(&#x27;Network error: &#x27; .. error)
+    return
+  end
+  -- Parse the JSON response body into a Lua table.
+  local data = json_parse(response.body)
+  -- Log the HTTP status for debugging.
+  console.log(&#x27;Status: &#x27; .. response.status)
+end)</code></pre></div></div>
+<h2 id="headers" class="has-anchor">Headers <a class="heading-anchor" href="#headers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript responses expose a small <code>Headers</code> object.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a response header case-insensitively.
+const type = response.headers.get(&#x27;Content-Type&#x27;);
+// Check for a cache validator before logging it.
+if (response.headers.has(&#x27;ETag&#x27;)) {
+  // Print the ETag value.
+  console.log(&#x27;Cached resource: &#x27; + response.headers.get(&#x27;ETag&#x27;));
+}
+
+// Iterate through all returned headers.
+response.headers.forEach((value, name) =&gt; {
+  // Log each header as name and value.
+  console.log(name + &#x27;: &#x27; + value);
+});</code></pre></div></div>
+<p>Header names are matched case-insensitively. Body readers can only be called once, mirroring browser Fetch behavior.</p>
+<h2 id="udp-sockets" class="has-anchor">UDP sockets <a class="heading-anchor" href="#udp-sockets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.net.udp</code> exposes non-blocking datagram sockets on desktop and Android. The current web target does not expose raw UDP because browsers do not provide it.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Bind to port 0 so the operating system chooses an available port.
+const socket = sys.net.udp.bind(0);
+// Read the selected local port.
+const port = sys.net.udp.getPort(socket);
+// Log the port so another process can connect.
+console.log(&#x27;Listening on &#x27; + port);
+
+// Register the callback that receives incoming datagrams.
+sys.net.udp.onMessage(socket, (message) =&gt; {
+  // Log the sender address.
+  console.log(&#x27;From &#x27; + message.host + &#x27;:&#x27; + message.port);
+  // Log the number of received bytes.
+  console.log(&#x27;Bytes: &#x27; + message.data.length);
+});
+
+// Send two bytes to a local UDP endpoint.
+sys.net.udp.send(socket, &#x27;127.0.0.1&#x27;, 5000, [0x48, 0x69]);</code></pre></div></div>
+<p>Callbacks are polled once per frame. Each socket stores one message callback; setting another replaces the previous one.</p>
+<p>Close sockets when you are finished.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Release the UDP socket when communication is finished.
+sys.net.udp.close(socket);</code></pre></div></div>
+<p>RTP-MIDI sessions are built on the UDP wrapper and are exposed through <code>sys.midi</code>, not <code>sys.net.udp</code>.</p>
+<h2 id="error-style" class="has-anchor">Error style <a class="heading-anchor" href="#error-style" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo bindings follow a consistent rule. Programmer errors throw or raise: wrong argument counts, invalid types, unsafe paths, invalid SQL, and contract violations. Transient runtime failures return a falsy value where that is more useful: missing devices, absent files, unavailable features, exhausted slots, and refused network operations. Namespaces that can fail expose <code>getError()</code> for the last human-readable message.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="const text = sys.files.readText(&#x27;files/missing.txt&#x27;);
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+sys.canvas.setFillColor(&#x27;#111318&#x27;);
+if (text === null) {
+  sys.canvas.drawText(sys.files.getError() || &#x27;missing.txt is not readable&#x27;, 32, 72, 18);
+}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Try to read a file that may not exist.
+const text = sys.files.readText(&#x27;files/missing.txt&#x27;);
+// The files API returns null for missing readable content.
+if (text === null) {
+  // Read the namespace&#x27;s last error message for a user-facing detail.
+  console.log(sys.files.getError());
+}</code></pre></div></div>
+<p>Use exceptions for mistakes you should fix during development. Use return values and capability checks for conditions a user or platform can reasonably create.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="input-time-state.html" class="prev"><small>← Previous</small><span>Input, Time, and State</span></a>
+                <a href="media-devices-ai.html" class="next"><small>Next →</small><span>Audio, MIDI, Sensors, and AI</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

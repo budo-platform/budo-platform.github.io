@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Getting Started — Budo Documentation</title>
+    <meta name="description" content="Build your first Budo app step by step with drawing, animation, input, and project metadata.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html" class="current">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="getting-started" class="has-anchor">Getting Started <a class="heading-anchor" href="#getting-started" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>This guide builds the smallest useful Budo app first, then adds one idea at a time. You will start with one JavaScript file, draw something, animate it, react to the pointer, and add optional project metadata.</p>
+<h2 id="create-an-app-folder" class="has-anchor">Create an app folder <a class="heading-anchor" href="#create-an-app-folder" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>From the repository root, create a folder with a <code>main.js</code> file.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">mkdir hello-budo
+touch hello-budo/main.js</code></pre></div></div>
+<p>Put this in <code>hello-budo/main.js</code>:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.clear(&#x27;#ffffff&#x27;);
+sys.canvas.setFillColor(&#x27;#111111&#x27;);
+sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 40, 80, 32);</code></pre></div></div>
+<p>Run it:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo run hello-budo</code></pre></div></div>
+<p>That is a complete Budo app. Budo opens a window, loads <code>main.js</code>, and gives your code the global <code>sys</code> object.</p>
+<h2 id="draw-every-frame" class="has-anchor">Draw every frame <a class="heading-anchor" href="#draw-every-frame" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The first file draws once. Most apps draw in a frame callback so they can update over time.</p>
+<p>Replace <code>main.js</code> with this:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(width * 0.5, height * 0.5, 40);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p><code>sys.animation.requestFrame(frame)</code> asks Budo to call <code>frame</code> on the next display tick. The callback receives a timestamp in milliseconds.</p>
+<h2 id="animate-something" class="has-anchor">Animate something <a class="heading-anchor" href="#animate-something" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Use the timestamp to move without keeping much state.</p>
+<p>Change the circle code inside <code>frame</code> to this:</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+
+  const seconds = timestamp / 1000;
+  const x = width * 0.5 + Math.cos(seconds) * 90;
+  const y = height * 0.5 + Math.sin(seconds) * 90;
+
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(x, y, 32);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">const seconds = timestamp / 1000;
+const x = width * 0.5 + Math.cos(seconds) * 90;
+const y = height * 0.5 + Math.sin(seconds) * 90;
+
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+sys.canvas.drawCircle(x, y, 32);</code></pre></div></div>
+<p>Now the circle orbits around the center of the window. The whole file should still be easy to scan: read the window size, clear, draw text, compute a position, draw a circle, request the next frame.</p>
+<h2 id="add-pointer-input" class="has-anchor">Add pointer input <a class="heading-anchor" href="#add-pointer-input" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Read input once near the start of the frame.</p>
+<p>After <code>width</code> and <code>height</code>, add this:</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+  const input = sys.input.get();
+
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+
+  const seconds = timestamp / 1000;
+  const x = width * 0.5 + Math.cos(seconds) * 90;
+  const y = height * 0.5 + Math.sin(seconds) * 90;
+
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(x, y, 32);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">const input = sys.input.get();</code></pre></div></div>
+<p>Then replace the <code>x</code> and <code>y</code> lines with this:</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+  const input = sys.input.get();
+
+  const seconds = timestamp / 1000;
+  let x = width * 0.5 + Math.cos(seconds) * 90;
+  let y = height * 0.5 + Math.sin(seconds) * 90;
+
+  if (input.pointer.down) {
+    x = input.pointer.x;
+    y = input.pointer.y;
+  }
+
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(x, y, 32);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">let x = width * 0.5 + Math.cos(seconds) * 90;
+let y = height * 0.5 + Math.sin(seconds) * 90;
+
+if (input.pointer.down) {
+  x = input.pointer.x;
+  y = input.pointer.y;
+}</code></pre></div></div>
+<p>When the mouse button or primary touch is down, the circle follows the pointer. Otherwise it keeps orbiting.</p>
+<p>Here is the full version so far:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+  const input = sys.input.get();
+
+  const seconds = timestamp / 1000;
+  let x = width * 0.5 + Math.cos(seconds) * 90;
+  let y = height * 0.5 + Math.sin(seconds) * 90;
+
+  if (input.pointer.down) {
+    x = input.pointer.x;
+    y = input.pointer.y;
+  }
+
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(x, y, 32);
+
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<h2 id="add-app-metadata" class="has-anchor">Add app metadata <a class="heading-anchor" href="#add-app-metadata" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>An <code>app.json</code> file is optional, but it gives the app a name and stores platform settings in one place.</p>
+<p>Create <code>hello-budo/app.json</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;name&quot;: &quot;Hello Budo&quot;,
+  &quot;author&quot;: &quot;Your Name&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;
+}</code></pre></div></div>
+<p>Budo uses this metadata for app identity. Android packaging also reads fields such as package name, orientation, icon, permissions, signing, and store listing data.</p>
+<h2 id="use-the-starter-command" class="has-anchor">Use the starter command <a class="heading-anchor" href="#use-the-starter-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For a real project, you may prefer Budo to write the starter files for you.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo init my-app</code></pre></div></div>
+<p>This creates a project with <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, <code>budo.d.ts</code>, and a local API reference snapshot. The generated <code>budo.d.ts</code> file gives editors autocomplete for the <code>sys</code> APIs.</p>
+<h2 id="split-code-when-it-grows" class="has-anchor">Split code when it grows <a class="heading-anchor" href="#split-code-when-it-grows" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript entrypoints may use ES modules. Keep the first app in one file, then split helpers when the file starts to feel crowded.</p>
+<p>Create <code>color.js</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">color.js</span></div><div class="code-body"><pre><code class="language-javascript">export function pulseColor(seconds) {
+  const value = Math.floor(160 + Math.sin(seconds * 2) * 80);
+  return (0xff &lt;&lt; 24) | (value &lt;&lt; 16) | (120 &lt;&lt; 8) | 255;
+}</code></pre></div></div>
+<p>Import it from <code>main.js</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">import { pulseColor } from &#x27;./color.js&#x27;;
+
+// Later, inside frame:
+sys.canvas.setFillColor(pulseColor(seconds));</code></pre></div></div>
+<p>Relative imports resolve from the importing file. Bare file names resolve from the project root. Paths must stay inside the project directory.</p>
+<h2 id="try-typescript-later" class="has-anchor">Try TypeScript later <a class="heading-anchor" href="#try-typescript-later" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo can load <code>main.ts</code> too. It strips lightweight TypeScript syntax before running the file through QuickJS.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.ts</span></div><div class="code-body"><pre><code class="language-typescript">let radius: number = 32;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}</code></pre></div></div>
+<p>This is useful for editor help, but it is not a full TypeScript build step. Budo does not type-check, bundle modules, or apply TypeScript-only runtime transforms.</p>
+<h2 id="what-to-read-next" class="has-anchor">What to read next <a class="heading-anchor" href="#what-to-read-next" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>You have used the core loop: draw with <code>sys.canvas</code>, read dimensions from <code>sys.window</code>, read pointer input from <code>sys.input</code>, and schedule frames with <code>sys.animation</code>.</p>
+<p><a href="drawing-and-layout.html">Drawing and layout</a> covers shapes, text, fonts, SVGs, paths, and transforms. <a href="project-model.html">Project model</a> explains entrypoints, assets, metadata, and capabilities. <a href="packaging-and-deployment.html">Packaging and deployment</a> shows how this same folder becomes a web export or Android package.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="index.html" class="prev"><small>← Previous</small><span>Documentation</span></a>
+                <a href="project-model.html" class="next"><small>Next →</small><span>Project Model</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

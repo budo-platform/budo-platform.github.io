@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Budo Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #888;
+            font-family: system-ui, sans-serif;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        #loading .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            border-top-color: #888;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #error-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ff6b6b;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+            overflow: auto;
+            white-space: pre-wrap;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading runtime…</div>
+    </div>
+    <div id="error-overlay"></div>
+
+    <script>
+        // Communication with parent playground page
+        var pendingCode = null;
+        var pendingEntryName = 'main.js';
+        var runtimeLoaded = false;
+        var runtimeVersion = new URLSearchParams(window.location.search).get('v') || '';
+        var runtimeErrorLines = [];
+
+        function runtimeAsset(path) {
+            if (!runtimeVersion) return path;
+            return path + '?v=' + encodeURIComponent(runtimeVersion);
+        }
+
+        function normalizeEntryName(value) {
+            if (value === 'main.ts' || value === 'main.lua' || value === 'main.js') {
+                return value;
+            }
+            return 'main.js';
+        }
+
+        function sendToParent(type, data) {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ source: 'budo-runner', type: type, data: data }, '*');
+            }
+        }
+
+        function showError(msg) {
+            var el = document.getElementById('error-overlay');
+            el.textContent = msg;
+            el.style.display = 'block';
+            sendToParent('error', msg);
+        }
+
+        // Set up Module before budo.js loads
+        var Module = {
+            preRun: [function () {
+                if (pendingCode) {
+                    try {
+                        var appJson = new TextEncoder().encode(JSON.stringify({ network: "*" }));
+                        Module.FS_createDataFile('/', 'app.json', appJson, true, true, true);
+                        var data = new TextEncoder().encode(pendingCode);
+                        Module.FS_createDataFile('/', pendingEntryName, data, true, true, true);
+                        sendToParent('log', '[playground] Code injected into runtime VFS');
+                    } catch (e) {
+                        showError('Failed to inject code: ' + e.message);
+                    }
+                }
+            }],
+            canvas: document.getElementById('canvas'),
+            locateFile: function (path) {
+                return path.endsWith('.wasm') ? runtimeAsset('budo.wasm') : path;
+            },
+            onRuntimeInitialized: function () {
+                runtimeLoaded = true;
+                var el = document.getElementById('loading');
+                if (el) el.style.display = 'none';
+                sendToParent('ready', null);
+            },
+            print: function (text) {
+                console.log(text);
+                sendToParent('stdout', text);
+            },
+            printErr: function (text) {
+                console.warn(text);
+                sendToParent('stderr', text);
+                if (text && (text.indexOf('Exception:') === 0 || text.indexOf('Stack:') === 0)) {
+                    runtimeErrorLines.push(text);
+                    showError(runtimeErrorLines.join('\n'));
+                }
+            },
+            onAbort: function (what) {
+                showError('Runtime error: ' + what);
+            }
+        };
+
+        // Listen for code from parent
+        window.addEventListener('message', function (event) {
+            if (!event.data || event.data.source !== 'budo-playground') return;
+
+            if (event.data.type === 'run') {
+                pendingCode = event.data.code;
+                pendingEntryName = normalizeEntryName(event.data.entryName);
+
+                // Load budo.js dynamically (only once per iframe lifetime)
+                if (!document.getElementById('budo-script')) {
+                    var script = document.createElement('script');
+                    script.id = 'budo-script';
+                    script.src = runtimeAsset('budo.js');
+                    script.onerror = function () {
+                        showError('Failed to load budo.js.\n\nMake sure budo.js and budo.wasm are in the website/ directory.\n\nBuild them with:\n  make web-build-runtime');
+                    };
+                    document.body.appendChild(script);
+                }
+            }
+        });
+
+        // Tell parent we're ready to receive code
+        sendToParent('iframe-ready', null);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Native C Projects — Budo Documentation</title>
+    <meta name="description" content="Initialize, compile, debug, cache, and package trusted native C applications.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html" class="current">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="native-c-projects" class="has-anchor">Native C projects <a class="heading-anchor" href="#native-c-projects" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Native C applications are ahead-of-time projects. Budo owns the process entry point, so application sources implement <code>budo_get_application()</code> and must not define <code>main()</code>.</p>
+<p>Native code is trusted and unsandboxed. Compiling or packaging an untrusted project is equivalent to compiling arbitrary native code.</p>
+<h2 id="create-a-project" class="has-anchor">Create a project <a class="heading-anchor" href="#create-a-project" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Generate the core canvas starter:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo init my-native-app --language c</code></pre></div></div>
+<p>The optional advanced template demonstrates shaders, textures, buffers, and a mesh:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo init my-native-gpu-app --language c --template gpu</code></pre></div></div>
+<p>Both templates write <code>main.c</code>, <code>budo-native.json</code>, <code>.gitignore</code>, a README, and VS Code settings for the generated compilation database. Native initialization refuses to add C files over an existing managed <code>main.js</code>, <code>main.ts</code>, <code>main.lua</code>, <code>main.wat</code>, or <code>main.wasm</code> entrypoint.</p>
+<h2 id="project-detection" class="has-anchor">Project detection <a class="heading-anchor" href="#project-detection" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A native project input is resolved in this order:</p>
+<ol><li>A directory containing <code>budo-native.json</code>.</li><li>A directory containing <code>main.c</code>, mapped to a one-source default project.</li><li>A single <code>.c</code> file, mapped to a one-source project rooted at its parent directory.</li></ol>
+<p>Managed <code>budo run</code> entrypoints are unchanged. Native projects are inputs to <code>budo compile</code>, not to <code>budo run</code>, and watch mode does not apply.</p>
+<h2 id="manifest" class="has-anchor">Manifest <a class="heading-anchor" href="#manifest" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>budo-native.json</code> is a strict JSON object. Unknown and duplicate fields are rejected. The supported schema is:</p>
+<p>| Field | Required | Meaning | |---|---|---| | <code>schema_version</code> | Yes | Must be <code>1</code>. | | <code>sources</code> | Yes | Non-empty array of project-relative <code>.c</code> files. | | <code>name</code> | No | Application/output name; defaults to the project directory name. | | <code>include_directories</code> | No | Project-relative directory paths. | | <code>assets</code> | No | Project-relative files or directories copied beside the executable while preserving their paths. File-backed native shader and image APIs resolve only through these staged project assets. | | <code>definitions</code> | No | Compile definitions such as <code>FEATURE=1</code>; shell/CMake syntax is not accepted. | | <code>modules</code> | No | Selected Budo modules. <code>core</code> currently includes lifecycle, input, canvas, and native GPU shader/texture/buffer/mesh services. | | <code>c_standard</code> | No | <code>11</code> (default), <code>17</code>, or <code>23</code>. Extensions are disabled. | | <code>sdk_version</code> | No | Requested Budo SDK version; defaults to the running Budo version. |</p>
+<p>Every declared path must be relative, exist, stay within the canonical project root, and contain no <code>.</code> or <code>..</code> segment. Symlinks that resolve outside the project are rejected. Arbitrary CMake, Make, shell, compiler, linker, and build-hook fields are intentionally unsupported.</p>
+<p>Declare every shader or image passed to a file-backed native graphics API in <code>assets</code>. Desktop compilation copies it beside the executable and Android packaging places it in the existing application asset pipeline while preserving the same relative path.</p>
+<h2 id="compile-command" class="has-anchor">Compile command <a class="heading-anchor" href="#compile-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Build a native project from a local checkout with:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">budo compile &lt;FILE|DIRECTORY&gt;
+budo compile &lt;FILE|DIRECTORY&gt; --build-dir &lt;DIRECTORY&gt;
+budo compile &lt;FILE|DIRECTORY&gt; --sdk &lt;UNPACKED-SDK&gt;
+budo compile &lt;FILE|DIRECTORY&gt; --offline
+budo compile &lt;FILE|DIRECTORY&gt; --run
+budo compile &lt;FILE|DIRECTORY&gt; --debug
+budo compile &lt;FILE|DIRECTORY&gt; --release
+budo compile &lt;FILE|DIRECTORY&gt; --debug --sanitize address,undefined</code></pre></div></div>
+<p>The default generated/build directory is <code>&lt;project&gt;/.budo/native</code>. <code>--run</code> starts the new executable only after compilation succeeds. <code>--watch</code> is explicitly rejected because native changes require recompilation and process restart.</p>
+<p>Without <code>--sdk</code>, the command first uses a complete matching checkout SDK when one is present. Installed CLIs otherwise resolve the current version and target tuple from release metadata whose SHA-256 was pinned independently when the CLI was configured. A release must configure both <code>BUDO_NATIVE_SDK_RELEASE_METADATA_URL</code> and <code>BUDO_NATIVE_SDK_RELEASE_METADATA_SHA256</code>; fetching metadata beside an archive without that independent pin is deliberately not authoritative.</p>
+<p><code>--sdk</code> selects a trusted local relocatable SDK and <code>BUDO_NATIVE_SDK_DIR</code> is the lower-priority trusted local equivalent. Trusting the selection does not skip integrity checking: every listed inner-manifest member, size, and SHA-256 must match, no unlisted file may exist, and links/special files are rejected. Relocatable and downloaded SDK builds resolve <code>CC</code>, <code>CXX</code>, and CMake on the host instead of inheriting compiler paths from the SDK producer. The SDK CMake package then enforces its compiler/target constraints.</p>
+<p>Automatic downloads verify the pinned release record, archive size and digest, safe archive member set, exact inner manifest, target tuple, version, inner manifest digest, and SDK input identity. Extraction accepts only bounded USTAR regular files/directories under one root; absolute/traversing paths, duplicate members, links, special members, oversized files, and member/total-size bombs fail closed. Installation is locked and atomic. Test and private distribution systems may override the metadata URL and its mandatory independent SHA-256 via <code>BUDO_NATIVE_SDK_RELEASE_METADATA_URL</code> and <code>BUDO_NATIVE_SDK_RELEASE_METADATA_SHA256</code>; <code>file://</code> is supported for deterministic local tests.</p>
+<p><code>--offline</code> (or <code>BUDO_NATIVE_SDK_OFFLINE=1</code>) forbids network access and requires the pinned metadata and verified archive to be cached. Corrupt installed SDKs are recovered from a valid cached archive. SDKs live under a separate <code>native-sdks</code> cache, not the native executable-result cache:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">budo cache sdk inspect [--json]
+budo cache sdk clean --all
+budo cache native inspect [--json]
+budo cache native clean --all</code></pre></div></div>
+<p>Each clean command affects only its named namespace. CMake diagnostics are printed directly, and successful builds report executable, compilation database, and provenance paths. Provenance includes the verified inner-manifest, release metadata, archive, and SDK input digests.</p>
+<p>Native source is trusted and unsandboxed. The command prints this warning before invoking the compiler.</p>
+<p>The default build is <code>RelWithDebInfo</code>: optimized application code with symbols. <code>--debug</code> selects an unoptimized debug build and <code>--release</code> selects an optimized release build. On Clang and GCC, <code>--sanitize address</code>, <code>--sanitize undefined</code>, or both as <code>address,undefined</code> instruments application sources and links the matching runtime. Prebuilt Budo, Skia, and SDL libraries are not instrumented. Sanitizers are rejected with <code>--release</code> and with unsupported compiler families rather than being silently ignored.</p>
+<p>For Android, package the same source with Budo Pro:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo android-apk my-native-app
+budo android-aab my-native-app --release</code></pre></div></div>
+<p>See <a href="native-c-debugging.html">Native C debugging</a> for debugger and sanitizer workflows. Cache diagnostics are available through <code>budo cache native inspect</code> and <code>budo cache sdk inspect</code>; build identity and invalidation details are also recorded in <code>budo-native-build.json</code>.</p>
+<h2 id="generated-build" class="has-anchor">Generated build <a class="heading-anchor" href="#generated-build" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The normalized model generates a private CMake project. It enables <code>compile_commands.json</code>, compiles only declared sources with declared includes and definitions, stages declared assets, and links the exported <code>budo::native_launcher</code> target. The generated project also writes <code>budo-native-project.json</code> for inspection and diagnostics.</p>
+<p>The local checkout export uses the matching <code>BudoNativeTargets.cmake</code>, SDL2 package discovery, and local Skia library. An unpacked SDK instead supplies a relocatable <code>BudoNative</code> CMake package containing the public headers, Budo host archives, Skia closure, SDL2 runtime, licenses, target/compiler constraints, and application configuration helper. Generated builds consume either form through the same project model.</p>
+<p>The generated directory contains:</p>
+<ul><li><code>CMakeLists.txt</code> and <code>budo-native-project.json</code> — inspectable generated input and normalized model.</li><li><code>build/compile_commands.json</code> — editor compilation database.</li><li><code>build/bin/&lt;application&gt;</code> — executable and staged assets.</li><li><code>budo-native-build.json</code> — SDK/build identity, platform, architecture, compiler, CMake generator, dependency inputs, and output path.</li></ul>
+<p>Reusing the directory gives CMake normal dependency-based incremental compilation. Completed executables also use the content-addressed native build cache. SDK identity is based on its manifest/tree contents rather than its unpack location, so relocating an unchanged SDK does not invalidate the cache.</p>
+<h2 id="producing-a-desktop-sdk" class="has-anchor">Producing a desktop SDK <a class="heading-anchor" href="#producing-a-desktop-sdk" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>make native-sdk</code> builds the host closure as <code>RelWithDebInfo</code>, installs the <code>NativeSDK</code> component under <code>build/native-sdk/stage</code>, validates and writes its complete SHA-256 file manifest, and creates a deterministic <code>.tar.gz</code> (<code>.zip</code> on Windows) plus an outer release record. Set <code>SOURCE_DATE_EPOCH</code> and <code>BUDO_NATIVE_SDK_BUILD_ID</code> in release jobs. Artifact tuples are <code>macos-arm64-apple</code>, <code>macos-x86_64-apple</code>, <code>linux-x86_64-gnu</code>, and <code>windows-x86_64-msvc</code>; only tuples exercised by clean CI should be published.</p>
+<p>The macOS package targets AppleClang and a macOS 11 deployment baseline, Linux targets x86-64 with a glibc 2.31 baseline and platform OpenGL/FreeType/Fontconfig, and Windows targets MSVC v143 with the dynamic CRT. SDL2 is staged beside the application by the package helper; macOS load commands and Linux runtime search paths are made relocatable. Native SDK archives retain optimized debug symbols.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="lua-and-wasm.html" class="prev"><small>← Previous</small><span>Lua and WebAssembly</span></a>
+                <a href="native-c-api.html" class="next"><small>Next →</small><span>Native C API</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>API Reference — Budo Documentation</title>
+    <meta name="description" content="Compact reference for Budo commands, JavaScript and Lua namespaces, and WebAssembly host imports.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html" class="current">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="api-reference" class="has-anchor">API Reference <a class="heading-anchor" href="#api-reference" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>This page is a compact map of the public developer surface. The generated <code>budo-llm.md</code> file in the repository is the exhaustive source for signatures, edge cases, and WebAssembly import lists. Use this page when you want to remember where something lives.</p>
+<h2 id="cli" class="has-anchor">CLI <a class="heading-anchor" href="#cli" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<blockquote><p><strong>Budo Pro:</strong> <code>android-apk</code> and <code>android-aab</code> are paid Android packaging commands. Public builds report that the feature is unavailable until the private Android feature pack is installed under <code>private/android</code>.</p></blockquote>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo run &lt;DIRECTORY|FILE&gt; [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
+./build/budo run --from-input js|ts|lua|wat|wasm [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
+./build/budo &lt;DIRECTORY&gt;
+./build/budo init &lt;DIRECTORY&gt;
+./build/budo web-serve &lt;DIRECTORY&gt;
+./build/budo web-export &lt;DIRECTORY&gt; [-o DIR]
+./build/budo android-apk &lt;DIRECTORY&gt; [--release|--debug] [--install] [--no-build] [--clean] [-o DIR]
+./build/budo android-aab &lt;DIRECTORY&gt; [--release|--debug] [--no-build] [--clean] [-o DIR]
+./build/budo budo.d.ts
+./build/budo budo-llm.md
+./build/budo help</code></pre></div></div>
+<h2 id="javascript-globals" class="has-anchor">JavaScript globals <a class="heading-anchor" href="#javascript-globals" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript and TypeScript apps run in QuickJS. Budo injects <code>sys</code>, <code>console</code>, <code>fetch</code>, and subsystem aliases where documented.</p>
+<p>The <code>sys</code> tree contains <code>canvas</code>, <code>transform</code>, <code>path</code>, <code>svg</code>, <code>font</code>, <code>graphics</code>, <code>gl</code>, <code>math</code>, <code>input</code>, <code>window</code>, <code>animation</code>, <code>timer</code>, <code>audio</code>, <code>midi</code>, <code>db</code>, <code>file</code>, <code>network</code>, <code>udp</code>, <code>magneto</code>, <code>device</code>, <code>neural</code>, and <code>capabilities</code>.</p>
+<p>&lt;!-- BEGIN GENERATED API AVAILABILITY --&gt;</p>
+<h2 id="runtime-availability" class="has-anchor">Runtime availability <a class="heading-anchor" href="#runtime-availability" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>This section is generated from <code>api/contracts/*.json</code>. Each cell names the guest-visible export; <code>-</code> means that operation is not exposed to that runtime. Platform lists describe where each runtime adapter is registered.</p>
+<h3 id="audio" class="has-anchor"><code>audio</code> <a class="heading-anchor" href="#audio" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>start</code></td><td>() -&gt; void</td><td><code>sys.audio.start</code></td><td><code>sys.audio.start</code></td><td><code>env.audio_start</code></td><td>-</td></tr>
+<tr><td><code>stop</code></td><td>() -&gt; void</td><td><code>sys.audio.stop</code></td><td><code>sys.audio.stop</code></td><td><code>env.audio_stop</code></td><td>-</td></tr>
+<tr><td><code>is_playing</code></td><td>() -&gt; bool</td><td><code>sys.audio.isPlaying</code></td><td><code>sys.audio.isPlaying</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_master_gain</code></td><td>(gain: f32) -&gt; void</td><td><code>sys.audio.setMasterGain</code></td><td><code>sys.audio.setMasterGain</code></td><td><code>env.audio_set_master_gain</code></td><td>-</td></tr>
+<tr><td><code>get_master_gain</code></td><td>() -&gt; f32</td><td><code>sys.audio.getMasterGain</code></td><td><code>sys.audio.getMasterGain</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>create_oscillator</code></td><td>() -&gt; i32 oscillator_id; -1 on failure</td><td><code>sys.audio.createOscillator</code></td><td><code>sys.audio.createOscillator</code></td><td><code>env.audio_create_oscillator</code></td><td>-</td></tr>
+<tr><td><code>destroy_oscillator</code></td><td>(oscillator_id: i32) -&gt; void</td><td><code>sys.audio.destroyOscillator</code></td><td><code>sys.audio.destroyOscillator</code></td><td><code>env.audio_destroy_oscillator</code></td><td>-</td></tr>
+<tr><td><code>set_oscillator_type</code></td><td>(oscillator_id: i32, type: wave_type) -&gt; void</td><td><code>sys.audio.setOscillatorType</code></td><td><code>sys.audio.setOscillatorType</code></td><td><code>env.audio_oscillator_set_type</code></td><td>-</td></tr>
+<tr><td><code>set_oscillator_frequency</code></td><td>(oscillator_id: i32, frequency_hz: f32) -&gt; void</td><td><code>sys.audio.setOscillatorFrequency</code></td><td><code>sys.audio.setOscillatorFrequency</code></td><td><code>env.audio_oscillator_set_frequency</code></td><td>-</td></tr>
+<tr><td><code>set_oscillator_gain</code></td><td>(oscillator_id: i32, gain: f32) -&gt; void</td><td><code>sys.audio.setOscillatorGain</code></td><td><code>sys.audio.setOscillatorGain</code></td><td><code>env.audio_oscillator_set_gain</code></td><td>-</td></tr>
+<tr><td><code>set_oscillator_detune</code></td><td>(oscillator_id: i32, cents: f32) -&gt; void</td><td><code>sys.audio.setOscillatorDetune</code></td><td><code>sys.audio.setOscillatorDetune</code></td><td><code>env.audio_oscillator_set_detune</code></td><td>-</td></tr>
+<tr><td><code>start_oscillator</code></td><td>(oscillator_id: i32) -&gt; void</td><td><code>sys.audio.startOscillator</code></td><td><code>sys.audio.startOscillator</code></td><td><code>env.audio_oscillator_start</code></td><td>-</td></tr>
+<tr><td><code>stop_oscillator</code></td><td>(oscillator_id: i32) -&gt; void</td><td><code>sys.audio.stopOscillator</code></td><td><code>sys.audio.stopOscillator</code></td><td><code>env.audio_oscillator_stop</code></td><td>-</td></tr>
+<tr><td><code>set_oscillator_envelope</code></td><td>(oscillator_id: i32, attack: f32, decay: f32, sustain: f32, release: f32) -&gt; void</td><td><code>sys.audio.setOscillatorEnvelope</code></td><td><code>sys.audio.setOscillatorEnvelope</code></td><td><code>env.audio_oscillator_set_envelope</code></td><td>-</td></tr>
+<tr><td><code>note_on</code></td><td>(oscillator_id: i32) -&gt; void</td><td><code>sys.audio.noteOn</code></td><td><code>sys.audio.noteOn</code></td><td><code>env.audio_oscillator_note_on</code></td><td>-</td></tr>
+<tr><td><code>note_off</code></td><td>(oscillator_id: i32) -&gt; void</td><td><code>sys.audio.noteOff</code></td><td><code>sys.audio.noteOff</code></td><td><code>env.audio_oscillator_note_off</code></td><td>-</td></tr>
+<tr><td><code>load_buffer</code></td><td>(project_relative_path: string) -&gt; i32 buffer_id; -1 on failure</td><td><code>sys.audio.loadBuffer</code></td><td><code>sys.audio.loadBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>load_buffer_from_buffer</code></td><td>(encoded_audio: bytes) -&gt; i32 buffer_id; -1 on failure</td><td><code>sys.audio.loadBufferFromBuffer</code></td><td><code>sys.audio.loadBufferFromBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>create_buffer</code></td><td>(sample_rate: i32, channels: i32, sample_count: i32) -&gt; i32 buffer_id; -1 on failure</td><td><code>sys.audio.createBuffer</code></td><td><code>sys.audio.createBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_buffer_data</code></td><td>(buffer_id: i32, samples: f32[], offset?: i32) -&gt; void</td><td><code>sys.audio.setBufferData</code></td><td><code>sys.audio.setBufferData</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>destroy_buffer</code></td><td>(buffer_id: i32) -&gt; void</td><td><code>sys.audio.destroyBuffer</code></td><td><code>sys.audio.destroyBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>play_buffer</code></td><td>(buffer_id: i32, loop?: bool, gain?: f32) -&gt; i32 playback_id; -1 on failure</td><td><code>sys.audio.playBuffer</code></td><td><code>sys.audio.playBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>stop_buffer</code></td><td>(playback_id: i32) -&gt; void</td><td><code>sys.audio.stopBuffer</code></td><td><code>sys.audio.stopBuffer</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>midi_to_frequency</code></td><td>(midi_note: i32) -&gt; f32 frequency_hz</td><td><code>sys.audio.midiToFreq</code></td><td><code>sys.audio.midiToFreq</code></td><td><code>env.audio_midi_to_freq</code></td><td>-</td></tr>
+<tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.audio.getError</code></td><td><code>sys.audio.getError</code></td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="canvas" class="has-anchor"><code>canvas</code> <a class="heading-anchor" href="#canvas" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>path_draw</code></td><td>(path) -&gt; void using current paint</td><td><code>sys.canvas.drawPath</code></td><td><code>sys.canvas.drawPath</code></td><td><code>env.canvas_draw_path</code></td><td><code>env.canvas_draw_path</code></td></tr>
+<tr><td><code>svg_draw</code></td><td>(SVG handle, x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.drawSvg</code></td><td><code>sys.canvas.drawSvg</code></td><td><code>env.canvas_draw_svg</code></td><td>-</td></tr>
+<tr><td><code>clear</code></td><td>(color: ARGB) -&gt; void</td><td><code>sys.canvas.clear</code></td><td><code>sys.canvas.clear</code></td><td><code>env.canvas_clear</code></td><td><code>env.canvas_clear</code></td></tr>
+<tr><td><code>read_pixels</code></td><td>read RGBA8 premultiplied pixels</td><td><code>sys.canvas.readPixels</code></td><td><code>sys.canvas.readPixels</code></td><td><code>env.canvas_read_pixels</code></td><td>-</td></tr>
+<tr><td><code>draw_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.drawRect</code></td><td><code>sys.canvas.drawRect</code></td><td><code>env.canvas_draw_rect</code></td><td><code>env.canvas_draw_rect</code></td></tr>
+<tr><td><code>draw_round_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32, rx:f32, ry:f32) -&gt; void</td><td><code>sys.canvas.drawRoundRect</code></td><td><code>sys.canvas.drawRoundRect</code></td><td><code>env.canvas_draw_round_rect</code></td><td><code>env.canvas_draw_round_rect</code></td></tr>
+<tr><td><code>draw_circle</code></td><td>(cx:f32, cy:f32, radius:f32) -&gt; void</td><td><code>sys.canvas.drawCircle</code></td><td><code>sys.canvas.drawCircle</code></td><td><code>env.canvas_draw_circle</code></td><td><code>env.canvas_draw_circle</code></td></tr>
+<tr><td><code>draw_oval</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.drawOval</code></td><td><code>sys.canvas.drawOval</code></td><td><code>env.canvas_draw_oval</code></td><td>-</td></tr>
+<tr><td><code>draw_line</code></td><td>(x1:f32, y1:f32, x2:f32, y2:f32) -&gt; void</td><td><code>sys.canvas.drawLine</code></td><td><code>sys.canvas.drawLine</code></td><td><code>env.canvas_draw_line</code></td><td><code>env.canvas_draw_line</code></td></tr>
+<tr><td><code>draw_point</code></td><td>(x:f32, y:f32) -&gt; void</td><td><code>sys.canvas.drawPoint</code></td><td><code>sys.canvas.drawPoint</code></td><td><code>env.canvas_draw_point</code></td><td>-</td></tr>
+<tr><td><code>draw_text</code></td><td>draw UTF-8 text and return its width</td><td><code>sys.canvas.drawText</code></td><td><code>sys.canvas.drawText</code></td><td><code>env.canvas_draw_text</code></td><td><code>env.canvas_draw_text</code></td></tr>
+<tr><td><code>measure_text</code></td><td>measure UTF-8 text width</td><td><code>sys.canvas.measureText</code></td><td><code>sys.canvas.measureText</code></td><td><code>env.canvas_measure_text</code></td><td>-</td></tr>
+<tr><td><code>measure_text_rect</code></td><td>measure UTF-8 text bounds</td><td><code>sys.canvas.measureTextRect</code></td><td><code>sys.canvas.measureTextRect</code></td><td><code>env.canvas_measure_text_rect</code></td><td>-</td></tr>
+<tr><td><code>draw_arc</code></td><td>(x:f32, y:f32, width:f32, height:f32, start_degrees:f32, sweep_degrees:f32, use_center:bool) -&gt; void</td><td><code>sys.canvas.drawArc</code></td><td><code>sys.canvas.drawArc</code></td><td><code>env.canvas_draw_arc</code></td><td>-</td></tr>
+<tr><td><code>font_set</code></td><td>(registered name or null) -&gt; void</td><td><code>sys.canvas.setFont</code></td><td><code>sys.canvas.setFont</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_fill_color</code></td><td>(color: ARGB) -&gt; void and select fill style</td><td><code>sys.canvas.setFillColor</code></td><td><code>sys.canvas.setFillColor</code></td><td><code>env.canvas_set_fill_color</code></td><td><code>env.canvas_set_fill_color</code></td></tr>
+<tr><td><code>set_stroke_color</code></td><td>(color: ARGB) -&gt; void and select stroke style</td><td><code>sys.canvas.setStrokeColor</code></td><td><code>sys.canvas.setStrokeColor</code></td><td><code>env.canvas_set_stroke_color</code></td><td><code>env.canvas_set_stroke_color</code></td></tr>
+<tr><td><code>set_stroke_width</code></td><td>(width:f32) -&gt; void</td><td><code>sys.canvas.setStrokeWidth</code></td><td><code>sys.canvas.setStrokeWidth</code></td><td><code>env.canvas_set_stroke_width</code></td><td><code>env.canvas_set_stroke_width</code></td></tr>
+<tr><td><code>set_anti_alias</code></td><td>(enabled:bool) -&gt; void</td><td><code>sys.canvas.setAntiAlias</code></td><td><code>sys.canvas.setAntiAlias</code></td><td><code>env.canvas_set_anti_alias</code></td><td><code>env.canvas_set_anti_alias</code></td></tr>
+<tr><td><code>set_alpha</code></td><td>(alpha:i32 clamped to 0..255) -&gt; void</td><td><code>sys.canvas.setAlpha</code></td><td><code>sys.canvas.setAlpha</code></td><td><code>env.canvas_set_alpha</code></td><td><code>env.canvas_set_alpha</code></td></tr>
+<tr><td><code>set_stroke_cap</code></td><td>(butt|round|square) -&gt; void</td><td><code>sys.canvas.setStrokeCap</code></td><td><code>sys.canvas.setStrokeCap</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_stroke_join</code></td><td>(miter|round|bevel) -&gt; void</td><td><code>sys.canvas.setStrokeJoin</code></td><td><code>sys.canvas.setStrokeJoin</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_blend_mode</code></td><td>set a stable Skia blend-mode name or numeric ABI value</td><td><code>sys.canvas.setBlendMode</code></td><td><code>sys.canvas.setBlendMode</code></td><td><code>env.canvas_set_blend_mode</code></td><td>-</td></tr>
+<tr><td><code>set_image_filter</code></td><td>set or clear a managed blur/drop-shadow image filter</td><td><code>sys.canvas.setImageFilter</code></td><td><code>sys.canvas.setImageFilter</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_color_filter</code></td><td>set or clear a managed matrix/blend color filter</td><td><code>sys.canvas.setColorFilter</code></td><td><code>sys.canvas.setColorFilter</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_blur_filter</code></td><td>(sigma_x:f32, sigma_y:f32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_blur_filter</code></td><td>-</td></tr>
+<tr><td><code>set_drop_shadow_filter</code></td><td>(dx:f32, dy:f32, sigma_x:f32, sigma_y:f32, color_argb:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_drop_shadow_filter</code></td><td>-</td></tr>
+<tr><td><code>set_drop_shadow_only_filter</code></td><td>(dx:f32, dy:f32, sigma_x:f32, sigma_y:f32, color_argb:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_drop_shadow_only_filter</code></td><td>-</td></tr>
+<tr><td><code>clear_image_filter</code></td><td>() -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_clear_image_filter</code></td><td>-</td></tr>
+<tr><td><code>set_color_matrix_filter</code></td><td>(matrix_ptr:i32, matrix_len:i32) -&gt; void; requires exactly 20 f32 values</td><td>-</td><td>-</td><td><code>env.canvas_set_color_matrix_filter</code></td><td>-</td></tr>
+<tr><td><code>set_blend_color_filter</code></td><td>(color_argb:i32, blend_mode:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_blend_color_filter</code></td><td>-</td></tr>
+<tr><td><code>clear_color_filter</code></td><td>() -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_clear_color_filter</code></td><td>-</td></tr>
+<tr><td><code>save</code></td><td>() -&gt; void</td><td><code>sys.canvas.save</code></td><td><code>sys.canvas.save</code></td><td><code>env.transform_save</code></td><td><code>env.transform_save</code></td></tr>
+<tr><td><code>restore</code></td><td>() -&gt; void</td><td><code>sys.canvas.restore</code></td><td><code>sys.canvas.restore</code></td><td><code>env.transform_restore</code></td><td><code>env.transform_restore</code></td></tr>
+<tr><td><code>translate</code></td><td>(dx:f32, dy:f32) -&gt; void</td><td><code>sys.canvas.translate</code></td><td><code>sys.canvas.translate</code></td><td><code>env.transform_translate</code></td><td><code>env.transform_translate</code></td></tr>
+<tr><td><code>rotate</code></td><td>(degrees:f32) -&gt; void; managed bindings also accept an optional pivot</td><td><code>sys.canvas.rotate</code></td><td><code>sys.canvas.rotate</code></td><td><code>env.transform_rotate</code></td><td><code>env.transform_rotate</code></td></tr>
+<tr><td><code>rotate_around</code></td><td>(degrees:f32, px:f32, py:f32) -&gt; void</td><td>-</td><td>-</td><td><code>env.transform_rotate_around</code></td><td>-</td></tr>
+<tr><td><code>scale</code></td><td>(sx:f32, sy:f32) -&gt; void</td><td><code>sys.canvas.scale</code></td><td><code>sys.canvas.scale</code></td><td><code>env.transform_scale</code></td><td><code>env.transform_scale</code></td></tr>
+<tr><td><code>skew</code></td><td>(sx:f32, sy:f32) -&gt; void</td><td><code>sys.canvas.skew</code></td><td><code>sys.canvas.skew</code></td><td><code>env.canvas_skew</code></td><td>-</td></tr>
+<tr><td><code>reset_transform</code></td><td>() -&gt; void</td><td><code>sys.canvas.reset</code></td><td><code>sys.canvas.reset</code></td><td><code>env.canvas_reset_transform</code></td><td>-</td></tr>
+<tr><td><code>clip_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.clipRect</code></td><td><code>sys.canvas.clipRect</code></td><td><code>env.canvas_clip_rect</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="canvastexture" class="has-anchor"><code>canvas_texture</code> <a class="heading-anchor" href="#canvastexture" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> unsupported; <strong>Wasmtime:</strong> unsupported; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>create</code></td><td>(width:i32, height:i32) -&gt; CanvasTexture object with id, width, height, texture, target, and canvas</td><td><code>sys.graphics.createCanvasTexture</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>resize</code></td><td>(width:i32, height:i32) -&gt; void and refresh public GL metadata</td><td><code>CanvasTexture.resize</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>destroy</code></td><td>() -&gt; void and invalidate the object handle</td><td><code>CanvasTexture.destroy</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_clear</code></td><td>(color?:ARGB) -&gt; void</td><td><code>CanvasTexture.canvas.clear</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawRect</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_arc</code></td><td>(x:f32, y:f32, width:f32, height:f32, start_angle:f32, sweep_angle:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawArc</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_line</code></td><td>(x1:f32, y1:f32, x2:f32, y2:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawLine</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_oval</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawOval</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_point</code></td><td>(x:f32, y:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawPoint</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_round_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32, radiusX:f32, radiusY:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawRoundRect</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_measure_text</code></td><td>(text:string, font_size?:f32) -&gt; number width using the owner active font</td><td><code>CanvasTexture.canvas.measureText</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_measure_text_rect</code></td><td>(text:string, font_size?:f32) -&gt; { width: number, height: number } using the owner active font</td><td><code>CanvasTexture.canvas.measureTextRect</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_read_pixels</code></td><td>() -&gt; Uint8Array using the owner default paint</td><td><code>CanvasTexture.canvas.readPixels</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_circle</code></td><td>(cx:f32, cy:f32, radius:f32) -&gt; void using the owner default paint</td><td><code>CanvasTexture.canvas.drawCircle</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_text</code></td><td>(text:string, x:f32, y:f32, font_size?:f32) -&gt; number width using the owner active font and default paint</td><td><code>CanvasTexture.canvas.drawText</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_fill_color</code></td><td>(color: ARGB) -&gt; void and select fill style</td><td><code>CanvasTexture.canvas.setFillColor</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_stroke_color</code></td><td>(color: ARGB) -&gt; void and select stroke style</td><td><code>CanvasTexture.canvas.setStrokeColor</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_stroke_width</code></td><td>(width:f32) -&gt; void</td><td><code>CanvasTexture.canvas.setStrokeWidth</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_anti_alias</code></td><td>(enabled:bool) -&gt; void</td><td><code>CanvasTexture.canvas.setAntiAlias</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_alpha</code></td><td>(alpha:i32 clamped to 0..255) -&gt; void</td><td><code>CanvasTexture.canvas.setAlpha</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_stroke_cap</code></td><td>(butt|round|square) -&gt; void</td><td><code>CanvasTexture.canvas.setStrokeCap</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_stroke_join</code></td><td>(miter|round|bevel) -&gt; void</td><td><code>CanvasTexture.canvas.setStrokeJoin</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_blend_mode</code></td><td>set a stable Skia blend-mode name or numeric ABI value</td><td><code>CanvasTexture.canvas.setBlendMode</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_image_filter</code></td><td>set or clear a managed blur/drop-shadow image filter</td><td><code>CanvasTexture.canvas.setImageFilter</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_color_filter</code></td><td>set or clear a managed matrix/blend color filter</td><td><code>CanvasTexture.canvas.setColorFilter</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>font_set</code></td><td>(registered name or null) -&gt; void</td><td><code>CanvasTexture.canvas.setFont</code></td><td>-</td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="capabilities" class="has-anchor"><code>capabilities</code> <a class="heading-anchor" href="#capabilities" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>neural</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.neural</code></td><td><code>sys.capabilities.neural</code></td><td><code>env.capability_neural</code></td><td>-</td></tr>
+<tr><td><code>llamacpp</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.llamacpp</code></td><td><code>sys.capabilities.llamacpp</code></td><td><code>env.capability_llamacpp</code></td><td>-</td></tr>
+<tr><td><code>midi</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.midi</code></td><td><code>sys.capabilities.midi</code></td><td><code>env.capability_midi</code></td><td>-</td></tr>
+<tr><td><code>udp</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.udp</code></td><td><code>sys.capabilities.udp</code></td><td><code>env.capability_udp</code></td><td>-</td></tr>
+<tr><td><code>http</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.http</code></td><td><code>sys.capabilities.http</code></td><td><code>env.capability_http</code></td><td>-</td></tr>
+<tr><td><code>sensors</code></td><td>() -&gt; bool</td><td><code>sys.capabilities.sensors</code></td><td><code>sys.capabilities.sensors</code></td><td><code>env.capability_sensors</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="console" class="has-anchor"><code>console</code> <a class="heading-anchor" href="#console" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>log</code></td><td>(...values) -&gt; void</td><td><code>console.log</code></td><td><code>console.log</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>log_int</code></td><td>(value:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.log_int</code></td><td>-</td></tr>
+<tr><td><code>log_float</code></td><td>(value:f32) -&gt; void</td><td>-</td><td>-</td><td><code>env.log_float</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="device" class="has-anchor"><code>device</code> <a class="heading-anchor" href="#device" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>keep_screen_on</code></td><td>(bool enabled) -&gt; bool</td><td><code>sys.device.keepScreenOn</code></td><td><code>sys.device.keepScreenOn</code></td><td><code>env.device_keep_screen_on</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="drawingresources" class="has-anchor"><code>drawing_resources</code> <a class="heading-anchor" href="#drawingresources" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>path_create</code></td><td>() -&gt; path handle</td><td><code>sys.path.create</code></td><td><code>sys.path.create</code></td><td><code>env.path_create</code></td><td><code>env.path_create</code></td></tr>
+<tr><td><code>path_reset</code></td><td>(path) -&gt; void</td><td><code>sys.path.reset</code></td><td><code>sys.path.reset</code></td><td><code>env.path_reset</code></td><td>-</td></tr>
+<tr><td><code>path_move_to</code></td><td>(path, x:f32, y:f32) -&gt; void</td><td><code>sys.path.moveTo</code></td><td><code>sys.path.moveTo</code></td><td><code>env.path_move_to</code></td><td><code>env.path_move_to</code></td></tr>
+<tr><td><code>path_line_to</code></td><td>(path, x:f32, y:f32) -&gt; void</td><td><code>sys.path.lineTo</code></td><td><code>sys.path.lineTo</code></td><td><code>env.path_line_to</code></td><td><code>env.path_line_to</code></td></tr>
+<tr><td><code>path_quad_to</code></td><td>(path, x1:f32, y1:f32, x2:f32, y2:f32) -&gt; void</td><td><code>sys.path.quadTo</code></td><td><code>sys.path.quadTo</code></td><td><code>env.path_quad_to</code></td><td>-</td></tr>
+<tr><td><code>path_cubic_to</code></td><td>(path, x1:f32, y1:f32, x2:f32, y2:f32, x3:f32, y3:f32) -&gt; void</td><td><code>sys.path.cubicTo</code></td><td><code>sys.path.cubicTo</code></td><td><code>env.path_cubic_to</code></td><td>-</td></tr>
+<tr><td><code>path_close</code></td><td>(path) -&gt; void</td><td><code>sys.path.close</code></td><td><code>sys.path.close</code></td><td><code>env.path_close</code></td><td><code>env.path_close</code></td></tr>
+<tr><td><code>path_add_rect</code></td><td>(path, x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.path.addRect</code></td><td><code>sys.path.addRect</code></td><td><code>env.path_add_rect</code></td><td>-</td></tr>
+<tr><td><code>path_add_circle</code></td><td>(path, cx:f32, cy:f32, radius:f32) -&gt; void</td><td><code>sys.path.addCircle</code></td><td><code>sys.path.addCircle</code></td><td><code>env.path_add_circle</code></td><td>-</td></tr>
+<tr><td><code>svg_load</code></td><td>(safe project-relative path) -&gt; SVG handle or -1</td><td><code>sys.svg.load</code></td><td><code>sys.svg.load</code></td><td><code>env.svg_load</code></td><td>-</td></tr>
+<tr><td><code>svg_load_from_buffer</code></td><td>(SVG XML bytes) -&gt; SVG handle or -1</td><td><code>sys.svg.loadFromBuffer</code></td><td><code>sys.svg.loadFromBuffer</code></td><td><code>env.svg_load_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>svg_destroy</code></td><td>(SVG handle) -&gt; void</td><td><code>sys.svg.destroy</code></td><td><code>sys.svg.destroy</code></td><td><code>env.svg_destroy</code></td><td>-</td></tr>
+<tr><td><code>svg_get_width</code></td><td>(SVG handle) -&gt; f32</td><td><code>sys.svg.getWidth</code></td><td><code>sys.svg.getWidth</code></td><td><code>env.svg_get_width</code></td><td>-</td></tr>
+<tr><td><code>svg_get_height</code></td><td>(SVG handle) -&gt; f32</td><td><code>sys.svg.getHeight</code></td><td><code>sys.svg.getHeight</code></td><td><code>env.svg_get_height</code></td><td>-</td></tr>
+<tr><td><code>font_load</code></td><td>(safe project-relative path, optional name) -&gt; void</td><td><code>sys.font.load</code></td><td><code>sys.font.load</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>font_load_from_buffer</code></td><td>(font bytes, optional name) -&gt; void</td><td><code>sys.font.loadFromBuffer</code></td><td><code>sys.font.loadFromBuffer</code></td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="file" class="has-anchor"><code>file</code> <a class="heading-anchor" href="#file" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>list</code></td><td>(path?: string) -&gt; file_entry[]|null</td><td><code>sys.files.list</code><br><code>sys.assets.list</code></td><td><code>sys.files.list</code><br><code>sys.assets.list</code></td><td><code>env.files_list_json</code></td><td>-</td></tr>
+<tr><td><code>read_text</code></td><td>(path: string) -&gt; string|null</td><td><code>sys.files.readText</code><br><code>sys.assets.readText</code></td><td><code>sys.files.readText</code><br><code>sys.assets.readText</code></td><td><code>env.files_read_text</code></td><td>-</td></tr>
+<tr><td><code>read_binary</code></td><td>(path: string) -&gt; bytes|null</td><td><code>sys.files.readBinary</code><br><code>sys.assets.readBinary</code></td><td><code>sys.files.readBinary</code><br><code>sys.assets.readBinary</code></td><td><code>env.files_read_binary</code></td><td>-</td></tr>
+<tr><td><code>exists</code></td><td>(path: string) -&gt; bool</td><td><code>sys.files.exists</code><br><code>sys.assets.exists</code></td><td><code>sys.files.exists</code><br><code>sys.assets.exists</code></td><td><code>env.files_exists</code></td><td>-</td></tr>
+<tr><td><code>is_directory</code></td><td>(path: string) -&gt; bool</td><td><code>sys.files.isDirectory</code><br><code>sys.assets.isDirectory</code></td><td><code>sys.files.isDirectory</code><br><code>sys.assets.isDirectory</code></td><td><code>env.files_is_directory</code></td><td>-</td></tr>
+<tr><td><code>size</code></td><td>(path: string) -&gt; integer|null</td><td><code>sys.files.size</code><br><code>sys.assets.size</code></td><td><code>sys.files.size</code><br><code>sys.assets.size</code></td><td><code>env.files_size</code></td><td>-</td></tr>
+<tr><td><code>write_text</code></td><td>(path: files/ virtual path, text: string) -&gt; absolute_path|null</td><td><code>sys.files.writeText</code></td><td><code>sys.files.writeText</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>write_binary</code></td><td>(path: files/ virtual path, data: bytes) -&gt; absolute_path|null</td><td><code>sys.files.writeBinary</code></td><td><code>sys.files.writeBinary</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>append_binary</code></td><td>(path: files/ virtual path, data: bytes) -&gt; absolute_path|null</td><td><code>sys.files.appendBinary</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>pick_text</code></td><td>(callback, extension?: string) -&gt; bool</td><td><code>sys.files.pickText</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>save_text</code></td><td>(name: string, text: string, callback) -&gt; bool</td><td><code>sys.files.saveText</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="gl" class="has-anchor"><code>gl</code> <a class="heading-anchor" href="#gl" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>create_program</code></td><td>compile/link vertex and fragment shader files -&gt; positive program id or -1</td><td><code>sys.gl.createProgram</code></td><td><code>sys.gl.createProgram</code></td><td><code>env.gl_create_program</code></td><td><code>env.gl_create_program</code></td></tr>
+<tr><td><code>create_program_from_buffer</code></td><td>compile/link in-memory vertex and fragment source -&gt; positive program id or -1</td><td><code>sys.gl.createProgramFromBuffer</code></td><td><code>sys.gl.createProgramFromBuffer</code></td><td><code>env.gl_create_program_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>destroy_program</code></td><td>(program_id:i32) -&gt; bool</td><td><code>sys.gl.destroyProgram</code></td><td><code>sys.gl.destroyProgram</code></td><td><code>env.gl_destroy_program</code></td><td>-</td></tr>
+<tr><td><code>use_program</code></td><td>(program_id:i32) -&gt; bool</td><td><code>sys.gl.useProgram</code></td><td><code>sys.gl.useProgram</code></td><td><code>env.gl_use_program</code></td><td>-</td></tr>
+<tr><td><code>bind_screen</code></td><td>() -&gt; bool; bind default framebuffer and viewport</td><td><code>sys.gl.bindScreen</code></td><td><code>sys.gl.bindScreen</code></td><td><code>env.gl_bind_screen</code></td><td>-</td></tr>
+<tr><td><code>bind_render_target</code></td><td>(target_id:i32) -&gt; bool; zero binds screen</td><td><code>sys.gl.bindRenderTarget</code></td><td><code>sys.gl.bindRenderTarget</code></td><td><code>env.gl_bind_render_target</code></td><td>-</td></tr>
+<tr><td><code>draw_fullscreen</code></td><td>(program_id:i32) -&gt; bool using the queued/default-canvas path</td><td><code>sys.gl.drawFullscreen</code></td><td>-</td><td>-</td><td><code>env.gl_draw_fullscreen</code></td></tr>
+<tr><td><code>draw_fullscreen_immediate</code></td><td>(program_id:i32, source_texture:u32) -&gt; bool against current target</td><td><code>sys.gl.drawFullscreenImmediate</code></td><td><code>sys.gl.drawFullscreen</code></td><td><code>env.gl_draw_fullscreen</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_1i</code></td><td>(program_id, name, i32) -&gt; bool</td><td><code>sys.gl.setUniform1i</code></td><td><code>sys.gl.setUniform1i</code></td><td><code>env.gl_set_uniform_1i</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_1f</code></td><td>(program_id, name, f32) -&gt; bool</td><td><code>sys.gl.setUniform1f</code></td><td><code>sys.gl.setUniform1f</code></td><td><code>env.gl_set_uniform_1f</code></td><td><code>env.gl_set_uniform_1f</code></td></tr>
+<tr><td><code>set_uniform_2f</code></td><td>(program_id, name, f32, f32) -&gt; bool</td><td><code>sys.gl.setUniform2f</code></td><td><code>sys.gl.setUniform2f</code></td><td><code>env.gl_set_uniform_2f</code></td><td><code>env.gl_set_uniform_2f</code></td></tr>
+<tr><td><code>set_uniform_3f</code></td><td>(program_id, name, f32, f32, f32) -&gt; bool</td><td><code>sys.gl.setUniform3f</code></td><td><code>sys.gl.setUniform3f</code></td><td><code>env.gl_set_uniform_3f</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_4f</code></td><td>(program_id, name, f32, f32, f32, f32) -&gt; bool</td><td><code>sys.gl.setUniform4f</code></td><td><code>sys.gl.setUniform4f</code></td><td><code>env.gl_set_uniform_4f</code></td><td>-</td></tr>
+<tr><td><code>get_last_error</code></td><td>() -&gt; last GL error string or empty</td><td><code>sys.gl.getLastError</code></td><td><code>sys.gl.getLastError</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_project_dir</code></td><td>() -&gt; loaded project directory</td><td><code>sys.gl.getProjectDir</code></td><td><code>sys.gl.getProjectDir</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>create_render_target</code></td><td>(width:i32, height:i32, depth:bool) -&gt; target id or -1</td><td><code>sys.gl.createRenderTarget</code></td><td><code>sys.gl.createRenderTarget</code></td><td><code>env.gl_create_render_target</code></td><td>-</td></tr>
+<tr><td><code>destroy_render_target</code></td><td>(target_id:i32) -&gt; bool</td><td><code>sys.gl.destroyRenderTarget</code></td><td><code>sys.gl.destroyRenderTarget</code></td><td><code>env.gl_destroy_render_target</code></td><td>-</td></tr>
+<tr><td><code>resize_render_target</code></td><td>(target_id:i32, width:i32, height:i32) -&gt; bool</td><td><code>sys.gl.resizeRenderTarget</code></td><td><code>sys.gl.resizeRenderTarget</code></td><td><code>env.gl_resize_render_target</code></td><td>-</td></tr>
+<tr><td><code>draw_region</code></td><td>queued region draw using program and optional target</td><td><code>sys.gl.drawRegion</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>draw_region_immediate</code></td><td>immediate region draw against current or explicit target</td><td><code>sys.gl.drawRegionImmediate</code></td><td><code>sys.gl.drawRegion</code></td><td><code>env.gl_draw_region</code></td><td>-</td></tr>
+<tr><td><code>bind_render_target_texture</code></td><td>queued bind of render-target color texture to sampler</td><td><code>sys.gl.bindTexture</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>bind_render_target_texture_immediate</code></td><td>immediate bind of render-target color texture to sampler</td><td><code>sys.gl.renderTargetTexture</code></td><td><code>sys.gl.bindTexture</code></td><td><code>env.gl_bind_texture</code></td><td>-</td></tr>
+<tr><td><code>bind_canvas_texture</code></td><td>queued bind of flushed CanvasTexture to sampler</td><td><code>sys.gl.bindCanvasTexture</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>program_texture</code></td><td>polymorphic immediate binding of numeric 2D texture or CanvasTexture</td><td><code>sys.gl.texture</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>create_buffer</code></td><td>() -&gt; buffer id or -1; managed forms optionally upload initial data</td><td><code>sys.gl.createBuffer</code></td><td><code>sys.gl.createBuffer</code></td><td><code>env.gl_create_buffer</code></td><td><code>env.gl_create_buffer</code></td></tr>
+<tr><td><code>buffer_data</code></td><td>(buffer_id, target, data, byte_len, usage) -&gt; bool</td><td>-</td><td>-</td><td><code>env.gl_buffer_data</code></td><td><code>env.gl_buffer_data</code></td></tr>
+<tr><td><code>update_buffer</code></td><td>(buffer_id, byte_offset, data, byte_len) -&gt; bool</td><td><code>sys.gl.updateBuffer</code></td><td><code>sys.gl.updateBuffer</code></td><td><code>env.gl_buffer_sub_data</code></td><td>-</td></tr>
+<tr><td><code>destroy_buffer</code></td><td>(buffer_id:i32) -&gt; bool</td><td><code>sys.gl.destroyBuffer</code></td><td><code>sys.gl.destroyBuffer</code></td><td><code>env.gl_destroy_buffer</code></td><td>-</td></tr>
+<tr><td><code>create_texture_2d</code></td><td>(width, height, format, optional RGBA bytes) -&gt; texture id or -1</td><td><code>sys.gl.createTexture2D</code></td><td><code>sys.gl.createTexture2D</code></td><td><code>env.gl_create_texture_2d</code></td><td>-</td></tr>
+<tr><td><code>load_texture_2d</code></td><td>(safe project-relative image path) -&gt; texture id or -1</td><td><code>sys.gl.loadTexture2D</code></td><td><code>sys.gl.loadTexture2D</code></td><td><code>env.gl_load_texture_2d</code></td><td>-</td></tr>
+<tr><td><code>load_texture_2d_from_buffer</code></td><td>(encoded image bytes) -&gt; texture id or -1</td><td><code>sys.gl.loadTexture2DFromBuffer</code></td><td><code>sys.gl.loadTexture2DFromBuffer</code></td><td><code>env.gl_load_texture_2d_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>load_texture_cube</code></td><td>(six safe project-relative image paths) -&gt; cubemap id or -1</td><td><code>sys.gl.loadTextureCube</code></td><td><code>sys.gl.loadTextureCube</code></td><td><code>env.gl_load_texture_cube</code></td><td>-</td></tr>
+<tr><td><code>load_texture_cube_from_buffer</code></td><td>(six encoded image buffers) -&gt; cubemap id or -1</td><td><code>sys.gl.loadTextureCubeFromBuffer</code></td><td><code>sys.gl.loadTextureCubeFromBuffer</code></td><td><code>env.gl_load_texture_cube_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>update_texture_2d</code></td><td>(texture_id, x, y, width, height, pixels) -&gt; bool</td><td><code>sys.gl.updateTexture2D</code></td><td><code>sys.gl.updateTexture2D</code></td><td><code>env.gl_update_texture_2d</code></td><td>-</td></tr>
+<tr><td><code>destroy_texture</code></td><td>(texture_id:i32) -&gt; bool</td><td><code>sys.gl.destroyTexture</code></td><td><code>sys.gl.destroyTexture</code></td><td><code>env.gl_destroy_texture</code></td><td>-</td></tr>
+<tr><td><code>create_vertex_layout</code></td><td>() -&gt; layout id or -1</td><td><code>sys.gl.createVertexLayout</code></td><td><code>sys.gl.createVertexLayout</code></td><td><code>env.gl_create_vertex_layout</code></td><td><code>env.gl_create_vertex_layout</code></td></tr>
+<tr><td><code>destroy_vertex_layout</code></td><td>(layout_id:i32) -&gt; bool</td><td><code>sys.gl.destroyVertexLayout</code></td><td><code>sys.gl.destroyVertexLayout</code></td><td><code>env.gl_destroy_vertex_layout</code></td><td>-</td></tr>
+<tr><td><code>set_attribute</code></td><td>configure one vertex attribute slot</td><td><code>sys.gl.setAttribute</code></td><td><code>sys.gl.setAttribute</code></td><td><code>env.gl_set_attribute</code></td><td><code>env.gl_set_attribute</code></td></tr>
+<tr><td><code>set_index_buffer</code></td><td>attach an index buffer and u16/u32 type to a layout</td><td><code>sys.gl.setIndexBuffer</code></td><td><code>sys.gl.setIndexBuffer</code></td><td><code>env.gl_set_index_buffer</code></td><td><code>env.gl_set_index_buffer</code></td></tr>
+<tr><td><code>set_uniform_matrix3</code></td><td>set one or more column-major mat3 values</td><td><code>sys.gl.setUniformMatrix3</code></td><td><code>sys.gl.setUniformMatrix3</code></td><td><code>env.gl_set_uniform_matrix3fv</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_matrix4</code></td><td>set one or more column-major mat4 values</td><td><code>sys.gl.setUniformMatrix4</code></td><td><code>sys.gl.setUniformMatrix4</code></td><td><code>env.gl_set_uniform_matrix4fv</code></td><td><code>env.gl_set_uniform_matrix4fv</code></td></tr>
+<tr><td><code>set_uniform_1iv</code></td><td>set i32 uniform array</td><td><code>sys.gl.setUniform1iv</code></td><td><code>sys.gl.setUniform1iv</code></td><td><code>env.gl_set_uniform_1iv</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_1fv</code></td><td>set scalar f32 uniform array</td><td><code>sys.gl.setUniform1fv</code></td><td><code>sys.gl.setUniform1fv</code></td><td><code>env.gl_set_uniform_1fv</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_2fv</code></td><td>set vec2 f32 uniform array</td><td><code>sys.gl.setUniform2fv</code></td><td><code>sys.gl.setUniform2fv</code></td><td><code>env.gl_set_uniform_2fv</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_3fv</code></td><td>set vec3 f32 uniform array</td><td><code>sys.gl.setUniform3fv</code></td><td><code>sys.gl.setUniform3fv</code></td><td><code>env.gl_set_uniform_3fv</code></td><td>-</td></tr>
+<tr><td><code>set_uniform_4fv</code></td><td>set vec4 f32 uniform array</td><td><code>sys.gl.setUniform4fv</code></td><td><code>sys.gl.setUniform4fv</code></td><td><code>env.gl_set_uniform_4fv</code></td><td>-</td></tr>
+<tr><td><code>bind_texture_2d</code></td><td>queued bind of app 2D texture to sampler</td><td><code>sys.gl.bindTexture2D</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>bind_texture_2d_immediate</code></td><td>immediate bind of app 2D texture to sampler</td><td>-</td><td><code>sys.gl.bindTexture2D</code></td><td><code>env.gl_bind_texture_2d</code></td><td>-</td></tr>
+<tr><td><code>bind_texture_cube</code></td><td>queued bind of app cubemap to sampler</td><td><code>sys.gl.bindTextureCube</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>bind_texture_cube_immediate</code></td><td>immediate bind of app cubemap to sampler</td><td>-</td><td><code>sys.gl.bindTextureCube</code></td><td><code>env.gl_bind_texture_cube</code></td><td>-</td></tr>
+<tr><td><code>draw_mesh</code></td><td>queued mesh draw with layout and draw state</td><td><code>sys.gl.drawMesh</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>draw_mesh_immediate</code></td><td>immediate mesh draw with optional target, depth/cull/blend state, and instance count</td><td><code>sys.gl.drawMeshImmediate</code></td><td><code>sys.gl.drawMesh</code></td><td><code>env.gl_draw_mesh</code></td><td><code>env.gl_draw_mesh</code></td></tr>
+<tr><td><code>get_attrib_location</code></td><td>(program_id, name) -&gt; location or -1</td><td><code>sys.gl.getAttribLocation</code></td><td><code>sys.gl.getAttribLocation</code></td><td><code>env.gl_get_attrib_location</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="inputwindow" class="has-anchor"><code>input_window</code> <a class="heading-anchor" href="#inputwindow" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>input_snapshot</code></td><td>() -&gt; per-frame input snapshot containing mouse, pointer(s), modifiers, text/edit/composition, timing, frame count, and focus</td><td><code>sys.input.get</code></td><td><code>sys.input.get</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>key_down</code></td><td>(SDL scancode:i32) -&gt; bool currently held</td><td><code>sys.input.isKeyDown</code></td><td><code>sys.input.isKeyDown</code></td><td><code>env.input_get_key_down</code></td><td>-</td></tr>
+<tr><td><code>key_pressed</code></td><td>(SDL scancode:i32) -&gt; bool pressed during current frame</td><td><code>sys.input.isKeyPressed</code></td><td><code>sys.input.isKeyPressed</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>start_text_input</code></td><td>(text, UTF-16 selection start/end, multiline) -&gt; bool</td><td><code>sys.input.startTextInput</code></td><td><code>sys.input.startTextInput</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>update_text_input</code></td><td>(text, UTF-16 selection start/end, caret x/y/width/height) -&gt; bool</td><td><code>sys.input.updateTextInput</code></td><td><code>sys.input.updateTextInput</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>stop_text_input</code></td><td>() -&gt; void; finish composition and platform editing session</td><td><code>sys.input.stopTextInput</code></td><td><code>sys.input.stopTextInput</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>window_width</code></td><td>() -&gt; physical canvas width in pixels</td><td><code>sys.window.getWidth</code></td><td><code>sys.window.getWidth</code></td><td><code>env.window_get_width</code></td><td><code>env.window_get_width</code></td></tr>
+<tr><td><code>window_height</code></td><td>() -&gt; physical canvas height in pixels</td><td><code>sys.window.getHeight</code></td><td><code>sys.window.getHeight</code></td><td><code>env.window_get_height</code></td><td><code>env.window_get_height</code></td></tr>
+<tr><td><code>display_density</code></td><td>() -&gt; f32 drawable-pixel density; defaults to 1</td><td><code>sys.window.getDisplayDensity</code></td><td><code>sys.window.getDisplayDensity</code></td><td><code>env.window_get_display_density</code></td><td>-</td></tr>
+<tr><td><code>mouse_x</code></td><td>() -&gt; i32 current mouse x</td><td>-</td><td>-</td><td><code>env.input_get_mouse_x</code></td><td><code>env.input_get_mouse_x</code></td></tr>
+<tr><td><code>mouse_y</code></td><td>() -&gt; i32 current mouse y</td><td>-</td><td>-</td><td><code>env.input_get_mouse_y</code></td><td><code>env.input_get_mouse_y</code></td></tr>
+<tr><td><code>mouse_button</code></td><td>(button:i32) -&gt; i32 boolean</td><td>-</td><td>-</td><td><code>env.input_get_mouse_button</code></td><td><code>env.input_get_mouse_button</code></td></tr>
+<tr><td><code>delta_time</code></td><td>() -&gt; f32 elapsed seconds since previous frame or 0</td><td>-</td><td>-</td><td><code>env.input_get_delta_time</code></td><td>-</td></tr>
+<tr><td><code>total_time</code></td><td>() -&gt; f32 elapsed seconds since runtime start or 0</td><td>-</td><td>-</td><td><code>env.input_get_total_time</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="llamacpp" class="has-anchor"><code>llamacpp</code> <a class="heading-anchor" href="#llamacpp" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android; <strong>Lua:</strong> desktop, android; <strong>Wasmtime:</strong> unsupported; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>is_available</code></td><td>() -&gt; bool</td><td><code>sys.llamacpp.isAvailable</code></td><td><code>sys.llamacpp.isAvailable</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_devices</code></td><td>() -&gt; device[]</td><td><code>sys.llamacpp.getDevices</code></td><td><code>sys.llamacpp.getDevices</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>load_model</code></td><td>(path, options, callback) -&gt; void</td><td><code>sys.llamacpp.loadModel</code></td><td><code>sys.llamacpp.loadModel</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.llamacpp.getError</code></td><td><code>sys.llamacpp.getError</code></td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="magneto" class="has-anchor"><code>magneto</code> <a class="heading-anchor" href="#magneto" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>is_available</code></td><td>() -&gt; bool</td><td><code>sys.sensors.isAvailable</code></td><td><code>sys.sensors.isAvailable</code></td><td><code>env.magneto_is_available</code></td><td>-</td></tr>
+<tr><td><code>has_accelerometer</code></td><td>() -&gt; bool</td><td><code>sys.sensors.hasAccelerometer</code></td><td><code>sys.sensors.hasAccelerometer</code></td><td><code>env.magneto_has_accelerometer</code></td><td>-</td></tr>
+<tr><td><code>has_compass</code></td><td>() -&gt; bool</td><td><code>sys.sensors.hasCompass</code></td><td><code>sys.sensors.hasCompass</code></td><td><code>env.magneto_has_compass</code></td><td>-</td></tr>
+<tr><td><code>start</code></td><td>() -&gt; bool</td><td><code>sys.sensors.start</code></td><td><code>sys.sensors.start</code></td><td><code>env.magneto_start</code></td><td>-</td></tr>
+<tr><td><code>stop</code></td><td>() -&gt; void</td><td><code>sys.sensors.stop</code></td><td><code>sys.sensors.stop</code></td><td><code>env.magneto_stop</code></td><td>-</td></tr>
+<tr><td><code>is_active</code></td><td>() -&gt; bool</td><td><code>sys.sensors.isActive</code></td><td><code>sys.sensors.isActive</code></td><td><code>env.magneto_is_active</code></td><td>-</td></tr>
+<tr><td><code>get_accel</code></td><td>() -&gt; {x: f32, y: f32, z: f32}|null</td><td><code>sys.sensors.getAccel</code></td><td><code>sys.sensors.getAccel</code></td><td><code>env.magneto_get_accel_x</code><br><code>env.magneto_get_accel_y</code><br><code>env.magneto_get_accel_z</code></td><td>-</td></tr>
+<tr><td><code>get_compass</code></td><td>() -&gt; {x: f32, y: f32, z: f32, heading: f32}|null</td><td><code>sys.sensors.getCompass</code></td><td><code>sys.sensors.getCompass</code></td><td><code>env.magneto_get_compass_x</code><br><code>env.magneto_get_compass_y</code><br><code>env.magneto_get_compass_z</code><br><code>env.magneto_get_compass_heading</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="math" class="has-anchor"><code>math</code> <a class="heading-anchor" href="#math" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>mat4_identity</code></td><td>(out: mat4) -&gt; void</td><td><code>sys.math.mat4Identity</code></td><td><code>sys.math.mat4Identity</code></td><td><code>env.math_mat4_identity</code></td><td><code>env.math_mat4_identity</code></td></tr>
+<tr><td><code>mat4_multiply</code></td><td>(out: mat4, a: mat4, b: mat4) -&gt; void</td><td><code>sys.math.mat4Multiply</code></td><td><code>sys.math.mat4Multiply</code></td><td><code>env.math_mat4_multiply</code></td><td><code>env.math_mat4_multiply</code></td></tr>
+<tr><td><code>mat4_perspective</code></td><td>(out: mat4, fovy: f32, aspect: f32, near: f32, far: f32) -&gt; void</td><td><code>sys.math.mat4Perspective</code></td><td><code>sys.math.mat4Perspective</code></td><td><code>env.math_mat4_perspective</code></td><td><code>env.math_mat4_perspective</code></td></tr>
+<tr><td><code>mat4_ortho</code></td><td>(out: mat4, left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -&gt; void</td><td><code>sys.math.mat4Ortho</code></td><td><code>sys.math.mat4Ortho</code></td><td><code>env.math_mat4_ortho</code></td><td>-</td></tr>
+<tr><td><code>mat4_lookat</code></td><td>(out: mat4, eye: vec3, target: vec3, up: vec3) -&gt; void</td><td><code>sys.math.mat4LookAt</code></td><td><code>sys.math.mat4LookAt</code></td><td><code>env.math_mat4_lookat</code></td><td><code>env.math_mat4_lookat</code></td></tr>
+<tr><td><code>mat4_translate</code></td><td>(out: mat4, a: mat4, translation: vec3) -&gt; void</td><td><code>sys.math.mat4Translate</code></td><td><code>sys.math.mat4Translate</code></td><td><code>env.math_mat4_translate</code></td><td>-</td></tr>
+<tr><td><code>mat4_rotate_x</code></td><td>(out: mat4, a: mat4, angle: f32) -&gt; void</td><td><code>sys.math.mat4RotateX</code></td><td><code>sys.math.mat4RotateX</code></td><td><code>env.math_mat4_rotate_x</code></td><td><code>env.math_mat4_rotate_x</code></td></tr>
+<tr><td><code>mat4_rotate_y</code></td><td>(out: mat4, a: mat4, angle: f32) -&gt; void</td><td><code>sys.math.mat4RotateY</code></td><td><code>sys.math.mat4RotateY</code></td><td><code>env.math_mat4_rotate_y</code></td><td><code>env.math_mat4_rotate_y</code></td></tr>
+<tr><td><code>mat4_rotate_z</code></td><td>(out: mat4, a: mat4, angle: f32) -&gt; void</td><td><code>sys.math.mat4RotateZ</code></td><td><code>sys.math.mat4RotateZ</code></td><td><code>env.math_mat4_rotate_z</code></td><td>-</td></tr>
+<tr><td><code>mat4_scale</code></td><td>(out: mat4, a: mat4, scale: vec3) -&gt; void</td><td><code>sys.math.mat4Scale</code></td><td><code>sys.math.mat4Scale</code></td><td><code>env.math_mat4_scale</code></td><td>-</td></tr>
+<tr><td><code>mat4_invert</code></td><td>(out: mat4, a: mat4) -&gt; bool</td><td><code>sys.math.mat4Invert</code></td><td><code>sys.math.mat4Invert</code></td><td><code>env.math_mat4_invert</code></td><td>-</td></tr>
+<tr><td><code>mat4_transpose</code></td><td>(out: mat4, a: mat4) -&gt; void</td><td><code>sys.math.mat4Transpose</code></td><td><code>sys.math.mat4Transpose</code></td><td><code>env.math_mat4_transpose</code></td><td>-</td></tr>
+<tr><td><code>vec3_add</code></td><td>(out: vec3, a: vec3, b: vec3) -&gt; void</td><td><code>sys.math.vec3Add</code></td><td><code>sys.math.vec3Add</code></td><td><code>env.math_vec3_add</code></td><td>-</td></tr>
+<tr><td><code>vec3_sub</code></td><td>(out: vec3, a: vec3, b: vec3) -&gt; void</td><td><code>sys.math.vec3Sub</code></td><td><code>sys.math.vec3Sub</code></td><td><code>env.math_vec3_sub</code></td><td>-</td></tr>
+<tr><td><code>vec3_scale</code></td><td>(out: vec3, a: vec3, scale: f32) -&gt; void</td><td><code>sys.math.vec3Scale</code></td><td><code>sys.math.vec3Scale</code></td><td><code>env.math_vec3_scale</code></td><td>-</td></tr>
+<tr><td><code>vec3_normalize</code></td><td>(out: vec3, a: vec3) -&gt; void</td><td><code>sys.math.vec3Normalize</code></td><td><code>sys.math.vec3Normalize</code></td><td><code>env.math_vec3_normalize</code></td><td>-</td></tr>
+<tr><td><code>vec3_cross</code></td><td>(out: vec3, a: vec3, b: vec3) -&gt; void</td><td><code>sys.math.vec3Cross</code></td><td><code>sys.math.vec3Cross</code></td><td><code>env.math_vec3_cross</code></td><td>-</td></tr>
+<tr><td><code>vec3_dot</code></td><td>(a: vec3, b: vec3) -&gt; f32</td><td><code>sys.math.vec3Dot</code></td><td><code>sys.math.vec3Dot</code></td><td><code>env.math_vec3_dot</code></td><td>-</td></tr>
+<tr><td><code>vec3_length</code></td><td>(a: vec3) -&gt; f32</td><td><code>sys.math.vec3Length</code></td><td><code>sys.math.vec3Length</code></td><td><code>env.math_vec3_length</code></td><td>-</td></tr>
+<tr><td><code>vec3_transform_mat4</code></td><td>(out: vec3, value: vec3, matrix: mat4) -&gt; void</td><td><code>sys.math.vec3TransformMat4</code></td><td><code>sys.math.vec3TransformMat4</code></td><td><code>env.math_vec3_transform_mat4</code></td><td>-</td></tr>
+<tr><td><code>vec3_normalize_many</code></td><td>(out: vec3[], values: vec3[], count: i32) -&gt; void</td><td><code>sys.math.vec3NormalizeMany</code></td><td><code>sys.math.vec3NormalizeMany</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>vec3_transform_mat4_many</code></td><td>(out: vec3[], values: vec3[], matrix: mat4, count: i32) -&gt; void</td><td><code>sys.math.vec3TransformMat4Many</code></td><td><code>sys.math.vec3TransformMat4Many</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>quat_from_axis_angle</code></td><td>(out: quat, axis: vec3, angle: f32) -&gt; void</td><td><code>sys.math.quatFromAxisAngle</code></td><td><code>sys.math.quatFromAxisAngle</code></td><td><code>env.math_quat_from_axis_angle</code></td><td>-</td></tr>
+<tr><td><code>quat_multiply</code></td><td>(out: quat, a: quat, b: quat) -&gt; void</td><td><code>sys.math.quatMultiply</code></td><td><code>sys.math.quatMultiply</code></td><td><code>env.math_quat_multiply</code></td><td>-</td></tr>
+<tr><td><code>quat_slerp</code></td><td>(out: quat, a: quat, b: quat, t: f32) -&gt; void</td><td><code>sys.math.quatSlerp</code></td><td><code>sys.math.quatSlerp</code></td><td><code>env.math_quat_slerp</code></td><td>-</td></tr>
+<tr><td><code>quat_to_mat4</code></td><td>(out: mat4, value: quat) -&gt; void</td><td><code>sys.math.quatToMat4</code></td><td><code>sys.math.quatToMat4</code></td><td><code>env.math_quat_to_mat4</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="midi" class="has-anchor"><code>midi</code> <a class="heading-anchor" href="#midi" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>get_input_count</code></td><td>() -&gt; integer; 0 when unavailable or no devices</td><td><code>sys.midi.getInputCount</code></td><td><code>sys.midi.getInputCount</code></td><td><code>env.midi_get_input_count</code></td><td>-</td></tr>
+<tr><td><code>get_output_count</code></td><td>() -&gt; integer; 0 when unavailable or no devices</td><td><code>sys.midi.getOutputCount</code></td><td><code>sys.midi.getOutputCount</code></td><td><code>env.midi_get_output_count</code></td><td>-</td></tr>
+<tr><td><code>get_input_devices</code></td><td>() -&gt; Array&lt;{id: integer, name: string}&gt;; [] when unavailable</td><td><code>sys.midi.getInputDevices</code></td><td><code>sys.midi.getInputDevices</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_output_devices</code></td><td>() -&gt; Array&lt;{id: integer, name: string}&gt;; [] when unavailable</td><td><code>sys.midi.getOutputDevices</code></td><td><code>sys.midi.getOutputDevices</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>refresh_devices</code></td><td>() -&gt; void; no-op when unavailable</td><td><code>sys.midi.refreshDevices</code></td><td><code>sys.midi.refreshDevices</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>on_devices_changed</code></td><td>(callback: (event: {inputs, outputs, generation}) -&gt; void | null) -&gt; void</td><td><code>sys.midi.onDevicesChanged</code></td><td><code>sys.midi.onDevicesChanged</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>open_input</code></td><td>(device_index: integer, callback: (message) -&gt; void) -&gt; integer handle; -1 on failure</td><td><code>sys.midi.openInput</code></td><td><code>sys.midi.openInput</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>close_input</code></td><td>(handle: integer) -&gt; void; no-op when unavailable</td><td><code>sys.midi.closeInput</code></td><td><code>sys.midi.closeInput</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>open_output</code></td><td>(device_index: integer) -&gt; integer handle; -1 on failure</td><td><code>sys.midi.openOutput</code></td><td><code>sys.midi.openOutput</code></td><td><code>env.midi_open_output</code></td><td>-</td></tr>
+<tr><td><code>close_output</code></td><td>(handle: integer) -&gt; void; no-op when unavailable</td><td><code>sys.midi.closeOutput</code></td><td><code>sys.midi.closeOutput</code></td><td><code>env.midi_close_output</code></td><td>-</td></tr>
+<tr><td><code>send_message</code></td><td>(handle: integer, status: byte, data1: byte, data2: byte) -&gt; bool</td><td><code>sys.midi.sendMessage</code></td><td><code>sys.midi.sendMessage</code></td><td><code>env.midi_send_message</code></td><td>-</td></tr>
+<tr><td><code>send_raw</code></td><td>(handle: integer, data: bytes[1..4096]) -&gt; bool</td><td><code>sys.midi.sendRaw</code></td><td><code>sys.midi.sendRaw</code></td><td><code>env.midi_send_raw</code></td><td>-</td></tr>
+<tr><td><code>note_on</code></td><td>(handle: integer, channel: integer, note: integer, velocity: integer) -&gt; bool</td><td><code>sys.midi.noteOn</code></td><td><code>sys.midi.noteOn</code></td><td><code>env.midi_note_on</code></td><td>-</td></tr>
+<tr><td><code>note_off</code></td><td>(handle: integer, channel: integer, note: integer, velocity: integer) -&gt; bool</td><td><code>sys.midi.noteOff</code></td><td><code>sys.midi.noteOff</code></td><td><code>env.midi_note_off</code></td><td>-</td></tr>
+<tr><td><code>control_change</code></td><td>(handle: integer, channel: integer, control: integer, value: integer) -&gt; bool</td><td><code>sys.midi.controlChange</code></td><td><code>sys.midi.controlChange</code></td><td><code>env.midi_control_change</code></td><td>-</td></tr>
+<tr><td><code>program_change</code></td><td>(handle: integer, channel: integer, program: integer) -&gt; bool</td><td><code>sys.midi.programChange</code></td><td><code>sys.midi.programChange</code></td><td><code>env.midi_program_change</code></td><td>-</td></tr>
+<tr><td><code>pitch_bend</code></td><td>(handle: integer, channel: integer, value: integer[-8192..8191]) -&gt; bool</td><td><code>sys.midi.pitchBend</code></td><td><code>sys.midi.pitchBend</code></td><td><code>env.midi_pitch_bend</code></td><td>-</td></tr>
+<tr><td><code>channel_pressure</code></td><td>(handle: integer, channel: integer, pressure: integer) -&gt; bool</td><td><code>sys.midi.channelPressure</code></td><td><code>sys.midi.channelPressure</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>poly_pressure</code></td><td>(handle: integer, channel: integer, note: integer, pressure: integer) -&gt; bool</td><td><code>sys.midi.polyPressure</code></td><td><code>sys.midi.polyPressure</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_type</code></td><td>(status: byte) -&gt; integer message_type</td><td><code>sys.midi.getType</code></td><td><code>sys.midi.getType</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_channel</code></td><td>(status: byte) -&gt; integer[0..15] | -1 for system messages</td><td><code>sys.midi.getChannel</code></td><td><code>sys.midi.getChannel</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>create_session</code></td><td>(name: string, control_port?: integer = 0) -&gt; integer handle; -1 on failure or unavailable</td><td><code>sys.midi.createSession</code></td><td><code>sys.midi.createSession</code></td><td><code>env.rtpmidi_create_session</code></td><td>-</td></tr>
+<tr><td><code>connect_session</code></td><td>(session: integer, host: string, control_port: integer) -&gt; bool invitation_sent</td><td><code>sys.midi.connectSession</code></td><td><code>sys.midi.connectSession</code></td><td><code>env.rtpmidi_connect</code></td><td>-</td></tr>
+<tr><td><code>destroy_session</code></td><td>(session: integer) -&gt; void; no-op when unavailable</td><td><code>sys.midi.destroySession</code></td><td><code>sys.midi.destroySession</code></td><td><code>env.rtpmidi_destroy_session</code></td><td>-</td></tr>
+<tr><td><code>on_session_message</code></td><td>(session: integer, callback: (message) -&gt; void) -&gt; void; no-op when unavailable or session is outside 0..7</td><td><code>sys.midi.onSessionMessage</code></td><td><code>sys.midi.onSessionMessage</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>session_send</code></td><td>(session: integer, status: byte, data1: byte, data2: byte) -&gt; bool; true only when sent to at least one peer</td><td><code>sys.midi.sessionSend</code></td><td><code>sys.midi.sessionSend</code></td><td><code>env.rtpmidi_send_message</code></td><td>-</td></tr>
+<tr><td><code>session_note_on</code></td><td>(session: integer, channel: integer, note: integer, velocity: integer) -&gt; bool</td><td><code>sys.midi.sessionNoteOn</code></td><td><code>sys.midi.sessionNoteOn</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>session_note_off</code></td><td>(session: integer, channel: integer, note: integer, velocity: integer) -&gt; bool</td><td><code>sys.midi.sessionNoteOff</code></td><td><code>sys.midi.sessionNoteOff</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>session_control_change</code></td><td>(session: integer, channel: integer, control: integer, value: integer) -&gt; bool</td><td><code>sys.midi.sessionControlChange</code></td><td><code>sys.midi.sessionControlChange</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>session_send_raw</code></td><td>(session: integer, data: bytes[1..512]) -&gt; bool</td><td><code>sys.midi.sessionSendRaw</code></td><td><code>sys.midi.sessionSendRaw</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_sessions</code></td><td>() -&gt; Array&lt;{handle, name, port, state, peerCount}&gt;; [] when unavailable</td><td><code>sys.midi.getSessions</code></td><td><code>sys.midi.getSessions</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_session_count</code></td><td>() -&gt; integer; 0 when unavailable</td><td>-</td><td>-</td><td><code>env.rtpmidi_get_session_count</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="modulelifecycle" class="has-anchor"><code>module_lifecycle</code> <a class="heading-anchor" href="#modulelifecycle" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>module_import</code></td><td>load another language module</td><td><code>language.import</code></td><td><code>language.require</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>load_entrypoint</code></td><td>load and execute the configured application entrypoint</td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td></tr>
+<tr><td><code>guest_memory</code></td><td>guest-exported linear memory used by pointer/buffer host ABIs</td><td>-</td><td>-</td><td><code>guest.exports.memory</code></td><td><code>guest.exports.memory</code></td></tr>
+<tr><td><code>guest_init</code></td><td>optional guest export init() called once after instantiation and memory wiring</td><td>-</td><td>-</td><td><code>guest.exports.init</code></td><td><code>guest.exports.init</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="network" class="has-anchor"><code>network</code> <a class="heading-anchor" href="#network" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>fetch</code></td><td>asynchronous policy-controlled HTTP request</td><td><code>sys.net.fetch</code></td><td><code>sys.net.fetch</code><br><code>global.fetch</code></td><td><code>env.network_fetch</code></td><td><code>env.network_fetch</code></td></tr>
+<tr><td><code>parse_json</code></td><td>(json_text: string) -&gt; Lua value</td><td>-</td><td><code>global.json_parse</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_get</code></td><td>(name: string) -&gt; string|null</td><td><code>Headers.get</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_has</code></td><td>(name: string) -&gt; bool</td><td><code>Headers.has</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_entries</code></td><td>() -&gt; Array&lt;[string,string]&gt;</td><td><code>Headers.entries</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_keys</code></td><td>() -&gt; string[]</td><td><code>Headers.keys</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_values</code></td><td>() -&gt; string[]</td><td><code>Headers.values</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>headers_for_each</code></td><td>(callback: (value: string, name: string) -&gt; any) -&gt; void</td><td><code>Headers.forEach</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>response_text</code></td><td>() -&gt; string; consumes the body once</td><td><code>Response.text</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>response_json</code></td><td>() -&gt; any; consumes the body once and throws SyntaxError for invalid JSON</td><td><code>Response.json</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>response_array_buffer</code></td><td>() -&gt; ArrayBuffer; consumes the body once</td><td><code>Response.arrayBuffer</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>fetch_status</code></td><td>(slot: i32) -&gt; request state</td><td>-</td><td>-</td><td><code>env.network_fetch_status</code></td><td><code>env.network_fetch_status</code></td></tr>
+<tr><td><code>fetch_status_code</code></td><td>(slot: i32) -&gt; HTTP status sentinel</td><td>-</td><td>-</td><td><code>env.network_fetch_status_code</code></td><td><code>env.network_fetch_status_code</code></td></tr>
+<tr><td><code>fetch_response_body_length</code></td><td>(slot: i32) -&gt; body byte length sentinel</td><td>-</td><td>-</td><td><code>env.network_fetch_response_body_len</code></td><td><code>env.network_fetch_response_body_len</code></td></tr>
+<tr><td><code>fetch_response_body</code></td><td>(slot: i32, destination_ptr: i32, max_len: i32) -&gt; i32 bytes copied</td><td>-</td><td>-</td><td><code>env.network_fetch_response_body</code></td><td><code>env.network_fetch_response_body</code></td></tr>
+<tr><td><code>fetch_response_headers_length</code></td><td>(slot: i32) -&gt; serialized header byte length</td><td>-</td><td>-</td><td><code>env.network_fetch_response_headers_len</code></td><td>-</td></tr>
+<tr><td><code>fetch_response_headers</code></td><td>(slot: i32, destination_ptr: i32, max_len: i32) -&gt; serialized header bytes copied</td><td>-</td><td>-</td><td><code>env.network_fetch_response_headers</code></td><td>-</td></tr>
+<tr><td><code>fetch_response_url_length</code></td><td>(slot: i32) -&gt; final URL byte length</td><td>-</td><td>-</td><td><code>env.network_fetch_response_url_len</code></td><td>-</td></tr>
+<tr><td><code>fetch_response_url</code></td><td>(slot: i32, destination_ptr: i32, max_len: i32) -&gt; final URL bytes copied</td><td>-</td><td>-</td><td><code>env.network_fetch_response_url</code></td><td>-</td></tr>
+<tr><td><code>fetch_error_length</code></td><td>(slot: i32) -&gt; request error byte length</td><td>-</td><td>-</td><td><code>env.network_fetch_error_len</code></td><td>-</td></tr>
+<tr><td><code>fetch_error</code></td><td>(slot: i32, destination_ptr: i32, max_len: i32) -&gt; request error bytes copied</td><td>-</td><td>-</td><td><code>env.network_fetch_error</code></td><td>-</td></tr>
+<tr><td><code>fetch_release</code></td><td>(slot: i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.network_fetch_release</code></td><td><code>env.network_fetch_release</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="neural" class="has-anchor"><code>neural</code> <a class="heading-anchor" href="#neural" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android; <strong>Lua:</strong> desktop, android; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>is_available</code></td><td>() -&gt; bool indicating whether the ONNX Runtime library can be loaded</td><td><code>sys.neural.isAvailable</code></td><td><code>sys.neural.isAvailable</code></td><td><code>env.neural_is_available</code></td><td>-</td></tr>
+<tr><td><code>get_error</code></td><td>() -&gt; last context error string</td><td><code>sys.neural.getError</code></td><td><code>sys.neural.getError</code></td><td><code>env.neural_get_error</code></td><td>-</td></tr>
+<tr><td><code>load_model</code></td><td>(safe project-relative .onnx path) -&gt; model_id</td><td><code>sys.neural.loadModel</code></td><td><code>sys.neural.loadModel</code></td><td><code>env.neural_load_model</code></td><td>-</td></tr>
+<tr><td><code>load_model_from_buffer</code></td><td>(ONNX model bytes) -&gt; model_id</td><td><code>sys.neural.loadModelFromBuffer</code></td><td><code>sys.neural.loadModelFromBuffer</code></td><td><code>env.neural_load_model_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>unload_model</code></td><td>(model_id) -&gt; void</td><td><code>sys.neural.unloadModel</code></td><td><code>sys.neural.unloadModel</code></td><td><code>env.neural_unload_model</code></td><td>-</td></tr>
+<tr><td><code>get_model_info</code></td><td>(model_id) -&gt; model metadata</td><td><code>sys.neural.getModelInfo</code></td><td><code>sys.neural.getModelInfo</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_input_count</code></td><td>(model_id) -&gt; input tensor count</td><td>-</td><td>-</td><td><code>env.neural_get_input_count</code></td><td>-</td></tr>
+<tr><td><code>get_output_count</code></td><td>(model_id) -&gt; output tensor count</td><td>-</td><td>-</td><td><code>env.neural_get_output_count</code></td><td>-</td></tr>
+<tr><td><code>get_input_info</code></td><td>(model_id, input_index) -&gt; input name, shape, and rank</td><td>-</td><td>-</td><td><code>env.neural_get_input_info</code></td><td>-</td></tr>
+<tr><td><code>get_output_info</code></td><td>(model_id, output_index) -&gt; output name, shape, and rank</td><td>-</td><td>-</td><td><code>env.neural_get_output_info</code></td><td>-</td></tr>
+<tr><td><code>set_input</code></td><td>stage a named tensor for the next inference</td><td><code>sys.neural.setInput</code></td><td><code>sys.neural.setInput</code></td><td><code>env.neural_set_input_f32</code></td><td>-</td></tr>
+<tr><td><code>run</code></td><td>run synchronous model inference</td><td><code>sys.neural.run</code></td><td><code>sys.neural.run</code></td><td><code>env.neural_run</code></td><td>-</td></tr>
+<tr><td><code>get_output</code></td><td>retrieve a named output from the most recent run</td><td><code>sys.neural.getOutput</code></td><td><code>sys.neural.getOutput</code></td><td><code>env.neural_copy_output_f32</code><br><code>env.neural_get_output_f32</code></td><td>-</td></tr>
+<tr><td><code>get_output_shape</code></td><td>retrieve the resolved shape of a named output</td><td>-</td><td>-</td><td><code>env.neural_get_output_shape</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="scheduling" class="has-anchor"><code>scheduling</code> <a class="heading-anchor" href="#scheduling" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>animation_start</code></td><td>(callback(timestamp_ms)) -&gt; void; replace the persistent Lua frame callback</td><td>-</td><td><code>sys.animation.start</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>request_frame</code></td><td>(callback(timestamp_ms)) -&gt; handle 1; replace the persistent managed frame callback</td><td><code>sys.animation.requestFrame</code></td><td><code>sys.animation.requestFrame</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>cancel_frame</code></td><td>(handle ignored) -&gt; void; clear the single managed frame callback</td><td><code>sys.animation.cancelFrame</code></td><td><code>sys.animation.cancelFrame</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>timer_once</code></td><td>(delay_ms:number, callback) -&gt; timer id or undefined; non-positive delay fires on a later timer-processing pass</td><td><code>sys.timer.once</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>timer_every</code></td><td>(interval_ms:number, callback) -&gt; timer id or undefined; interval is clamped to at least 1 ms</td><td><code>sys.timer.every</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>timer_clear</code></td><td>(timer_id:i32) -&gt; void; unknown or inactive ids are ignored</td><td><code>sys.timer.clear</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>guest_frame</code></td><td>optional guest export frame(timestamp_ms); invoked once per host frame</td><td>-</td><td>-</td><td><code>guest.exports.frame</code></td><td><code>guest.exports.frame</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="sqlite" class="has-anchor"><code>sqlite</code> <a class="heading-anchor" href="#sqlite" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>open</code></td><td>(name: string) -&gt; database_handle</td><td><code>sys.db.open</code></td><td><code>sys.db.open</code></td><td><code>env.db_open</code></td><td>-</td></tr>
+<tr><td><code>close</code></td><td>(handle: database_handle) -&gt; void</td><td><code>sys.db.close</code></td><td><code>sys.db.close</code></td><td><code>env.db_close</code></td><td>-</td></tr>
+<tr><td><code>execute</code></td><td>(handle: database_handle, sql: string) -&gt; bool</td><td><code>sys.db.execute</code></td><td><code>sys.db.execute</code></td><td><code>env.db_execute</code></td><td>-</td></tr>
+<tr><td><code>run</code></td><td>(handle: database_handle, sql: string, ...params: null|bool|number|string) -&gt; i32 changes</td><td><code>sys.db.run</code></td><td><code>sys.db.run</code></td><td><code>env.db_run</code></td><td>-</td></tr>
+<tr><td><code>run_integer_parameter</code></td><td>(handle: database_handle, sql: string, parameter: i32) -&gt; i32 changes</td><td>-</td><td>-</td><td><code>env.db_run_int</code></td><td>-</td></tr>
+<tr><td><code>run_string_parameter</code></td><td>(handle: database_handle, sql: string, parameter: string) -&gt; i32 changes</td><td>-</td><td>-</td><td><code>env.db_run_str</code></td><td>-</td></tr>
+<tr><td><code>query</code></td><td>(handle: database_handle, sql: string, ...params: null|bool|number|string) -&gt; rows</td><td><code>sys.db.query</code></td><td><code>sys.db.query</code></td><td><code>env.db_query_json</code></td><td>-</td></tr>
+<tr><td><code>last_insert_id</code></td><td>(handle: database_handle) -&gt; integer</td><td><code>sys.db.lastInsertId</code></td><td><code>sys.db.lastInsertId</code></td><td><code>env.db_last_insert_id</code></td><td>-</td></tr>
+<tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.db.getError</code></td><td><code>sys.db.getError</code></td><td>-</td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="udp" class="has-anchor"><code>udp</code> <a class="heading-anchor" href="#udp" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android; <strong>Lua:</strong> desktop, android; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>bind</code></td><td>(local_port: i32; 0 requests auto-assignment) -&gt; i32 socket_handle; -1 on failure</td><td><code>sys.net.udp.bind</code></td><td><code>sys.net.udp.bind</code></td><td><code>env.udp_bind</code></td><td>-</td></tr>
+<tr><td><code>get_port</code></td><td>(socket_handle: i32) -&gt; i32 local_port; -1 on failure</td><td><code>sys.net.udp.getPort</code></td><td><code>sys.net.udp.getPort</code></td><td><code>env.udp_get_port</code></td><td>-</td></tr>
+<tr><td><code>send</code></td><td>(socket_handle: i32, host: string, port: i32, data: bytes) -&gt; bool</td><td><code>sys.net.udp.send</code></td><td><code>sys.net.udp.send</code></td><td><code>env.udp_send</code></td><td>-</td></tr>
+<tr><td><code>receive</code></td><td>receive datagrams with sender host and port</td><td><code>sys.net.udp.onMessage</code></td><td><code>sys.net.udp.onMessage</code></td><td><code>env.udp_recv</code></td><td>-</td></tr>
+<tr><td><code>close</code></td><td>(socket_handle: i32) -&gt; void</td><td><code>sys.net.udp.close</code></td><td><code>sys.net.udp.close</code></td><td><code>env.udp_close</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
+<p>&lt;!-- END GENERATED API AVAILABILITY --&gt;</p>
+<h2 id="sysanimation" class="has-anchor"><code>sys.animation</code> <a class="heading-anchor" href="#sysanimation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.animation.requestFrame(callback)
+sys.animation.cancelFrame(handle)</code></pre></div></div>
+<p>Register one frame callback. The callback receives a timestamp in milliseconds.</p>
+<h2 id="systimer" class="has-anchor"><code>sys.timer</code> <a class="heading-anchor" href="#systimer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.timer.once(delay, callback)
+sys.timer.every(interval, callback)
+sys.timer.clear(id)</code></pre></div></div>
+<p>JavaScript-only frame-resolution timers.</p>
+<h2 id="syswindow" class="has-anchor"><code>sys.window</code> <a class="heading-anchor" href="#syswindow" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.window.getWidth()
+sys.window.getHeight()
+sys.window.getDisplayDensity()</code></pre></div></div>
+<p>Use display density for UI that should keep a stable physical size across devices.</p>
+<h2 id="sysinput" class="has-anchor"><code>sys.input</code> <a class="heading-anchor" href="#sysinput" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.input.get()
+sys.input.isKeyDown(scancode)
+sys.input.isKeyPressed(scancode)
+sys.input.startTextInput({text, selectionStart, selectionEnd, multiline?})
+sys.input.updateTextInput({text, selectionStart, selectionEnd, caret:{x,y,width,height}})
+sys.input.stopTextInput()</code></pre></div></div>
+<p><code>get()</code> returns pointer, pointer list, timing, modifier, focus, committed <code>text</code>, full <code>textEdit</code> replacements, persistent <code>composition</code>, and <code>textInputActive</code>. Apply <code>textEdit</code> before sending the current model back through <code>updateTextInput</code>. Text sessions provide IME composition, selection edits, candidate positioning, and soft-keyboard lifecycle on desktop, web, and Android. Android Back and single-line Done/Return finalize composition into <code>textEdit</code>. Text selections use UTF-16 code units. Scancode queries remain physical and layout-independent.</p>
+<h2 id="syscapabilities" class="has-anchor"><code>sys.capabilities</code> <a class="heading-anchor" href="#syscapabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Capability entries have an <code>available</code> boolean. The main entries are <code>neural</code>, <code>midi</code>, <code>udp</code>, <code>http</code> and <code>sensors</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">if (sys.capabilities.udp.available) {
+  console.log(&#x27;UDP enabled&#x27;);
+}</code></pre></div></div>
+<h2 id="syscanvas" class="has-anchor"><code>sys.canvas</code> <a class="heading-anchor" href="#syscanvas" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.clear(color)
+sys.canvas.drawRect(x, y, width, height)
+sys.canvas.drawRoundRect(x, y, width, height, rx, ry)
+sys.canvas.drawCircle(cx, cy, radius)
+sys.canvas.drawOval(x, y, width, height)
+sys.canvas.drawLine(x1, y1, x2, y2)
+sys.canvas.drawPoint(x, y)
+sys.canvas.drawText(text, x, y, fontSize)
+sys.canvas.measureText(text, fontSize)
+sys.canvas.measureTextRect(text, fontSize)
+sys.canvas.drawArc(x, y, width, height, startAngle, sweepAngle, useCenter)
+sys.canvas.flush()
+sys.canvas.readPixels()
+sys.canvas.save()
+sys.canvas.restore()
+sys.canvas.translate(dx, dy)
+sys.canvas.rotate(degrees)
+sys.canvas.rotate(degrees, px, py)
+sys.canvas.scale(sx, sy)
+sys.canvas.skew(sx, sy)
+sys.canvas.reset()
+sys.canvas.clipRect(x, y, width, height)</code></pre></div></div>
+<p>The optional <code>fontSize</code> defaults to 32 for drawing and measurement.</p>
+<p>Colors accept <code>#RRGGBB</code>, <code>#RRGGBBAA</code>, or numeric ARGB.</p>
+<h2 id="canvas-paint-state" class="has-anchor">Canvas paint state <a class="heading-anchor" href="#canvas-paint-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.setFillColor(color)
+sys.canvas.setStrokeColor(color)
+sys.canvas.setStrokeWidth(width)
+sys.canvas.setAntiAlias(enabled)
+sys.canvas.setAlpha(alpha)
+sys.canvas.setStrokeCap(cap)
+sys.canvas.setStrokeJoin(join)
+sys.canvas.setBlendMode(mode)
+sys.canvas.setImageFilter(name, ...args)
+sys.canvas.setColorFilter(name, ...args)
+sys.canvas.getError()</code></pre></div></div>
+<p>Blend modes, image filters, and color filters are advanced Skia APIs.</p>
+<h2 id="syspath" class="has-anchor"><code>sys.path</code> <a class="heading-anchor" href="#syspath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const path = sys.path.create()
+sys.path.reset(path)
+sys.path.moveTo(path, x, y)
+sys.path.lineTo(path, x, y)
+sys.path.quadTo(path, x1, y1, x2, y2)
+sys.path.cubicTo(path, x1, y1, x2, y2, x3, y3)
+sys.path.close(path)
+sys.path.addRect(path, x, y, width, height)
+sys.path.addCircle(path, cx, cy, radius)
+sys.canvas.drawPath(path)</code></pre></div></div>
+<h2 id="syssvg-and-sysfont" class="has-anchor"><code>sys.svg</code> and <code>sys.font</code> <a class="heading-anchor" href="#syssvg-and-sysfont" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const svg = sys.svg.load(&#x27;icon.svg&#x27;)
+const svgFromBytes = sys.svg.loadFromBuffer(svgBytes)
+sys.canvas.drawSvg(svg, x, y, width, height)
+sys.svg.destroy(svg)
+sys.svg.getWidth(svg)
+sys.svg.getHeight(svg)
+
+sys.font.load(path, name)
+sys.font.loadFromBuffer(fontBytes, name)
+sys.canvas.setFont(name)
+sys.font.reset()</code></pre></div></div>
+<h2 id="sysgl" class="has-anchor"><code>sys.gl</code> <a class="heading-anchor" href="#sysgl" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const program = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+sys.gl.bindScreen()
+program.uniform1f(&#x27;u_strength&#x27;, 0.5).drawFullscreen()
+
+const handle = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+const handleFromBytes = sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)
+sys.gl.destroyProgram(program)
+sys.gl.drawFullscreen(program)
+sys.gl.drawFullscreenImmediate(program, sourceTexture)
+sys.gl.drawRegion(program, x, y, width, height, targetId)
+sys.gl.drawRegionImmediate(program, x, y, width, height, targetId)
+sys.gl.drawMeshImmediate(program, layout, options)
+sys.gl.getLastError()
+sys.gl.getProjectDir()</code></pre></div></div>
+<p>GL operations are immediate. Uniforms include scalar, vector, array, and matrix forms such as <code>setUniform1f</code>, <code>setUniform3fv</code>, and <code>setUniformMatrix4</code>.</p>
+<p><code>createShaderProgram</code> returns a chainable <code>ShaderProgram</code> wrapper around the same immediate GL state. It supports <code>use</code>, <code>uniform1i</code>, <code>uniform1f</code>, <code>uniform2f</code>, <code>uniform3f</code>, <code>uniform4f</code>, <code>uniformMatrix4</code>, <code>texture</code>, <code>canvasTexture</code>, <code>renderTargetTexture</code>, <code>drawFullscreen</code>, <code>drawRegion</code>, and <code>drawMesh</code>. The handle API and object API can be mixed when that keeps setup code readable.</p>
+<p>Render targets, buffers, vertex layouts, textures, cubemaps, mesh draws, and instanced mesh draws are also available. Resource loaders that normally take project-relative paths also have <code>FromBuffer</code> variants for bytes from <code>file.readBinary()</code>, <code>fetch().arrayBuffer()</code>, or other sources. See <a href="rendering-and-shaders.html">Rendering and shaders</a> for the model and <code>budo-llm.md</code> for the full signature list.</p>
+<h2 id="sysgraphics" class="has-anchor"><code>sys.graphics</code> <a class="heading-anchor" href="#sysgraphics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const surface = sys.graphics.createCanvasTexture(512, 256)
+surface.canvas.drawText(&#x27;HUD&#x27;, 32, 96, 42)
+surface.flush()
+program.canvasTexture(&#x27;u_hud&#x27;, surface, 1).drawFullscreen()
+surface.destroy()</code></pre></div></div>
+<p>Canvas textures are Skia surfaces backed by GL textures and framebuffers. They are useful for drawing text, UI, or vector content into a texture that a shader can sample.</p>
+<h2 id="sysmath" class="has-anchor"><code>sys.math</code> <a class="heading-anchor" href="#sysmath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Math helpers mutate caller-owned arrays. Matrix layout is column-major.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.math.mat4Identity(out)
+sys.math.mat4Multiply(out, a, b)
+sys.math.mat4Perspective(out, fovy, aspect, near, far)
+sys.math.mat4Ortho(out, left, right, bottom, top, near, far)
+sys.math.mat4LookAt(out, eye, target, up)
+sys.math.mat4Translate(out, a, v)
+sys.math.mat4RotateX(out, a, radians)
+sys.math.mat4RotateY(out, a, radians)
+sys.math.mat4RotateZ(out, a, radians)
+sys.math.mat4Scale(out, a, v)
+sys.math.mat4Invert(out, a)
+sys.math.mat4Transpose(out, a)
+sys.math.vec3Add(out, a, b)
+sys.math.vec3Sub(out, a, b)
+sys.math.vec3Scale(out, a, scale)
+sys.math.vec3Normalize(out, a)
+sys.math.vec3Cross(out, a, b)
+sys.math.vec3Dot(a, b)
+sys.math.vec3Length(a)
+sys.math.vec3TransformMat4(out, a, matrix)
+sys.math.quatFromAxisAngle(out, axis, radians)
+sys.math.quatMultiply(out, a, b)
+sys.math.quatSlerp(out, a, b, t)
+sys.math.quatToMat4(out, q)</code></pre></div></div>
+<h2 id="sysaudio" class="has-anchor"><code>sys.audio</code> <a class="heading-anchor" href="#sysaudio" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.audio.start()
+sys.audio.stop()
+sys.audio.isPlaying()
+sys.audio.setMasterGain(gain)
+sys.audio.getMasterGain()
+sys.audio.createOscillator()
+sys.audio.destroyOscillator(id)
+sys.audio.setOscillatorType(id, type)
+sys.audio.setOscillatorFrequency(id, frequency)
+sys.audio.setOscillatorGain(id, gain)
+sys.audio.setOscillatorDetune(id, cents)
+sys.audio.setOscillatorEnvelope(id, attack, decay, sustain, release)
+sys.audio.startOscillator(id)
+sys.audio.stopOscillator(id)
+sys.audio.noteOn(id)
+sys.audio.noteOff(id)
+sys.audio.createBuffer(sampleRate, channels, samples)
+sys.audio.loadBuffer(path)
+sys.audio.loadBufferFromBuffer(buffer)
+sys.audio.setBufferData(buffer, samplesArray, offset)
+sys.audio.destroyBuffer(buffer)
+sys.audio.playBuffer(buffer, loop, gain)
+sys.audio.stopBuffer(playback)
+sys.audio.midiToFreq(note)
+sys.audio.getError()</code></pre></div></div>
+<p><code>createBuffer</code> allocates an empty mono or stereo PCM buffer. <code>loadBuffer</code> decodes a project-relative WAV, MP3, Ogg Vorbis, or FLAC asset; <code>loadBufferFromBuffer</code> decodes the same formats from an <code>ArrayBuffer</code>. Both return a buffer ID, or <code>-1</code> on failure. Play either kind of buffer with <code>playBuffer</code>; use <code>getError()</code> after a failed load to inspect the last audio error.</p>
+<h2 id="sysmidi" class="has-anchor"><code>sys.midi</code> <a class="heading-anchor" href="#sysmidi" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.midi.getInputCount()
+sys.midi.getOutputCount()
+sys.midi.getInputDevices()
+sys.midi.getOutputDevices()
+sys.midi.refreshDevices()
+sys.midi.onDevicesChanged(callbackOrNull)
+sys.midi.openInput(deviceIndex, callback)
+sys.midi.closeInput(handle)
+sys.midi.openOutput(deviceIndex)
+sys.midi.closeOutput(handle)
+sys.midi.sendMessage(handle, status, data1, data2)
+sys.midi.sendRaw(handle, bytes)
+sys.midi.noteOn(handle, channel, note, velocity)
+sys.midi.noteOff(handle, channel, note, velocity)
+sys.midi.controlChange(handle, channel, control, value)
+sys.midi.programChange(handle, channel, program)
+sys.midi.pitchBend(handle, channel, value)
+sys.midi.channelPressure(handle, channel, pressure)
+sys.midi.polyPressure(handle, channel, note, pressure)
+sys.midi.createSession(name, port)
+sys.midi.connectSession(session, host, port)
+sys.midi.destroySession(session)
+sys.midi.onSessionMessage(session, callback)
+sys.midi.sessionSend(session, status, data1, data2)
+sys.midi.sessionSendRaw(session, bytes)
+sys.midi.getSessions()</code></pre></div></div>
+<p>Constants include MIDI message types and common control-change numbers. <code>onDevicesChanged</code> establishes a silent baseline when registered, replaces any previous listener, and accepts <code>null</code> to unsubscribe. On a later topology change the callback runs on the runtime frame thread with <code>{inputs, outputs, generation}</code>. The snapshots are already refreshed and detect device replacement or reordering even when counts remain unchanged.</p>
+<h2 id="sysdb-sysfiles-sysassets-fetch-and-sysnetudp" class="has-anchor"><code>sys.db</code>, <code>sys.files</code>, <code>sys.assets</code>, <code>fetch</code>, and <code>sys.net.udp</code> <a class="heading-anchor" href="#sysdb-sysfiles-sysassets-fetch-and-sysnetudp" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const db = sys.db.open(name)
+sys.db.close(db)
+sys.db.execute(db, sql)
+sys.db.run(db, sql, ...params)
+sys.db.query(db, sql, ...params)
+sys.db.lastInsertId(db)
+sys.db.getError()
+
+sys.files.list(path)
+sys.files.readText(path)
+sys.files.readBinary(path)
+sys.files.writeText(path, text)
+sys.files.writeBinary(path, bytes)
+sys.files.exists(path)
+sys.files.isDirectory(path)
+sys.files.size(path)
+sys.files.pickText(callback, extension?)
+sys.files.saveText(suggestedName, text, callback)
+sys.files.getError()
+
+// Read-only convenience wrapper over sys.files paths under assets/.
+sys.assets.list(path)
+sys.assets.readText(path)
+sys.assets.readBinary(path)
+sys.assets.exists(path)
+sys.assets.isDirectory(path)
+sys.assets.size(path)
+sys.assets.getError()
+
+fetch(url, options)
+sys.net.fetch(url, options)
+
+const socket = sys.net.udp.bind(port)
+sys.net.udp.getPort(socket)
+sys.net.udp.send(socket, host, port, bytes)
+sys.net.udp.onMessage(socket, callback)
+sys.net.udp.close(socket)</code></pre></div></div>
+<p><code>sys.files</code> is the canonical virtual filesystem. Except for a root <code>list()</code>, its paths start with <code>assets/</code> or <code>files/</code>. <code>sys.assets</code> accepts bundle-relative paths, prepends <code>assets/</code>, exposes no write methods, and shares <code>getError()</code> state with <code>sys.files</code>. Therefore <code>sys.assets.readText(&#x27;config.json&#x27;)</code> is equivalent to <code>sys.files.readText(&#x27;assets/config.json&#x27;)</code>, while <code>sys.assets.list()</code> is equivalent to <code>sys.files.list(&#x27;assets&#x27;)</code>. JS <code>pickText(callback, extension?)</code> opens the platform system picker and returns whether it launched; an extension such as <code>.json</code> filters the picker and is enforced on the selected display name. The callback receives <code>({name,text}, null)</code> or <code>(null, error)</code>, and reads at most 8 MiB. <code>saveText(name, text, callback)</code> opens the platform Save As flow and reports <code>null</code> on success or an error string. Both APIs access locations outside Budo's mounts only through explicit user consent.</p>
+<p>Network access is disabled until <code>app.json</code> declares a <code>network</code> policy.</p>
+<h2 id="syssensors-sysdevice-and-sysneural" class="has-anchor"><code>sys.sensors</code>, <code>sys.device</code>, and <code>sys.neural</code> <a class="heading-anchor" href="#syssensors-sysdevice-and-sysneural" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.sensors.isAvailable()
+sys.sensors.hasAccelerometer()
+sys.sensors.hasCompass()
+sys.sensors.start()
+sys.sensors.stop()
+sys.sensors.isActive()
+sys.sensors.getAccel()
+sys.sensors.getCompass()
+
+sys.device.keepScreenOn(enabled)
+
+sys.neural.isAvailable()
+sys.neural.getError()
+sys.neural.loadModel(path)
+sys.neural.loadModelFromBuffer(buffer)
+sys.neural.unloadModel(model)
+sys.neural.getModelInfo(model)
+sys.neural.setInput(model, name, data, shape)
+sys.neural.run(model, inputs)
+sys.neural.getOutput(model, name)</code></pre></div></div>
+<p>Neural inference requires ONNX Runtime support and <code>&quot;neural&quot;: true</code> in <code>app.json</code>.</p>
+<h2 id="lua-reference" class="has-anchor">Lua reference <a class="heading-anchor" href="#lua-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Lua uses the same <code>sys</code> namespace names for canvas, paint, transform, path, SVG, font, GL, input, window, animation, audio, MIDI, SQLite, files/assets, network, UDP, sensors, device, neural, math, and capabilities.</p>
+<p>Differences are language-shaped. Lists are 1-based. <code>fetch</code> is callback-based. <code>readBinary</code> returns a Lua string. Neural tensors are Lua tables. <code>sys.timer</code> is JavaScript-only.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-lua">local function frame(timestamp)
+  sys.canvas.clear(&#x27;#101116&#x27;)
+  sys.canvas.setFillColor(&#x27;#ffffff&#x27;)
+  sys.canvas.drawText(&#x27;Lua&#x27;, 32, 64, 24)
+  sys.animation.requestFrame(frame)
+end
+
+sys.animation.requestFrame(frame)</code></pre></div></div>
+<h2 id="webassembly-reference" class="has-anchor">WebAssembly reference <a class="heading-anchor" href="#webassembly-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>WebAssembly imports host functions from <code>env</code>. Names use snake case: <code>canvas_clear</code>, <code>canvas_set_fill_color</code>, <code>transform_translate</code>, <code>path_create</code>, <code>gl_create_program</code>, <code>audio_create_oscillator</code>, <code>db_open</code>, <code>files_read_text</code>, <code>udp_bind</code>, <code>midi_open_input</code>, <code>magneto_get_accel</code>, <code>device_keep_screen_on</code>, <code>neural_load_model</code>, and so on. File import paths start with <code>assets/</code> or <code>files/</code>. WebAssembly has no <code>sys</code> namespace, so <code>sys.assets</code> does not add a separate import family; use <code>env.files_*</code> with an <code>assets/</code> path.</p>
+<p>String-backed imports take pointer and length pairs. Tensor and pixel APIs copy through exported linear memory. Optional features should be guarded with capability imports or compiled into target-specific modules.</p>
+<p>For the complete import list, generate or open <code>budo-llm.md</code> from the same Budo build you ship.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="packaging-and-deployment.html" class="prev"><small>← Previous</small><span>Packaging and Deployment</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

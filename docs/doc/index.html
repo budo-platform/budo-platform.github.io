@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Documentation — Budo Documentation</title>
+    <meta name="description" content="Developer documentation for building JavaScript, Lua, and WebAssembly apps with Budo.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html" class="current">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="documentation" class="has-anchor">Documentation <a class="heading-anchor" href="#documentation" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo is a small runtime for building animated apps in JavaScript, TypeScript, Lua, or WebAssembly, then taking the same project to desktop, Android, and the web. It gives application code a direct creative surface: Skia drawing, shader passes, input, audio, MIDI, SQLite, files, HTTP, sensors, wake locks, and optional ONNX Runtime inference.</p>
+<p>This documentation is written for developers who want to build apps with Budo. It starts with a tutorial you can follow in one sitting, then opens into deeper guides for the runtime model, rendering pipeline, data APIs, platform behavior, and language-specific details.</p>
+<h2 id="where-to-begin" class="has-anchor">Where to begin <a class="heading-anchor" href="#where-to-begin" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>If this is your first Budo app, start with <a href="getting-started.html">Getting started</a>. You will create a project, draw a scene, add input, keep a tiny bit of state, and run it locally.</p>
+<p>If you already know what you are building, <a href="project-model.html">Project model</a> explains how Budo chooses an entrypoint, loads metadata, resolves assets, and exposes capabilities. That page is the best mental model before you reach for platform-specific features.</p>
+<p>For day-to-day API work, keep <a href="api-reference.html">API reference</a> open. It groups the public JavaScript and Lua namespaces by task and points to the WebAssembly import names where the model differs.</p>
+<h2 id="what-budo-feels-like" class="has-anchor">What Budo feels like <a class="heading-anchor" href="#what-budo-feels-like" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A minimal JavaScript app is just a directory with <code>main.js</code>:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">my-app/main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw one frame of the app.
+function frame(t) {
+  // Clear the canvas with a dark background.
+  sys.canvas.clear(&#x27;#0e0e12&#x27;);
+  // Choose the text color.
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  // Draw a greeting at x=40, y=80 with a 32-pixel font size.
+  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 40, 80, 32);
+  // Request the next frame so the app stays alive.
+  sys.animation.requestFrame(frame);
+}
+
+// Start the animation loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>Run the directory:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run the project directory as a desktop app.
+./build/budo run my-app</code></pre></div></div>
+<p>For a throwaway sketch, you can also pipe one file directly into <code>run</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">cat &lt;&lt;&#x27;EOF&#x27; | ./build/budo run --from-input js
+let pulse = 0;
+
+function frame(t) {
+  const width = sys.window.getWidth();
+  const height = sys.window.getHeight();
+  const radius = 32 + Math.sin(pulse) * 12;
+
+  sys.canvas.clear(&#x27;#0e0e12&#x27;);
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(width * 0.5, height * 0.5, radius);
+
+  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
+  sys.canvas.drawText(&#x27;Hello from stdin&#x27;, 40, 80, 28);
+
+  pulse += 0.04;
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);
+EOF</code></pre></div></div>
+<p>That same project can grow into a TypeScript app, a Lua app, a WebAssembly module, a shader-heavy visual tool, a game, an offline SQLite app, or an Android package with store metadata. Budo keeps the project shape deliberately plain so you can see your own code.</p>
+<h2 id="documentation-map" class="has-anchor">Documentation map <a class="heading-anchor" href="#documentation-map" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><a href="getting-started.html">Getting started</a> walks through a complete first app with drawing, input, animation, and project files.</p>
+<p><a href="project-model.html">Project model</a> explains entrypoints, <code>app.json</code>, asset paths, modules, TypeScript stripping, file sandboxing, and capability checks.</p>
+<p><a href="drawing-and-layout.html">Drawing and layout</a> covers canvas drawing, paint state, paths, transforms, text, fonts, SVGs, colors, and density-aware coordinates.</p>
+<p><a href="rendering-and-shaders.html">Rendering and shaders</a> explains the GPU-immediate canvas pipeline, framebuffer reads, immediate fullscreen shaders, render targets, mesh drawing, textures, and Skia-backed canvas textures.</p>
+<p><a href="input-time-state.html">Input, time, and state</a> describes the animation loop, timers, keyboard and pointer input, focus, touch handling, and state patterns that stay comfortable across platforms.</p>
+<p><a href="data-files-network.html">Data, files, and network</a> documents SQLite, bundled assets, persistent files, HTTP fetch, UDP sockets, and the network and filesystem policies in <code>app.json</code>.</p>
+<p><a href="media-devices-ai.html">Audio, MIDI, sensors, and AI</a> covers synthesis, sample buffers, decoded WAV/MP3/Ogg/FLAC assets, MIDI I/O, RTP-MIDI, accelerometer and compass data, screen wake locks, and neural inference.</p>
+<p><a href="lua-and-wasm.html">Lua and WebAssembly</a> shows how the same runtime concepts map to Lua tables and WebAssembly host imports.</p>
+<p><a href="packaging-and-deployment.html">Packaging and deployment</a> explains desktop runs, web export, Android APK/AAB packaging, metadata, icons, permissions, and release flow.</p>
+<p><a href="native-c-projects.html">Native C projects</a> covers trusted ahead-of-time C applications, initialization, constrained manifests, SDK resolution, caching, and Android packaging. <a href="native-c-api.html">Native C API</a> documents lifecycle, ownership, input, canvas, and GPU resources, while <a href="native-c-debugging.html">Native C debugging</a> covers LLDB, GDB, Visual Studio, sanitizers, and Android Studio.</p>
+<p><a href="api-reference.html">API reference</a> is the compact reference for commands and namespaces.</p>
+<h2 id="a-few-useful-principles" class="has-anchor">A few useful principles <a class="heading-anchor" href="#a-few-useful-principles" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo apps are ordinary folders. Put your code, shaders, fonts, images, databases, model files, and metadata beside each other, then refer to those files with project-relative paths.</p>
+<p>The runtime is immediate enough to feel like a creative coding environment, but the platform APIs are real. Network access is policy-gated, file paths are sandboxed, shader paths are checked, and Android packaging reads the same metadata your app reads.</p>
+<p>When a feature may not exist on every target, probe <code>sys.capabilities</code> before you depend on it. This keeps your app pleasant on desktop, Android, and web without scattering defensive exceptions through the code.</p>
+<h2 id="command-shape" class="has-anchor">Command shape <a class="heading-anchor" href="#command-shape" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The current Budo CLI uses subcommands:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run a project directory explicitly.
+./build/budo run my-app
+# Create a starter project.
+./build/budo init my-app
+# Export a self-contained web build.
+./build/budo web-export my-app -o dist/my-app-web
+# Export and serve locally for browser testing.
+./build/budo web-serve my-app
+# Build an Android APK release.
+./build/budo android-apk my-app --release
+# Build an Android App Bundle release.
+./build/budo android-aab my-app --release
+# Print the TypeScript declarations bundled with the runtime.
+./build/budo budo.d.ts
+# Print the generated developer API reference.
+./build/budo budo-llm.md
+# Show the command help.
+./build/budo help</code></pre></div></div>
+<p>The shorthand <code>./build/budo my-app</code> is accepted for <code>run</code>, but using the explicit subcommand in scripts makes intent clearer.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="getting-started.html" class="next"><small>Next →</small><span>Getting Started</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

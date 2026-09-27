@@ -1,0 +1,614 @@
+/* ════════════════════════════════════════════════════════════════════
+   Budo — "Playful" theme override
+   --------------------------------------------------------------------
+   Light, joyful, Google-flavored palette. Loaded AFTER theme-base.css
+   to override variables and a handful of dark-specific component rules
+   from index.html / playground.html.
+
+   Big chunky blocks, solid colors, hard shadows, no glow gradients.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Web fonts ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* ── Token overrides ──────────────────────────────── */
+:root {
+    /* Surfaces */
+    --color-bg: #ffffff;
+    --color-surface: #f5f3ee;
+    /* warm off-white */
+    --color-border: #1f1f1f;
+    /* heavy black borders */
+    --color-card: #ffffff;
+
+    /* Text */
+    --color-text: #1f1f1f;
+    --color-muted: #5f6368;
+
+    /* Brand — Google-ish */
+    --color-primary: #4285F4;
+    /* blue */
+    --color-primary-glow: #1a73e8;
+    /* hover blue */
+    --color-accent: #FBBC04;
+    /* yellow */
+    --color-success: #34A853;
+    /* green */
+    --color-error: #EA4335;
+    /* red */
+
+    /* Extra playful palette (used by feature cards, badges, ...) */
+    --color-blue: #4285F4;
+    --color-red: #EA4335;
+    --color-yellow: #FBBC04;
+    --color-green: #34A853;
+    --color-purple: #A142F4;
+    --color-pink: #FF6CA8;
+    --color-teal: #00A39E;
+
+    /* Type */
+    --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* Reusable chunky shadow */
+    --shadow-block: 6px 6px 0 0 #1f1f1f;
+    --shadow-block-sm: 4px 4px 0 0 #1f1f1f;
+}
+
+/* ── Base tweaks ──────────────────────────────────── */
+body {
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-glow);
+}
+
+/* ── Buttons (playful, chunky) ────────────────────── */
+.btn {
+    border-radius: 999px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+    border: 2px solid #1f1f1f !important;
+    box-shadow: var(--shadow-block-sm);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+}
+
+.btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 #1f1f1f;
+    text-decoration: none !important;
+}
+
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 0 #1f1f1f;
+}
+
+.btn-primary {
+    background: var(--color-yellow) !important;
+    color: #1f1f1f !important;
+    box-shadow: var(--shadow-block-sm) !important;
+}
+
+.btn-primary:hover {
+    background: var(--color-yellow) !important;
+    color: #1f1f1f !important;
+    box-shadow: 6px 6px 0 0 #1f1f1f !important;
+}
+
+.btn-secondary {
+    background: #ffffff !important;
+    color: #1f1f1f !important;
+    border: 2px solid #1f1f1f !important;
+}
+
+.btn-secondary:hover {
+    background: var(--color-blue) !important;
+    color: #ffffff !important;
+}
+
+/* ════════════════════════════════════════════════════
+   Index page overrides
+   ════════════════════════════════════════════════════ */
+
+/* Nav — solid white with thick bottom rule */
+nav {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    border-bottom: 2px solid #1f1f1f !important;
+}
+
+.nav-logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #1f1f1f !important;
+}
+
+.nav-logo span {
+    color: var(--color-red) !important;
+}
+
+.nav-links a {
+    color: #1f1f1f !important;
+    font-weight: 600;
+}
+
+.nav-links a:hover {
+    color: var(--color-blue) !important;
+}
+
+/* Hero — pastel block with playful display headline */
+.hero {
+    background:
+        radial-gradient(circle at 15% 20%, rgba(251, 188, 4, 0.25) 0, transparent 35%),
+        radial-gradient(circle at 85% 80%, rgba(66, 133, 244, 0.22) 0, transparent 40%),
+        radial-gradient(circle at 80% 15%, rgba(234, 67, 53, 0.18) 0, transparent 30%),
+        #fffaf0 !important;
+}
+
+.hero h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.hero h1 .highlight {
+    color: var(--color-red) !important;
+    background: var(--color-yellow);
+    padding: 0 0.3em;
+    border-radius: 8px;
+    box-shadow: 4px 4px 0 0 #1f1f1f;
+    display: inline-block;
+    transform: rotate(-2deg);
+}
+
+.hero p {
+    color: #1f1f1f !important;
+}
+
+/* Code block — light editor look */
+.code-block {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-block);
+}
+
+.code-header {
+    background: var(--color-surface);
+    color: #1f1f1f !important;
+    border-bottom: 2px solid #1f1f1f !important;
+    font-weight: 600;
+}
+
+.code-body {
+    color: #1f1f1f !important;
+}
+
+/* Section titles — display serif */
+.section-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #1f1f1f;
+}
+
+.section-subtitle {
+    color: var(--color-muted);
+}
+
+/* Feature cards — chunky, color-rotating blocks */
+.feature-card {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-block);
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.feature-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 0 #1f1f1f !important;
+}
+
+.feature-card h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #1f1f1f;
+}
+
+.feature-card p {
+    color: #444;
+}
+
+.feature-icon {
+    border-radius: 12px !important;
+    border: 2px solid #1f1f1f;
+    width: 52px !important;
+    height: 52px !important;
+}
+
+/* Color-rotate the feature icons across the grid */
+.feature-card:nth-child(7n+1) .feature-icon {
+    background: var(--color-yellow) !important;
+}
+
+.feature-card:nth-child(7n+2) .feature-icon {
+    background: var(--color-blue) !important;
+}
+
+.feature-card:nth-child(7n+3) .feature-icon {
+    background: var(--color-red) !important;
+}
+
+.feature-card:nth-child(7n+4) .feature-icon {
+    background: var(--color-green) !important;
+}
+
+.feature-card:nth-child(7n+5) .feature-icon {
+    background: var(--color-purple) !important;
+}
+
+.feature-card:nth-child(7n+6) .feature-icon {
+    background: var(--color-pink) !important;
+}
+
+.feature-card:nth-child(7n+7) .feature-icon {
+    background: var(--color-teal) !important;
+}
+
+/* Language badges — playful pills */
+.lang-badge {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 999px !important;
+    box-shadow: var(--shadow-block-sm);
+    color: #1f1f1f;
+    font-weight: 700;
+}
+
+.lang-badge:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 #1f1f1f;
+}
+
+/* Demo section — colored block */
+#demo {
+    background: #fff5db !important;
+    /* warm yellow tint */
+    border-top: 2px solid #1f1f1f;
+    border-bottom: 2px solid #1f1f1f;
+}
+
+.demo-placeholder {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 16px !important;
+    box-shadow: var(--shadow-block);
+    color: #1f1f1f !important;
+}
+
+.demo-placeholder p {
+    color: #1f1f1f !important;
+}
+
+/* Description doc */
+.description-doc p {
+    color: #444 !important;
+}
+
+.description-doc p.lead {
+    color: #1f1f1f !important;
+    font-family: var(--font-display);
+    font-weight: 700;
+}
+
+.description-doc strong {
+    color: #1f1f1f !important;
+}
+
+.description-doc code {
+    background: var(--color-yellow) !important;
+    border: 2px solid #1f1f1f !important;
+    color: #1f1f1f !important;
+    border-radius: 6px !important;
+    font-weight: 600;
+}
+
+.doc-subtitle {
+    font-family: var(--font-display);
+    color: #1f1f1f !important;
+    border-bottom: 2px solid #1f1f1f !important;
+}
+
+.description-doc .callout {
+    background: var(--color-blue) !important;
+    color: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-left: 8px solid #1f1f1f !important;
+    border-radius: 12px !important;
+    box-shadow: var(--shadow-block-sm);
+    font-weight: 600;
+}
+
+.doc-commands dt code {
+    background: #1f1f1f !important;
+    color: var(--color-yellow) !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 8px !important;
+}
+
+.doc-commands dd {
+    border-left: 3px solid var(--color-blue) !important;
+    color: #444 !important;
+}
+
+/* Pricing cards — three colored blocks */
+.price-card {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 18px !important;
+    box-shadow: var(--shadow-block);
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.price-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 0 #1f1f1f !important;
+}
+
+.price-card .price-label {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: #1f1f1f;
+    color: #ffffff !important;
+    border: 2px solid #1f1f1f;
+}
+
+.price-card .price-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #1f1f1f;
+}
+
+.price-card .price-amount {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #1f1f1f;
+}
+
+.price-card.featured {
+    background: var(--color-yellow) !important;
+    border-color: #1f1f1f !important;
+    box-shadow: var(--shadow-block);
+}
+
+.price-card.featured .price-label {
+    background: var(--color-red);
+    color: #ffffff !important;
+}
+
+.price-card.featured .price-desc {
+    color: #1f1f1f !important;
+}
+
+.price-card.featured .price-features li {
+    color: #1f1f1f !important;
+}
+
+.price-card.featured .price-features li::before {
+    color: #1f1f1f !important;
+}
+
+.price-card .price-desc {
+    color: #444 !important;
+}
+
+.price-features li {
+    color: #444 !important;
+}
+
+.price-features li::before {
+    color: var(--color-green) !important;
+    font-weight: 800;
+}
+
+/* Download */
+.download-placeholder {
+    background: #f5f3ee !important;
+    border: 2px solid #1f1f1f !important;
+    border-radius: 18px !important;
+    box-shadow: var(--shadow-block);
+}
+
+.download-placeholder p {
+    color: #1f1f1f !important;
+}
+
+.platform-badge {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    color: #1f1f1f !important;
+    font-weight: 600;
+    border-radius: 999px !important;
+    box-shadow: var(--shadow-block-sm);
+}
+
+/* Contact */
+#contact {
+    background: var(--color-blue) !important;
+    border-top: 2px solid #1f1f1f;
+    border-bottom: 2px solid #1f1f1f;
+}
+
+#contact .section-title,
+#contact .section-subtitle {
+    color: #ffffff !important;
+}
+
+.contact-form input,
+.contact-form textarea,
+.contact-form select {
+    background: #ffffff !important;
+    border: 2px solid #1f1f1f !important;
+    color: #1f1f1f !important;
+    border-radius: 10px !important;
+    box-shadow: var(--shadow-block-sm);
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: var(--color-red) !important;
+    outline: none;
+}
+
+/* Footer */
+footer {
+    background: #1f1f1f;
+    color: #ffffff !important;
+    border-top: 2px solid #1f1f1f !important;
+}
+
+footer p {
+    color: #ffffff !important;
+}
+
+/* ════════════════════════════════════════════════════
+   Playground page overrides
+   ════════════════════════════════════════════════════ */
+
+.toolbar {
+    background: #ffffff !important;
+    border-bottom: 2px solid #1f1f1f !important;
+}
+
+.toolbar-logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+}
+
+.toolbar-logo span {
+    color: var(--color-red) !important;
+}
+
+.toolbar-divider {
+    background: #1f1f1f !important;
+    opacity: 0.3;
+}
+
+.editor-header,
+.preview-header,
+.console-header {
+    background: var(--color-surface) !important;
+    border-bottom: 2px solid #1f1f1f !important;
+    color: #1f1f1f !important;
+}
+
+.preview-frame-container {
+    background: #ffffff !important;
+}
+
+.preview-placeholder {
+    background: #fff5db !important;
+    color: #1f1f1f !important;
+}
+
+.console-panel {
+    border-top: 2px solid #1f1f1f !important;
+}
+
+.console-output {
+    background: #1f1f1f !important;
+    color: #f5f3ee !important;
+}
+
+.console-line.stdout {
+    color: #d0d0d0 !important;
+}
+
+.console-line.info {
+    color: var(--color-yellow) !important;
+}
+
+.console-line.error,
+.console-line.stderr {
+    color: var(--color-red) !important;
+}
+
+/* ════════════════════════════════════════════════════
+   Mobile tweaks — keep the playful look but right-sized
+   ════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+
+    /* Smaller chunky shadow so it doesn't crowd narrow viewports
+       and never causes horizontal scroll. */
+    :root {
+        --shadow-block: 4px 4px 0 0 #1f1f1f;
+        --shadow-block-sm: 3px 3px 0 0 #1f1f1f;
+    }
+
+    /* Disable hover-lift transforms — they don't make sense on touch
+       and can produce jitter on tap. */
+    .btn:hover,
+    .feature-card:hover,
+    .price-card:hover,
+    .lang-badge:hover {
+        transform: none !important;
+    }
+
+    .feature-card:hover {
+        box-shadow: var(--shadow-block) !important;
+    }
+
+    .price-card:hover {
+        box-shadow: var(--shadow-block) !important;
+    }
+
+    .btn:hover {
+        box-shadow: var(--shadow-block-sm) !important;
+    }
+
+    .btn-primary:hover {
+        box-shadow: var(--shadow-block-sm) !important;
+    }
+
+    /* Tame the rotated highlight badge so it never overflows. */
+    .hero h1 .highlight {
+        box-shadow: 3px 3px 0 0 #1f1f1f;
+        transform: rotate(-1.5deg);
+        padding: 0 0.25em;
+    }
+
+    .feature-icon {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    /* Heavy left rule on the callout looks chunky on a phone — soften. */
+    .description-doc .callout {
+        border-left-width: 5px !important;
+    }
+}
+
+/* ── Playground toolbar on mobile — let it wrap and shrink. */
+@media (max-width: 768px) {
+    .toolbar {
+        flex-wrap: wrap !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem 0.7rem !important;
+    }
+
+    .toolbar-divider,
+    .toolbar-label,
+    .toolbar-spacer {
+        display: none !important;
+    }
+}

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Project Model — Budo Documentation</title>
+    <meta name="description" content="How Budo finds entrypoints, resolves files, loads metadata, and exposes capabilities.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html" class="current">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="native-c-projects.html">Native C Projects</a></li>
+                    <li><a href="native-c-api.html">Native C API</a></li>
+                    <li><a href="native-c-debugging.html">Native C Debugging</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="project-model" class="has-anchor">Project Model <a class="heading-anchor" href="#project-model" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo projects are intentionally plain. A project directory contains an entrypoint, optional metadata, and any assets your app needs. There is no required package manager, manifest format, bundler, or generated source tree.</p>
+<p>That simplicity is useful only if the rules are predictable. This page explains the rules Budo applies before your first frame runs.</p>
+<h2 id="entrypoints" class="has-anchor">Entrypoints <a class="heading-anchor" href="#entrypoints" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>At startup, Budo scans the project directory in this order:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">main.ts
+main.js
+main.lua
+main.wat
+main.wasm</code></pre></div></div>
+<p>The first file found selects the runtime. <code>main.ts</code> and <code>main.js</code> run in QuickJS. <code>main.lua</code> runs in Lua 5.4. <code>main.wat</code> and <code>main.wasm</code> run through Wasmtime on desktop.</p>
+<p>Android supports QuickJS apps and Lua apps in the native runtime. Web export supports QuickJS and Lua. Wasmtime is a desktop feature; browsers cannot host it inside the Emscripten build.</p>
+<p>When both <code>main.ts</code> and <code>main.js</code> exist, <code>main.ts</code> wins. This is convenient while migrating, but in a release project it is clearer to keep only the entrypoint you mean to ship.</p>
+<h2 id="javascript-and-typescript-loading" class="has-anchor">JavaScript and TypeScript loading <a class="heading-anchor" href="#javascript-and-typescript-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript files are evaluated once before the main loop starts. Budo detects ES module syntax in the entrypoint and chooses module evaluation when it sees <code>import</code> or <code>export</code> statements. Classic scripts still work, and runtime globals such as <code>sys</code>, <code>console</code>, <code>fetch</code>, and the subsystem objects are available either way.</p>
+<p>TypeScript support is deliberately lightweight. The runtime strips type annotations, interfaces, access modifiers, generic type syntax, <code>as</code> casts, and related TypeScript-only constructs while preserving line and column positions as much as possible. It then runs the stripped JavaScript in QuickJS.</p>
+<p>This gives a smooth editor experience with <code>budo.d.ts</code> and no build step. It does not run the TypeScript compiler, emit decorator transforms, bundle modules, or type-check before execution.</p>
+<h2 id="lua-loading" class="has-anchor">Lua loading <a class="heading-anchor" href="#lua-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Lua apps are loaded as normal Lua chunks with the standard Lua libraries opened. Budo injects <code>sys</code>, <code>fetch</code>, <code>json_parse</code>, and <code>console</code>. The rendering model is the same as JavaScript: register a function with <code>sys.animation.requestFrame</code>, draw, then request the next frame.</p>
+<p>Lua has no Budo-specific module resolver. Use the Lua facilities available in the opened standard libraries and keep asset paths project-relative when you cross into Budo APIs.</p>
+<h2 id="webassembly-loading" class="has-anchor">WebAssembly loading <a class="heading-anchor" href="#webassembly-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Desktop WebAssembly apps import host functions from the <code>env</code> module. Budo calls an optional <code>init</code> export once, then calls a <code>frame</code> export once per frame when present. String-backed host functions require an exported <code>memory</code> so the host can read bytes from guest linear memory.</p>
+<p>WAT files are useful for small examples and tests. Larger projects usually generate <code>.wasm</code> from a language toolchain and keep a small compatibility layer around Budo's <code>env.*</code> imports.</p>
+<h2 id="appjson" class="has-anchor"><code>app.json</code> <a class="heading-anchor" href="#appjson" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The optional <code>app.json</code> file is read from the project directory. Budo uses it for app metadata and for policy decisions that must be explicit on some platforms.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;name&quot;: &quot;My Budo App&quot;,
+  &quot;author&quot;: &quot;N. Developer&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;date&quot;: &quot;2026-05-01&quot;,
+  &quot;orientation&quot;: &quot;portrait&quot;,
+  &quot;network&quot;: [&quot;api.example.com&quot;],
+  &quot;filesystem&quot;: false,
+  &quot;neural&quot;: true
+}</code></pre></div></div>
+<p><code>version</code> may also be written as <code>version_name</code>. If metadata is missing, Budo falls back to the directory name, <code>Unknown</code> author, version <code>1.0</code>, and unspecified orientation.</p>
+<p>Network access is disabled by default. Set <code>network</code> to <code>&quot;*&quot;</code>, a comma-separated domain string, or an array of domains to allow HTTP fetches.</p>
+<p>On Android, external filesystem access is disabled by default. Bundled project files remain readable. Set <code>filesystem</code> to <code>true</code> only when the app genuinely needs shared storage access.</p>
+<p>ONNX Runtime inference is opt-in at the app level. Set <code>neural</code> to <code>true</code> before calling <code>sys.neural</code> APIs.</p>
+<p>Android packaging reads additional fields from <code>app.json</code> for identity, icons, SDK versions, permissions, signing, shrinking, store listing metadata, and output details. See <a href="packaging-and-deployment.html">Packaging and deployment</a> for the release-oriented shape.</p>
+<h2 id="asset-paths" class="has-anchor">Asset paths <a class="heading-anchor" href="#asset-paths" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Most APIs that load files resolve paths relative to the project directory: shaders, fonts, SVGs, textures, modules, ONNX models, and <code>app.json</code> policy references.</p>
+<p>Paths must be relative. Absolute paths and traversal through <code>..</code> are rejected by APIs that load project assets. This rule keeps desktop, Android packaging, and web export aligned: if a path works locally, it can usually be bundled safely.</p>
+<p><code>sys.files</code> exposes a virtual root. <code>assets/</code> resolves from the application bundle. <code>sys.assets</code> is a read-only convenience wrapper that prepends this mount; its paths are bundle-relative, it has no writes, and it shares the <code>sys.files</code> error state. <code>files/</code> resolves from host storage: on desktop it defaults to the project directory unless <code>--file-root</code> is passed; on Android it defaults to app-specific external files or uses broad external storage when enabled and granted by policy.</p>
+<h2 id="capabilities" class="has-anchor">Capabilities <a class="heading-anchor" href="#capabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The <code>sys.capabilities</code> object lets code adapt to the runtime it is actually running on.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Check for neural inference before loading a model.
+if (sys.capabilities.neural.available) {
+  // Use the feature only on builds that expose it.
+  console.log(&#x27;Neural inference is available&#x27;);
+}
+
+// Check for sensor support before offering tilt controls.
+if (!sys.capabilities.sensors.available) {
+  // Pick a fallback that still works on desktop.
+  console.log(&#x27;Using keyboard fallback for tilt controls&#x27;);
+}</code></pre></div></div>
+<p>The main capability entries are <code>neural</code>, <code>midi</code>, <code>udp</code>, <code>http</code> and <code>sensors</code>. JavaScript and Lua expose the same shape on native desktop and Android builds, such as <code>sys.capabilities.neural.available</code>. WebAssembly uses <code>capability_*</code> imports.</p>
+<p>The current web entrypoints do not expose <code>sys.capabilities</code> for JavaScript or Lua. When code is meant to run on web too, combine capability checks with optional chaining and normal feature fallbacks.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// This works on native builds and safely falls back on current web builds.
+const canUseUdp = sys.capabilities?.udp?.available === true;</code></pre></div></div>
+<p>Capabilities are not a substitute for normal error handling. They are a clean way to choose a path before importing or calling a feature that may not exist on the current target.</p>
+<h2 id="runtime-lifecycle" class="has-anchor">Runtime lifecycle <a class="heading-anchor" href="#runtime-lifecycle" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For JavaScript and Lua, the app file is evaluated once, then the runtime enters a frame loop. Each frame follows the same broad shape: poll platform events, update input and timing, poll asynchronous subsystems such as MIDI, UDP, and network completion, clear or prepare the canvas, invoke your animation callback, run pending QuickJS jobs when needed, and present the frame.</p>
+<p>The important part for app authors is that your frame callback should finish quickly and request the next frame when it wants continuous animation. Long blocking work will block rendering and input. For network and timer work, use the asynchronous APIs provided by the runtime.</p>
+<h2 id="project-shape" class="has-anchor">Project shape <a class="heading-anchor" href="#project-shape" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A mature project often looks like this:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">my-app/
+  app.json
+  main.ts
+  draw.ts
+  input.ts
+  state.ts
+  shader.vert
+  shader.frag
+  assets/
+    logo.svg
+    Inter-Regular.ttf
+  data/
+    seed.db
+  models/
+    classifier.onnx</code></pre></div></div>
+<p>Budo does not require this layout. It is simply a practical one: code near the entrypoint, assets grouped by use, and paths short enough to remain readable in app code.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="getting-started.html" class="prev"><small>← Previous</small><span>Getting Started</span></a>
+                <a href="drawing-and-layout.html" class="next"><small>Next →</small><span>Drawing and Layout</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            code: code,
+                            entryName: entryName
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
