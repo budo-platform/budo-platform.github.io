@@ -64,8 +64,7 @@
 <p>Budo combines Skia drawing with a WebGL 2 and OpenGL ES 3 style shader pipeline. You can draw normal 2D canvas content, then run fullscreen or regional shader passes that sample the canvas as <code>u_canvas</code>. You can also draw meshes, upload buffers, bind textures, create Skia-backed canvas textures, and use offscreen render targets.</p>
 <p>The goal is not to expose every native graphics API. The goal is to provide a portable rendering surface that behaves consistently on desktop, Android, and web.</p>
 <h2 id="the-frame-pipeline" class="has-anchor">The frame pipeline <a class="heading-anchor" href="#the-frame-pipeline" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Within a frame, app code issues Skia drawing commands immediately and <code>sys.gl</code> draw calls submit immediately. Present only flushes or composites the default canvas when needed and swaps the platform window. Fullscreen and region passes can sample the current canvas texture through the built-in <code>u_canvas</code> uniform.</p>
-<p>The canvas path is GPU-immediate. Budo does not render by recording a CPU display list and uploading it at the end of the frame. This matters when you mix drawing, flushing, shader passes, and pixel reads.</p>
+<p>Within a frame, app code issues Skia drawing commands immediately and <code>sys.gl</code> draw calls submit immediately. Fullscreen and region passes can sample the current canvas texture through the built-in <code>u_canvas</code> uniform.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
@@ -100,7 +99,6 @@ function frame(t) {
   sys.canvas.clear(&#x27;#05060a&#x27;);
   sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
   sys.canvas.drawText(&#x27;Shader input&#x27;, 32, 64, 28);
-  sys.canvas.flush();
   sys.gl.bindScreen();
   program.use().drawFullscreen();
   sys.animation.requestFrame(frame);
@@ -114,9 +112,6 @@ function frame(t) {
   sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
   // Draw text that the shader will sample through u_canvas.
   sys.canvas.drawText(&#x27;Shader input&#x27;, 32, 64, 28);
-
-  // Submit pending canvas work before sampling it in GL.
-  sys.canvas.flush();
 
   // Bind the default screen framebuffer.
   sys.gl.bindScreen();
@@ -384,7 +379,6 @@ const post = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
 
 ui.canvas.clear(&#x27;transparent&#x27;);
 ui.canvas.drawText(&#x27;Budo&#x27;, 32, 96, 42);
-ui.flush();
 
 sys.gl.bindScreen();
 post.canvasTexture(&#x27;u_ui&#x27;, ui, 1).drawFullscreen();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a 512 by 256 Skia surface backed by a GL texture.

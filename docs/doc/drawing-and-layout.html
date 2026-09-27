@@ -286,7 +286,7 @@ sys.canvas.drawRoundRect(margin, margin, 220 * density, 56 * density, radius, ra
 sys.canvas.drawText(&#x27;Start&#x27;, margin + 18 * density, margin + 36 * density, fontSize);</code></pre></div></div>
 <p>For game worlds and simulations, it is often better to keep your own logical coordinate system and scale once at the edge. Both styles work; the important thing is to choose deliberately.</p>
 <h2 id="reading-pixels" class="has-anchor">Reading pixels <a class="heading-anchor" href="#reading-pixels" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.canvas.flush()</code> submits pending Skia work to the GPU. <code>sys.canvas.readPixels()</code> reads the current canvas into CPU memory as <code>{ width, height, pixels }</code> in JavaScript.</p>
+<p><code>sys.canvas.readPixels()</code> reads the current canvas into CPU memory as <code>{ width, height, pixels }</code> in JavaScript.</p>
 <div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Clear the canvas to a known color before the readback.
 sys.canvas.clear(&#x27;#ffffff&#x27;);
 // Select a red fill color.

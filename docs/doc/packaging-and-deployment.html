@@ -65,25 +65,25 @@
 <h2 id="local-desktop-runs" class="has-anchor">Local desktop runs <a class="heading-anchor" href="#local-desktop-runs" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>Use <code>run</code> while developing.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run one of the bundled examples on desktop.
-./build/budo run examples/demo
+budo run examples/demo
 # Run your app with an explicit window size and title.
-./build/budo run my-app --width 1280 --height 720 --title &quot;My App&quot;</code></pre></div></div>
+budo run my-app --width 1280 --height 720 --title &quot;My App&quot;</code></pre></div></div>
 <p>The implicit shorthand also works:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Use the shorthand form when you only want to run a project.
-./build/budo my-app</code></pre></div></div>
+budo my-app</code></pre></div></div>
 <p>Useful <code>run</code> options include <code>--fullscreen</code>, <code>--no-vsync</code>, and <code>--file-root &lt;path&gt;</code>. <code>--file-root</code> changes the <code>sys.files</code> virtual <code>files/</code> mount on desktop without changing its <code>assets/</code> mount, the <code>sys.assets</code> convenience wrapper, or project-relative loaders such as shaders and fonts.</p>
 <h2 id="project-bootstrap" class="has-anchor">Project bootstrap <a class="heading-anchor" href="#project-bootstrap" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p><code>init</code> writes a starter project into the target directory.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project with metadata and editor helper files.
-./build/budo init my-app</code></pre></div></div>
+budo init my-app</code></pre></div></div>
 <p>It creates <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, a copy of the developer API reference, and TypeScript declarations. This is the quickest way to get editor autocompletion for the runtime globals.</p>
 <h2 id="web-export" class="has-anchor">Web export <a class="heading-anchor" href="#web-export" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>The web target supports JavaScript, TypeScript, and Lua entrypoints. It packages a self-contained static folder with the Emscripten runtime and your project assets.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export a self-contained static web folder.
-./build/budo web-export my-app -o dist/my-app-web</code></pre></div></div>
+budo web-export my-app -o dist/my-app-web</code></pre></div></div>
 <p>To export and serve locally:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export the project and serve it locally for browser testing.
-./build/budo web-serve my-app</code></pre></div></div>
+budo web-serve my-app</code></pre></div></div>
 <p>The Makefile also provides web helpers for rebuilding the base runtime and staging the playground.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Rebuild the base web runtime.
 make web-build-runtime
@@ -96,14 +96,14 @@ make playground</code></pre></div></div>
 <blockquote><p><strong>Budo Pro:</strong> Android APK/AAB packaging is a paid feature. Public builds keep these commands visible, but require the private Android feature pack under <code>private/android</code> before packaging is enabled.</p></blockquote>
 <p>Android packaging is driven by the desktop <code>budo</code> binary. The public contract is the command surface, supported entrypoints, project assets, and <code>app.json</code> metadata; the Android runtime architecture and build backend are private to the Budo Pro feature pack.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build a debug APK for local testing.
-./build/budo android-apk my-app
+budo android-apk my-app
 # Build a release APK.
-./build/budo android-apk my-app --release
+budo android-apk my-app --release
 # Build a release Android App Bundle for store delivery.
-./build/budo android-aab my-app --release</code></pre></div></div>
+budo android-aab my-app --release</code></pre></div></div>
 <p>Use <code>--install</code> with <code>android-apk</code> to install the produced APK on connected adb devices.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build and install the APK on connected adb devices.
-./build/budo android-apk my-app --install</code></pre></div></div>
+budo android-apk my-app --install</code></pre></div></div>
 <p>The packager applies identity and release metadata, bundles the selected app's runtime assets, and writes the final APK/AAB to <code>dist/</code> by default. Temporary paths and generated files are implementation details, not stable API.</p>
 <h2 id="android-metadata" class="has-anchor">Android metadata <a class="heading-anchor" href="#android-metadata" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <blockquote><p><strong>Budo Pro:</strong> These metadata fields are consumed by the paid Android packaging feature.</p></blockquote>

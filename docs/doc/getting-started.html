@@ -71,7 +71,7 @@ touch hello-budo/main.js</code></pre></div></div>
 sys.canvas.setFillColor(&#x27;#111111&#x27;);
 sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 40, 80, 32);</code></pre></div></div>
 <p>Run it:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo run hello-budo</code></pre></div></div>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo run hello-budo</code></pre></div></div>
 <p>That is a complete Budo app. Budo opens a window, loads <code>main.js</code>, and gives your code the global <code>sys</code> object.</p>
 <h2 id="draw-every-frame" class="has-anchor">Draw every frame <a class="heading-anchor" href="#draw-every-frame" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>The first file draws once. Most apps draw in a frame callback so they can update over time.</p>
@@ -93,7 +93,7 @@ sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 40, 80, 32);</code></pre></div></d
 sys.animation.requestFrame(frame);</code></pre></div></div>
 <p><code>sys.animation.requestFrame(frame)</code> asks Budo to call <code>frame</code> on the next display tick. The callback receives a timestamp in milliseconds.</p>
 <h2 id="animate-something" class="has-anchor">Animate something <a class="heading-anchor" href="#animate-something" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Use the timestamp to move without keeping much state.</p>
+<p>Use the frame timestamp to move the circle.</p>
 <p>Change the circle code inside <code>frame</code> to this:</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
   const width = sys.window.getWidth();
@@ -213,7 +213,7 @@ sys.animation.requestFrame(frame);</code></pre></div></div>
 <p>Budo uses this metadata for app identity. Android packaging also reads fields such as package name, orientation, icon, permissions, signing, and store listing data.</p>
 <h2 id="use-the-starter-command" class="has-anchor">Use the starter command <a class="heading-anchor" href="#use-the-starter-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>For a real project, you may prefer Budo to write the starter files for you.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo init my-app</code></pre></div></div>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo init my-app</code></pre></div></div>
 <p>This creates a project with <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, <code>budo.d.ts</code>, and a local API reference snapshot. The generated <code>budo.d.ts</code> file gives editors autocomplete for the <code>sys</code> APIs.</p>
 <h2 id="split-code-when-it-grows" class="has-anchor">Split code when it grows <a class="heading-anchor" href="#split-code-when-it-grows" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>JavaScript entrypoints may use ES modules. Keep the first app in one file, then split helpers when the file starts to feel crowded.</p>

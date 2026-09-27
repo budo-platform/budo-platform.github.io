@@ -64,20 +64,289 @@
 <p>This page is a compact map of the public developer surface. The generated <code>budo-llm.md</code> file in the repository is the exhaustive source for signatures, edge cases, and WebAssembly import lists. Use this page when you want to remember where something lives.</p>
 <h2 id="cli" class="has-anchor">CLI <a class="heading-anchor" href="#cli" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <blockquote><p><strong>Budo Pro:</strong> <code>android-apk</code> and <code>android-aab</code> are paid Android packaging commands. Public builds report that the feature is unavailable until the private Android feature pack is installed under <code>private/android</code>.</p></blockquote>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">./build/budo run &lt;DIRECTORY|FILE&gt; [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
-./build/budo run --from-input js|ts|lua|wat|wasm [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
-./build/budo &lt;DIRECTORY&gt;
-./build/budo init &lt;DIRECTORY&gt;
-./build/budo web-serve &lt;DIRECTORY&gt;
-./build/budo web-export &lt;DIRECTORY&gt; [-o DIR]
-./build/budo android-apk &lt;DIRECTORY&gt; [--release|--debug] [--install] [--no-build] [--clean] [-o DIR]
-./build/budo android-aab &lt;DIRECTORY&gt; [--release|--debug] [--no-build] [--clean] [-o DIR]
-./build/budo budo.d.ts
-./build/budo budo-llm.md
-./build/budo help</code></pre></div></div>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo run &lt;DIRECTORY|FILE&gt; [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
+budo run --from-input js|ts|lua|wat|wasm [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
+budo &lt;DIRECTORY&gt;
+budo init &lt;DIRECTORY&gt;
+budo web-serve &lt;DIRECTORY&gt;
+budo web-export &lt;DIRECTORY&gt; [-o DIR]
+budo android-apk &lt;DIRECTORY&gt; [--release|--debug] [--install] [--no-build] [--clean] [-o DIR]
+budo android-aab &lt;DIRECTORY&gt; [--release|--debug] [--no-build] [--clean] [-o DIR]
+budo budo.d.ts
+budo budo-llm.md
+budo help</code></pre></div></div>
 <h2 id="javascript-globals" class="has-anchor">JavaScript globals <a class="heading-anchor" href="#javascript-globals" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>JavaScript and TypeScript apps run in QuickJS. Budo injects <code>sys</code>, <code>console</code>, <code>fetch</code>, and subsystem aliases where documented.</p>
 <p>The <code>sys</code> tree contains <code>canvas</code>, <code>transform</code>, <code>path</code>, <code>svg</code>, <code>font</code>, <code>graphics</code>, <code>gl</code>, <code>math</code>, <code>input</code>, <code>window</code>, <code>animation</code>, <code>timer</code>, <code>audio</code>, <code>midi</code>, <code>db</code>, <code>file</code>, <code>network</code>, <code>udp</code>, <code>magneto</code>, <code>device</code>, <code>neural</code>, and <code>capabilities</code>.</p>
+<h2 id="sysanimation" class="has-anchor"><code>sys.animation</code> <a class="heading-anchor" href="#sysanimation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.animation.requestFrame(callback)
+sys.animation.cancelFrame(handle)</code></pre></div></div>
+<p>Register one frame callback. The callback receives a timestamp in milliseconds.</p>
+<h2 id="systimer" class="has-anchor"><code>sys.timer</code> <a class="heading-anchor" href="#systimer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.timer.once(delay, callback)
+sys.timer.every(interval, callback)
+sys.timer.clear(id)</code></pre></div></div>
+<p>JavaScript-only frame-resolution timers.</p>
+<h2 id="syswindow" class="has-anchor"><code>sys.window</code> <a class="heading-anchor" href="#syswindow" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.window.getWidth()
+sys.window.getHeight()
+sys.window.getDisplayDensity()</code></pre></div></div>
+<p>Use display density for UI that should keep a stable physical size across devices.</p>
+<h2 id="sysinput" class="has-anchor"><code>sys.input</code> <a class="heading-anchor" href="#sysinput" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.input.get()
+sys.input.isKeyDown(scancode)
+sys.input.isKeyPressed(scancode)
+sys.input.startTextInput({text, selectionStart, selectionEnd, multiline?})
+sys.input.updateTextInput({text, selectionStart, selectionEnd, caret:{x,y,width,height}})
+sys.input.stopTextInput()</code></pre></div></div>
+<p><code>get()</code> returns pointer, pointer list, timing, modifier, focus, committed <code>text</code>, full <code>textEdit</code> replacements, persistent <code>composition</code>, and <code>textInputActive</code>. Apply <code>textEdit</code> before sending the current model back through <code>updateTextInput</code>. Text sessions provide IME composition, selection edits, candidate positioning, and soft-keyboard lifecycle on desktop, web, and Android. Android Back and single-line Done/Return finalize composition into <code>textEdit</code>. Text selections use UTF-16 code units. Scancode queries remain physical and layout-independent.</p>
+<h2 id="syscapabilities" class="has-anchor"><code>sys.capabilities</code> <a class="heading-anchor" href="#syscapabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Capability entries have an <code>available</code> boolean. The main entries are <code>neural</code>, <code>midi</code>, <code>udp</code>, <code>http</code> and <code>sensors</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">if (sys.capabilities.udp.available) {
+  console.log(&#x27;UDP enabled&#x27;);
+}</code></pre></div></div>
+<h2 id="syscanvas" class="has-anchor"><code>sys.canvas</code> <a class="heading-anchor" href="#syscanvas" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.clear(color)
+sys.canvas.drawRect(x, y, width, height)
+sys.canvas.drawRoundRect(x, y, width, height, rx, ry)
+sys.canvas.drawCircle(cx, cy, radius)
+sys.canvas.drawOval(x, y, width, height)
+sys.canvas.drawLine(x1, y1, x2, y2)
+sys.canvas.drawPoint(x, y)
+sys.canvas.drawText(text, x, y, fontSize)
+sys.canvas.measureText(text, fontSize)
+sys.canvas.measureTextRect(text, fontSize)
+sys.canvas.drawArc(x, y, width, height, startAngle, sweepAngle, useCenter)
+sys.canvas.readPixels()
+sys.canvas.save()
+sys.canvas.restore()
+sys.canvas.translate(dx, dy)
+sys.canvas.rotate(degrees)
+sys.canvas.rotate(degrees, px, py)
+sys.canvas.scale(sx, sy)
+sys.canvas.skew(sx, sy)
+sys.canvas.reset()
+sys.canvas.clipRect(x, y, width, height)</code></pre></div></div>
+<p>The optional <code>fontSize</code> defaults to 32 for drawing and measurement.</p>
+<p>Colors accept <code>#RRGGBB</code>, <code>#RRGGBBAA</code>, or numeric ARGB.</p>
+<h2 id="canvas-paint-state" class="has-anchor">Canvas paint state <a class="heading-anchor" href="#canvas-paint-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.setFillColor(color)
+sys.canvas.setStrokeColor(color)
+sys.canvas.setStrokeWidth(width)
+sys.canvas.setAntiAlias(enabled)
+sys.canvas.setAlpha(alpha)
+sys.canvas.setStrokeCap(cap)
+sys.canvas.setStrokeJoin(join)
+sys.canvas.setBlendMode(mode)
+sys.canvas.setImageFilter(name, ...args)
+sys.canvas.setColorFilter(name, ...args)
+sys.canvas.getError()</code></pre></div></div>
+<p>Blend modes, image filters, and color filters are advanced Skia APIs.</p>
+<h2 id="syspath" class="has-anchor"><code>sys.path</code> <a class="heading-anchor" href="#syspath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const path = sys.path.create()
+sys.path.reset(path)
+sys.path.moveTo(path, x, y)
+sys.path.lineTo(path, x, y)
+sys.path.quadTo(path, x1, y1, x2, y2)
+sys.path.cubicTo(path, x1, y1, x2, y2, x3, y3)
+sys.path.close(path)
+sys.path.addRect(path, x, y, width, height)
+sys.path.addCircle(path, cx, cy, radius)
+sys.canvas.drawPath(path)</code></pre></div></div>
+<h2 id="syssvg-and-sysfont" class="has-anchor"><code>sys.svg</code> and <code>sys.font</code> <a class="heading-anchor" href="#syssvg-and-sysfont" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const svg = sys.svg.load(&#x27;icon.svg&#x27;)
+const svgFromBytes = sys.svg.loadFromBuffer(svgBytes)
+sys.canvas.drawSvg(svg, x, y, width, height)
+sys.svg.destroy(svg)
+sys.svg.getWidth(svg)
+sys.svg.getHeight(svg)
+
+sys.font.load(path, name)
+sys.font.loadFromBuffer(fontBytes, name)
+sys.canvas.setFont(name)
+sys.font.reset()</code></pre></div></div>
+<h2 id="sysgl" class="has-anchor"><code>sys.gl</code> <a class="heading-anchor" href="#sysgl" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const program = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+sys.gl.bindScreen()
+program.uniform1f(&#x27;u_strength&#x27;, 0.5).drawFullscreen()
+
+const handle = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+const handleFromBytes = sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)
+sys.gl.destroyProgram(program)
+sys.gl.drawFullscreen(program)
+sys.gl.drawFullscreenImmediate(program, sourceTexture)
+sys.gl.drawRegion(program, x, y, width, height, targetId)
+sys.gl.drawRegionImmediate(program, x, y, width, height, targetId)
+sys.gl.drawMeshImmediate(program, layout, options)
+sys.gl.getLastError()
+sys.gl.getProjectDir()</code></pre></div></div>
+<p>GL operations are immediate. Uniforms include scalar, vector, array, and matrix forms such as <code>setUniform1f</code>, <code>setUniform3fv</code>, and <code>setUniformMatrix4</code>.</p>
+<p><code>createShaderProgram</code> returns a chainable <code>ShaderProgram</code> wrapper around the same immediate GL state. It supports <code>use</code>, <code>uniform1i</code>, <code>uniform1f</code>, <code>uniform2f</code>, <code>uniform3f</code>, <code>uniform4f</code>, <code>uniformMatrix4</code>, <code>texture</code>, <code>canvasTexture</code>, <code>renderTargetTexture</code>, <code>drawFullscreen</code>, <code>drawRegion</code>, and <code>drawMesh</code>. The handle API and object API can be mixed when that keeps setup code readable.</p>
+<p>Render targets, buffers, vertex layouts, textures, cubemaps, mesh draws, and instanced mesh draws are also available. Resource loaders that normally take project-relative paths also have <code>FromBuffer</code> variants for bytes from <code>file.readBinary()</code>, <code>fetch().arrayBuffer()</code>, or other sources. See <a href="rendering-and-shaders.html">Rendering and shaders</a> for the model and <code>budo-llm.md</code> for the full signature list.</p>
+<h2 id="sysgraphics" class="has-anchor"><code>sys.graphics</code> <a class="heading-anchor" href="#sysgraphics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const surface = sys.graphics.createCanvasTexture(512, 256)
+surface.canvas.drawText(&#x27;HUD&#x27;, 32, 96, 42)
+program.canvasTexture(&#x27;u_hud&#x27;, surface, 1).drawFullscreen()
+surface.destroy()</code></pre></div></div>
+<p>Canvas textures are Skia surfaces backed by GL textures and framebuffers. They are useful for drawing text, UI, or vector content into a texture that a shader can sample.</p>
+<h2 id="sysmath" class="has-anchor"><code>sys.math</code> <a class="heading-anchor" href="#sysmath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Math helpers mutate caller-owned arrays. Matrix layout is column-major.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.math.mat4Identity(out)
+sys.math.mat4Multiply(out, a, b)
+sys.math.mat4Perspective(out, fovy, aspect, near, far)
+sys.math.mat4Ortho(out, left, right, bottom, top, near, far)
+sys.math.mat4LookAt(out, eye, target, up)
+sys.math.mat4Translate(out, a, v)
+sys.math.mat4RotateX(out, a, radians)
+sys.math.mat4RotateY(out, a, radians)
+sys.math.mat4RotateZ(out, a, radians)
+sys.math.mat4Scale(out, a, v)
+sys.math.mat4Invert(out, a)
+sys.math.mat4Transpose(out, a)
+sys.math.vec3Add(out, a, b)
+sys.math.vec3Sub(out, a, b)
+sys.math.vec3Scale(out, a, scale)
+sys.math.vec3Normalize(out, a)
+sys.math.vec3Cross(out, a, b)
+sys.math.vec3Dot(a, b)
+sys.math.vec3Length(a)
+sys.math.vec3TransformMat4(out, a, matrix)
+sys.math.quatFromAxisAngle(out, axis, radians)
+sys.math.quatMultiply(out, a, b)
+sys.math.quatSlerp(out, a, b, t)
+sys.math.quatToMat4(out, q)</code></pre></div></div>
+<h2 id="sysaudio" class="has-anchor"><code>sys.audio</code> <a class="heading-anchor" href="#sysaudio" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.audio.start()
+sys.audio.stop()
+sys.audio.isPlaying()
+sys.audio.setMasterGain(gain)
+sys.audio.getMasterGain()
+sys.audio.createOscillator()
+sys.audio.destroyOscillator(id)
+sys.audio.setOscillatorType(id, type)
+sys.audio.setOscillatorFrequency(id, frequency)
+sys.audio.setOscillatorGain(id, gain)
+sys.audio.setOscillatorDetune(id, cents)
+sys.audio.setOscillatorEnvelope(id, attack, decay, sustain, release)
+sys.audio.startOscillator(id)
+sys.audio.stopOscillator(id)
+sys.audio.noteOn(id)
+sys.audio.noteOff(id)
+sys.audio.createBuffer(sampleRate, channels, samples)
+sys.audio.loadBuffer(path)
+sys.audio.loadBufferFromBuffer(buffer)
+sys.audio.setBufferData(buffer, samplesArray, offset)
+sys.audio.destroyBuffer(buffer)
+sys.audio.playBuffer(buffer, loop, gain)
+sys.audio.stopBuffer(playback)
+sys.audio.midiToFreq(note)
+sys.audio.getError()</code></pre></div></div>
+<p><code>createBuffer</code> allocates an empty mono or stereo PCM buffer. <code>loadBuffer</code> decodes a project-relative WAV, MP3, Ogg Vorbis, or FLAC asset; <code>loadBufferFromBuffer</code> decodes the same formats from an <code>ArrayBuffer</code>. Both return a buffer ID, or <code>-1</code> on failure. Play either kind of buffer with <code>playBuffer</code>; use <code>getError()</code> after a failed load to inspect the last audio error.</p>
+<h2 id="sysmidi" class="has-anchor"><code>sys.midi</code> <a class="heading-anchor" href="#sysmidi" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.midi.getInputCount()
+sys.midi.getOutputCount()
+sys.midi.getInputDevices()
+sys.midi.getOutputDevices()
+sys.midi.refreshDevices()
+sys.midi.onDevicesChanged(callbackOrNull)
+sys.midi.openInput(deviceIndex, callback)
+sys.midi.closeInput(handle)
+sys.midi.openOutput(deviceIndex)
+sys.midi.closeOutput(handle)
+sys.midi.sendMessage(handle, status, data1, data2)
+sys.midi.sendRaw(handle, bytes)
+sys.midi.noteOn(handle, channel, note, velocity)
+sys.midi.noteOff(handle, channel, note, velocity)
+sys.midi.controlChange(handle, channel, control, value)
+sys.midi.programChange(handle, channel, program)
+sys.midi.pitchBend(handle, channel, value)
+sys.midi.channelPressure(handle, channel, pressure)
+sys.midi.polyPressure(handle, channel, note, pressure)
+sys.midi.createSession(name, port)
+sys.midi.connectSession(session, host, port)
+sys.midi.destroySession(session)
+sys.midi.onSessionMessage(session, callback)
+sys.midi.sessionSend(session, status, data1, data2)
+sys.midi.sessionSendRaw(session, bytes)
+sys.midi.getSessions()</code></pre></div></div>
+<p>Constants include MIDI message types and common control-change numbers. <code>onDevicesChanged</code> establishes a silent baseline when registered, replaces any previous listener, and accepts <code>null</code> to unsubscribe. On a later topology change the callback runs on the runtime frame thread with <code>{inputs, outputs, generation}</code>. The snapshots are already refreshed and detect device replacement or reordering even when counts remain unchanged.</p>
+<h2 id="sysdb-sysfiles-sysassets-fetch-and-sysnetudp" class="has-anchor"><code>sys.db</code>, <code>sys.files</code>, <code>sys.assets</code>, <code>fetch</code>, and <code>sys.net.udp</code> <a class="heading-anchor" href="#sysdb-sysfiles-sysassets-fetch-and-sysnetudp" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const db = sys.db.open(name)
+sys.db.close(db)
+sys.db.execute(db, sql)
+sys.db.run(db, sql, ...params)
+sys.db.query(db, sql, ...params)
+sys.db.lastInsertId(db)
+sys.db.getError()
+
+sys.files.list(path)
+sys.files.readText(path)
+sys.files.readBinary(path)
+sys.files.writeText(path, text)
+sys.files.writeBinary(path, bytes)
+sys.files.exists(path)
+sys.files.isDirectory(path)
+sys.files.size(path)
+sys.files.pickText(callback, extension?)
+sys.files.saveText(suggestedName, text, callback)
+sys.files.getError()
+
+// Read-only convenience wrapper over sys.files paths under assets/.
+sys.assets.list(path)
+sys.assets.readText(path)
+sys.assets.readBinary(path)
+sys.assets.exists(path)
+sys.assets.isDirectory(path)
+sys.assets.size(path)
+sys.assets.getError()
+
+fetch(url, options)
+sys.net.fetch(url, options)
+
+const socket = sys.net.udp.bind(port)
+sys.net.udp.getPort(socket)
+sys.net.udp.send(socket, host, port, bytes)
+sys.net.udp.onMessage(socket, callback)
+sys.net.udp.close(socket)</code></pre></div></div>
+<p><code>sys.files</code> is the canonical virtual filesystem. Except for a root <code>list()</code>, its paths start with <code>assets/</code> or <code>files/</code>. <code>sys.assets</code> accepts bundle-relative paths, prepends <code>assets/</code>, exposes no write methods, and shares <code>getError()</code> state with <code>sys.files</code>. Therefore <code>sys.assets.readText(&#x27;config.json&#x27;)</code> is equivalent to <code>sys.files.readText(&#x27;assets/config.json&#x27;)</code>, while <code>sys.assets.list()</code> is equivalent to <code>sys.files.list(&#x27;assets&#x27;)</code>. JS <code>pickText(callback, extension?)</code> opens the platform system picker and returns whether it launched; an extension such as <code>.json</code> filters the picker and is enforced on the selected display name. The callback receives <code>({name,text}, null)</code> or <code>(null, error)</code>, and reads at most 8 MiB. <code>saveText(name, text, callback)</code> opens the platform Save As flow and reports <code>null</code> on success or an error string. Both APIs access locations outside Budo's mounts only through explicit user consent.</p>
+<p>Network access is disabled until <code>app.json</code> declares a <code>network</code> policy.</p>
+<h2 id="syssensors-sysdevice-and-sysneural" class="has-anchor"><code>sys.sensors</code>, <code>sys.device</code>, and <code>sys.neural</code> <a class="heading-anchor" href="#syssensors-sysdevice-and-sysneural" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.sensors.isAvailable()
+sys.sensors.hasAccelerometer()
+sys.sensors.hasCompass()
+sys.sensors.start()
+sys.sensors.stop()
+sys.sensors.isActive()
+sys.sensors.getAccel()
+sys.sensors.getCompass()
+
+sys.device.keepScreenOn(enabled)
+
+sys.neural.isAvailable()
+sys.neural.getError()
+sys.neural.loadModel(path)
+sys.neural.loadModelFromBuffer(buffer)
+sys.neural.unloadModel(model)
+sys.neural.getModelInfo(model)
+sys.neural.setInput(model, name, data, shape)
+sys.neural.run(model, inputs)
+sys.neural.getOutput(model, name)</code></pre></div></div>
+<p>Neural inference requires ONNX Runtime support and <code>&quot;neural&quot;: true</code> in <code>app.json</code>.</p>
+<h2 id="lua-reference" class="has-anchor">Lua reference <a class="heading-anchor" href="#lua-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Lua uses the same <code>sys</code> namespace names for canvas, paint, transform, path, SVG, font, GL, input, window, animation, audio, MIDI, SQLite, files/assets, network, UDP, sensors, device, neural, math, and capabilities.</p>
+<p>Differences are language-shaped. Lists are 1-based. <code>fetch</code> is callback-based. <code>readBinary</code> returns a Lua string. Neural tensors are Lua tables. <code>sys.timer</code> is JavaScript-only.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-lua">local function frame(timestamp)
+  sys.canvas.clear(&#x27;#101116&#x27;)
+  sys.canvas.setFillColor(&#x27;#ffffff&#x27;)
+  sys.canvas.drawText(&#x27;Lua&#x27;, 32, 64, 24)
+  sys.animation.requestFrame(frame)
+end
+
+sys.animation.requestFrame(frame)</code></pre></div></div>
+<h2 id="webassembly-reference" class="has-anchor">WebAssembly reference <a class="heading-anchor" href="#webassembly-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>WebAssembly imports host functions from <code>env</code>. Names use snake case: <code>canvas_clear</code>, <code>canvas_set_fill_color</code>, <code>transform_translate</code>, <code>path_create</code>, <code>gl_create_program</code>, <code>audio_create_oscillator</code>, <code>db_open</code>, <code>files_read_text</code>, <code>udp_bind</code>, <code>midi_open_input</code>, <code>magneto_get_accel</code>, <code>device_keep_screen_on</code>, <code>neural_load_model</code>, and so on. File import paths start with <code>assets/</code> or <code>files/</code>. WebAssembly has no <code>sys</code> namespace, so <code>sys.assets</code> does not add a separate import family; use <code>env.files_*</code> with an <code>assets/</code> path.</p>
+<p>String-backed imports take pointer and length pairs. Tensor and pixel APIs copy through exported linear memory. Optional features should be guarded with capability imports or compiled into target-specific modules.</p>
+<p>For the complete import list, generate or open <code>budo-llm.md</code> from the same Budo build you ship.</p>
 <p>&lt;!-- BEGIN GENERATED API AVAILABILITY --&gt;</p>
 <h2 id="runtime-availability" class="has-anchor">Runtime availability <a class="heading-anchor" href="#runtime-availability" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>This section is generated from <code>api/contracts/*.json</code>. Each cell names the guest-visible export; <code>-</code> means that operation is not exposed to that runtime. Platform lists describe where each runtime adapter is registered.</p>
@@ -590,277 +859,6 @@
 </table>
 </div>
 <p>&lt;!-- END GENERATED API AVAILABILITY --&gt;</p>
-<h2 id="sysanimation" class="has-anchor"><code>sys.animation</code> <a class="heading-anchor" href="#sysanimation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.animation.requestFrame(callback)
-sys.animation.cancelFrame(handle)</code></pre></div></div>
-<p>Register one frame callback. The callback receives a timestamp in milliseconds.</p>
-<h2 id="systimer" class="has-anchor"><code>sys.timer</code> <a class="heading-anchor" href="#systimer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.timer.once(delay, callback)
-sys.timer.every(interval, callback)
-sys.timer.clear(id)</code></pre></div></div>
-<p>JavaScript-only frame-resolution timers.</p>
-<h2 id="syswindow" class="has-anchor"><code>sys.window</code> <a class="heading-anchor" href="#syswindow" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.window.getWidth()
-sys.window.getHeight()
-sys.window.getDisplayDensity()</code></pre></div></div>
-<p>Use display density for UI that should keep a stable physical size across devices.</p>
-<h2 id="sysinput" class="has-anchor"><code>sys.input</code> <a class="heading-anchor" href="#sysinput" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.input.get()
-sys.input.isKeyDown(scancode)
-sys.input.isKeyPressed(scancode)
-sys.input.startTextInput({text, selectionStart, selectionEnd, multiline?})
-sys.input.updateTextInput({text, selectionStart, selectionEnd, caret:{x,y,width,height}})
-sys.input.stopTextInput()</code></pre></div></div>
-<p><code>get()</code> returns pointer, pointer list, timing, modifier, focus, committed <code>text</code>, full <code>textEdit</code> replacements, persistent <code>composition</code>, and <code>textInputActive</code>. Apply <code>textEdit</code> before sending the current model back through <code>updateTextInput</code>. Text sessions provide IME composition, selection edits, candidate positioning, and soft-keyboard lifecycle on desktop, web, and Android. Android Back and single-line Done/Return finalize composition into <code>textEdit</code>. Text selections use UTF-16 code units. Scancode queries remain physical and layout-independent.</p>
-<h2 id="syscapabilities" class="has-anchor"><code>sys.capabilities</code> <a class="heading-anchor" href="#syscapabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Capability entries have an <code>available</code> boolean. The main entries are <code>neural</code>, <code>midi</code>, <code>udp</code>, <code>http</code> and <code>sensors</code>.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">if (sys.capabilities.udp.available) {
-  console.log(&#x27;UDP enabled&#x27;);
-}</code></pre></div></div>
-<h2 id="syscanvas" class="has-anchor"><code>sys.canvas</code> <a class="heading-anchor" href="#syscanvas" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.clear(color)
-sys.canvas.drawRect(x, y, width, height)
-sys.canvas.drawRoundRect(x, y, width, height, rx, ry)
-sys.canvas.drawCircle(cx, cy, radius)
-sys.canvas.drawOval(x, y, width, height)
-sys.canvas.drawLine(x1, y1, x2, y2)
-sys.canvas.drawPoint(x, y)
-sys.canvas.drawText(text, x, y, fontSize)
-sys.canvas.measureText(text, fontSize)
-sys.canvas.measureTextRect(text, fontSize)
-sys.canvas.drawArc(x, y, width, height, startAngle, sweepAngle, useCenter)
-sys.canvas.flush()
-sys.canvas.readPixels()
-sys.canvas.save()
-sys.canvas.restore()
-sys.canvas.translate(dx, dy)
-sys.canvas.rotate(degrees)
-sys.canvas.rotate(degrees, px, py)
-sys.canvas.scale(sx, sy)
-sys.canvas.skew(sx, sy)
-sys.canvas.reset()
-sys.canvas.clipRect(x, y, width, height)</code></pre></div></div>
-<p>The optional <code>fontSize</code> defaults to 32 for drawing and measurement.</p>
-<p>Colors accept <code>#RRGGBB</code>, <code>#RRGGBBAA</code>, or numeric ARGB.</p>
-<h2 id="canvas-paint-state" class="has-anchor">Canvas paint state <a class="heading-anchor" href="#canvas-paint-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.setFillColor(color)
-sys.canvas.setStrokeColor(color)
-sys.canvas.setStrokeWidth(width)
-sys.canvas.setAntiAlias(enabled)
-sys.canvas.setAlpha(alpha)
-sys.canvas.setStrokeCap(cap)
-sys.canvas.setStrokeJoin(join)
-sys.canvas.setBlendMode(mode)
-sys.canvas.setImageFilter(name, ...args)
-sys.canvas.setColorFilter(name, ...args)
-sys.canvas.getError()</code></pre></div></div>
-<p>Blend modes, image filters, and color filters are advanced Skia APIs.</p>
-<h2 id="syspath" class="has-anchor"><code>sys.path</code> <a class="heading-anchor" href="#syspath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const path = sys.path.create()
-sys.path.reset(path)
-sys.path.moveTo(path, x, y)
-sys.path.lineTo(path, x, y)
-sys.path.quadTo(path, x1, y1, x2, y2)
-sys.path.cubicTo(path, x1, y1, x2, y2, x3, y3)
-sys.path.close(path)
-sys.path.addRect(path, x, y, width, height)
-sys.path.addCircle(path, cx, cy, radius)
-sys.canvas.drawPath(path)</code></pre></div></div>
-<h2 id="syssvg-and-sysfont" class="has-anchor"><code>sys.svg</code> and <code>sys.font</code> <a class="heading-anchor" href="#syssvg-and-sysfont" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const svg = sys.svg.load(&#x27;icon.svg&#x27;)
-const svgFromBytes = sys.svg.loadFromBuffer(svgBytes)
-sys.canvas.drawSvg(svg, x, y, width, height)
-sys.svg.destroy(svg)
-sys.svg.getWidth(svg)
-sys.svg.getHeight(svg)
-
-sys.font.load(path, name)
-sys.font.loadFromBuffer(fontBytes, name)
-sys.canvas.setFont(name)
-sys.font.reset()</code></pre></div></div>
-<h2 id="sysgl" class="has-anchor"><code>sys.gl</code> <a class="heading-anchor" href="#sysgl" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const program = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
-sys.gl.bindScreen()
-program.uniform1f(&#x27;u_strength&#x27;, 0.5).drawFullscreen()
-
-const handle = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
-const handleFromBytes = sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)
-sys.gl.destroyProgram(program)
-sys.gl.drawFullscreen(program)
-sys.gl.drawFullscreenImmediate(program, sourceTexture)
-sys.gl.drawRegion(program, x, y, width, height, targetId)
-sys.gl.drawRegionImmediate(program, x, y, width, height, targetId)
-sys.gl.drawMeshImmediate(program, layout, options)
-sys.gl.getLastError()
-sys.gl.getProjectDir()</code></pre></div></div>
-<p>GL operations are immediate. Uniforms include scalar, vector, array, and matrix forms such as <code>setUniform1f</code>, <code>setUniform3fv</code>, and <code>setUniformMatrix4</code>.</p>
-<p><code>createShaderProgram</code> returns a chainable <code>ShaderProgram</code> wrapper around the same immediate GL state. It supports <code>use</code>, <code>uniform1i</code>, <code>uniform1f</code>, <code>uniform2f</code>, <code>uniform3f</code>, <code>uniform4f</code>, <code>uniformMatrix4</code>, <code>texture</code>, <code>canvasTexture</code>, <code>renderTargetTexture</code>, <code>drawFullscreen</code>, <code>drawRegion</code>, and <code>drawMesh</code>. The handle API and object API can be mixed when that keeps setup code readable.</p>
-<p>Render targets, buffers, vertex layouts, textures, cubemaps, mesh draws, and instanced mesh draws are also available. Resource loaders that normally take project-relative paths also have <code>FromBuffer</code> variants for bytes from <code>file.readBinary()</code>, <code>fetch().arrayBuffer()</code>, or other sources. See <a href="rendering-and-shaders.html">Rendering and shaders</a> for the model and <code>budo-llm.md</code> for the full signature list.</p>
-<h2 id="sysgraphics" class="has-anchor"><code>sys.graphics</code> <a class="heading-anchor" href="#sysgraphics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const surface = sys.graphics.createCanvasTexture(512, 256)
-surface.canvas.drawText(&#x27;HUD&#x27;, 32, 96, 42)
-surface.flush()
-program.canvasTexture(&#x27;u_hud&#x27;, surface, 1).drawFullscreen()
-surface.destroy()</code></pre></div></div>
-<p>Canvas textures are Skia surfaces backed by GL textures and framebuffers. They are useful for drawing text, UI, or vector content into a texture that a shader can sample.</p>
-<h2 id="sysmath" class="has-anchor"><code>sys.math</code> <a class="heading-anchor" href="#sysmath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Math helpers mutate caller-owned arrays. Matrix layout is column-major.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.math.mat4Identity(out)
-sys.math.mat4Multiply(out, a, b)
-sys.math.mat4Perspective(out, fovy, aspect, near, far)
-sys.math.mat4Ortho(out, left, right, bottom, top, near, far)
-sys.math.mat4LookAt(out, eye, target, up)
-sys.math.mat4Translate(out, a, v)
-sys.math.mat4RotateX(out, a, radians)
-sys.math.mat4RotateY(out, a, radians)
-sys.math.mat4RotateZ(out, a, radians)
-sys.math.mat4Scale(out, a, v)
-sys.math.mat4Invert(out, a)
-sys.math.mat4Transpose(out, a)
-sys.math.vec3Add(out, a, b)
-sys.math.vec3Sub(out, a, b)
-sys.math.vec3Scale(out, a, scale)
-sys.math.vec3Normalize(out, a)
-sys.math.vec3Cross(out, a, b)
-sys.math.vec3Dot(a, b)
-sys.math.vec3Length(a)
-sys.math.vec3TransformMat4(out, a, matrix)
-sys.math.quatFromAxisAngle(out, axis, radians)
-sys.math.quatMultiply(out, a, b)
-sys.math.quatSlerp(out, a, b, t)
-sys.math.quatToMat4(out, q)</code></pre></div></div>
-<h2 id="sysaudio" class="has-anchor"><code>sys.audio</code> <a class="heading-anchor" href="#sysaudio" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.audio.start()
-sys.audio.stop()
-sys.audio.isPlaying()
-sys.audio.setMasterGain(gain)
-sys.audio.getMasterGain()
-sys.audio.createOscillator()
-sys.audio.destroyOscillator(id)
-sys.audio.setOscillatorType(id, type)
-sys.audio.setOscillatorFrequency(id, frequency)
-sys.audio.setOscillatorGain(id, gain)
-sys.audio.setOscillatorDetune(id, cents)
-sys.audio.setOscillatorEnvelope(id, attack, decay, sustain, release)
-sys.audio.startOscillator(id)
-sys.audio.stopOscillator(id)
-sys.audio.noteOn(id)
-sys.audio.noteOff(id)
-sys.audio.createBuffer(sampleRate, channels, samples)
-sys.audio.loadBuffer(path)
-sys.audio.loadBufferFromBuffer(buffer)
-sys.audio.setBufferData(buffer, samplesArray, offset)
-sys.audio.destroyBuffer(buffer)
-sys.audio.playBuffer(buffer, loop, gain)
-sys.audio.stopBuffer(playback)
-sys.audio.midiToFreq(note)
-sys.audio.getError()</code></pre></div></div>
-<p><code>createBuffer</code> allocates an empty mono or stereo PCM buffer. <code>loadBuffer</code> decodes a project-relative WAV, MP3, Ogg Vorbis, or FLAC asset; <code>loadBufferFromBuffer</code> decodes the same formats from an <code>ArrayBuffer</code>. Both return a buffer ID, or <code>-1</code> on failure. Play either kind of buffer with <code>playBuffer</code>; use <code>getError()</code> after a failed load to inspect the last audio error.</p>
-<h2 id="sysmidi" class="has-anchor"><code>sys.midi</code> <a class="heading-anchor" href="#sysmidi" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.midi.getInputCount()
-sys.midi.getOutputCount()
-sys.midi.getInputDevices()
-sys.midi.getOutputDevices()
-sys.midi.refreshDevices()
-sys.midi.onDevicesChanged(callbackOrNull)
-sys.midi.openInput(deviceIndex, callback)
-sys.midi.closeInput(handle)
-sys.midi.openOutput(deviceIndex)
-sys.midi.closeOutput(handle)
-sys.midi.sendMessage(handle, status, data1, data2)
-sys.midi.sendRaw(handle, bytes)
-sys.midi.noteOn(handle, channel, note, velocity)
-sys.midi.noteOff(handle, channel, note, velocity)
-sys.midi.controlChange(handle, channel, control, value)
-sys.midi.programChange(handle, channel, program)
-sys.midi.pitchBend(handle, channel, value)
-sys.midi.channelPressure(handle, channel, pressure)
-sys.midi.polyPressure(handle, channel, note, pressure)
-sys.midi.createSession(name, port)
-sys.midi.connectSession(session, host, port)
-sys.midi.destroySession(session)
-sys.midi.onSessionMessage(session, callback)
-sys.midi.sessionSend(session, status, data1, data2)
-sys.midi.sessionSendRaw(session, bytes)
-sys.midi.getSessions()</code></pre></div></div>
-<p>Constants include MIDI message types and common control-change numbers. <code>onDevicesChanged</code> establishes a silent baseline when registered, replaces any previous listener, and accepts <code>null</code> to unsubscribe. On a later topology change the callback runs on the runtime frame thread with <code>{inputs, outputs, generation}</code>. The snapshots are already refreshed and detect device replacement or reordering even when counts remain unchanged.</p>
-<h2 id="sysdb-sysfiles-sysassets-fetch-and-sysnetudp" class="has-anchor"><code>sys.db</code>, <code>sys.files</code>, <code>sys.assets</code>, <code>fetch</code>, and <code>sys.net.udp</code> <a class="heading-anchor" href="#sysdb-sysfiles-sysassets-fetch-and-sysnetudp" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const db = sys.db.open(name)
-sys.db.close(db)
-sys.db.execute(db, sql)
-sys.db.run(db, sql, ...params)
-sys.db.query(db, sql, ...params)
-sys.db.lastInsertId(db)
-sys.db.getError()
-
-sys.files.list(path)
-sys.files.readText(path)
-sys.files.readBinary(path)
-sys.files.writeText(path, text)
-sys.files.writeBinary(path, bytes)
-sys.files.exists(path)
-sys.files.isDirectory(path)
-sys.files.size(path)
-sys.files.pickText(callback, extension?)
-sys.files.saveText(suggestedName, text, callback)
-sys.files.getError()
-
-// Read-only convenience wrapper over sys.files paths under assets/.
-sys.assets.list(path)
-sys.assets.readText(path)
-sys.assets.readBinary(path)
-sys.assets.exists(path)
-sys.assets.isDirectory(path)
-sys.assets.size(path)
-sys.assets.getError()
-
-fetch(url, options)
-sys.net.fetch(url, options)
-
-const socket = sys.net.udp.bind(port)
-sys.net.udp.getPort(socket)
-sys.net.udp.send(socket, host, port, bytes)
-sys.net.udp.onMessage(socket, callback)
-sys.net.udp.close(socket)</code></pre></div></div>
-<p><code>sys.files</code> is the canonical virtual filesystem. Except for a root <code>list()</code>, its paths start with <code>assets/</code> or <code>files/</code>. <code>sys.assets</code> accepts bundle-relative paths, prepends <code>assets/</code>, exposes no write methods, and shares <code>getError()</code> state with <code>sys.files</code>. Therefore <code>sys.assets.readText(&#x27;config.json&#x27;)</code> is equivalent to <code>sys.files.readText(&#x27;assets/config.json&#x27;)</code>, while <code>sys.assets.list()</code> is equivalent to <code>sys.files.list(&#x27;assets&#x27;)</code>. JS <code>pickText(callback, extension?)</code> opens the platform system picker and returns whether it launched; an extension such as <code>.json</code> filters the picker and is enforced on the selected display name. The callback receives <code>({name,text}, null)</code> or <code>(null, error)</code>, and reads at most 8 MiB. <code>saveText(name, text, callback)</code> opens the platform Save As flow and reports <code>null</code> on success or an error string. Both APIs access locations outside Budo's mounts only through explicit user consent.</p>
-<p>Network access is disabled until <code>app.json</code> declares a <code>network</code> policy.</p>
-<h2 id="syssensors-sysdevice-and-sysneural" class="has-anchor"><code>sys.sensors</code>, <code>sys.device</code>, and <code>sys.neural</code> <a class="heading-anchor" href="#syssensors-sysdevice-and-sysneural" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.sensors.isAvailable()
-sys.sensors.hasAccelerometer()
-sys.sensors.hasCompass()
-sys.sensors.start()
-sys.sensors.stop()
-sys.sensors.isActive()
-sys.sensors.getAccel()
-sys.sensors.getCompass()
-
-sys.device.keepScreenOn(enabled)
-
-sys.neural.isAvailable()
-sys.neural.getError()
-sys.neural.loadModel(path)
-sys.neural.loadModelFromBuffer(buffer)
-sys.neural.unloadModel(model)
-sys.neural.getModelInfo(model)
-sys.neural.setInput(model, name, data, shape)
-sys.neural.run(model, inputs)
-sys.neural.getOutput(model, name)</code></pre></div></div>
-<p>Neural inference requires ONNX Runtime support and <code>&quot;neural&quot;: true</code> in <code>app.json</code>.</p>
-<h2 id="lua-reference" class="has-anchor">Lua reference <a class="heading-anchor" href="#lua-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Lua uses the same <code>sys</code> namespace names for canvas, paint, transform, path, SVG, font, GL, input, window, animation, audio, MIDI, SQLite, files/assets, network, UDP, sensors, device, neural, math, and capabilities.</p>
-<p>Differences are language-shaped. Lists are 1-based. <code>fetch</code> is callback-based. <code>readBinary</code> returns a Lua string. Neural tensors are Lua tables. <code>sys.timer</code> is JavaScript-only.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-lua">local function frame(timestamp)
-  sys.canvas.clear(&#x27;#101116&#x27;)
-  sys.canvas.setFillColor(&#x27;#ffffff&#x27;)
-  sys.canvas.drawText(&#x27;Lua&#x27;, 32, 64, 24)
-  sys.animation.requestFrame(frame)
-end
-
-sys.animation.requestFrame(frame)</code></pre></div></div>
-<h2 id="webassembly-reference" class="has-anchor">WebAssembly reference <a class="heading-anchor" href="#webassembly-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>WebAssembly imports host functions from <code>env</code>. Names use snake case: <code>canvas_clear</code>, <code>canvas_set_fill_color</code>, <code>transform_translate</code>, <code>path_create</code>, <code>gl_create_program</code>, <code>audio_create_oscillator</code>, <code>db_open</code>, <code>files_read_text</code>, <code>udp_bind</code>, <code>midi_open_input</code>, <code>magneto_get_accel</code>, <code>device_keep_screen_on</code>, <code>neural_load_model</code>, and so on. File import paths start with <code>assets/</code> or <code>files/</code>. WebAssembly has no <code>sys</code> namespace, so <code>sys.assets</code> does not add a separate import family; use <code>env.files_*</code> with an <code>assets/</code> path.</p>
-<p>String-backed imports take pointer and length pairs. Tensor and pixel APIs copy through exported linear memory. Optional features should be guarded with capability imports or compiled into target-specific modules.</p>
-<p>For the complete import list, generate or open <code>budo-llm.md</code> from the same Budo build you ship.</p>
             </article>
 
             <nav class="doc-pager">

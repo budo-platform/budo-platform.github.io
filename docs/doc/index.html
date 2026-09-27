@@ -85,9 +85,9 @@ function frame(t) {
 sys.animation.requestFrame(frame);</code></pre></div></div>
 <p>Run the directory:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run the project directory as a desktop app.
-./build/budo run my-app</code></pre></div></div>
+budo run my-app</code></pre></div></div>
 <p>For a throwaway sketch, you can also pipe one file directly into <code>run</code>:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">cat &lt;&lt;&#x27;EOF&#x27; | ./build/budo run --from-input js
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">cat &lt;&lt;&#x27;EOF&#x27; | budo run --from-input js
 let pulse = 0;
 
 function frame(t) {
@@ -128,24 +128,24 @@ EOF</code></pre></div></div>
 <h2 id="command-shape" class="has-anchor">Command shape <a class="heading-anchor" href="#command-shape" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>The current Budo CLI uses subcommands:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run a project directory explicitly.
-./build/budo run my-app
+budo run my-app
 # Create a starter project.
-./build/budo init my-app
+budo init my-app
 # Export a self-contained web build.
-./build/budo web-export my-app -o dist/my-app-web
+budo web-export my-app -o dist/my-app-web
 # Export and serve locally for browser testing.
-./build/budo web-serve my-app
+budo web-serve my-app
 # Build an Android APK release.
-./build/budo android-apk my-app --release
+budo android-apk my-app --release
 # Build an Android App Bundle release.
-./build/budo android-aab my-app --release
+budo android-aab my-app --release
 # Print the TypeScript declarations bundled with the runtime.
-./build/budo budo.d.ts
+budo budo.d.ts
 # Print the generated developer API reference.
-./build/budo budo-llm.md
+budo budo-llm.md
 # Show the command help.
-./build/budo help</code></pre></div></div>
-<p>The shorthand <code>./build/budo my-app</code> is accepted for <code>run</code>, but using the explicit subcommand in scripts makes intent clearer.</p>
+budo help</code></pre></div></div>
+<p>The shorthand <code>budo my-app</code> is accepted for <code>run</code>, but using the explicit subcommand in scripts makes intent clearer.</p>
             </article>
 
             <nav class="doc-pager">
