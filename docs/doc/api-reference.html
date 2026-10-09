@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html" class="current">API Reference</a></li>
@@ -60,25 +65,28 @@
                 <h1 id="api-reference" class="has-anchor">API Reference <a class="heading-anchor" href="#api-reference" aria-label="Copy link to this section" title="Copy link">#</a></h1>
 <p>This page is a compact map of the public developer surface. The generated <code>budo-llm.md</code> file in the repository is the exhaustive source for signatures, edge cases, and WebAssembly import lists. Use this page when you want to remember where something lives.</p>
 <h2 id="cli" class="has-anchor">CLI <a class="heading-anchor" href="#cli" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<blockquote><p><strong>Budo Pro:</strong> <code>android-apk</code> and <code>android-aab</code> are paid Android packaging commands. Public builds report that the feature is unavailable until the private Android feature pack is installed under <code>private/android</code>.</p></blockquote>
+<blockquote><p><strong>Budo Pro:</strong> <code>android-apk</code> and <code>android-aab</code> are Budo Pro commands. During Budo's public launch, the released Budo binaries include them for free; a later release will make them a paid feature. Budo built from source without the private Android feature pack under <code>private/android</code> keeps the commands, which then report that packaging is unavailable.</p></blockquote>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo run &lt;DIRECTORY|FILE&gt; [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
 budo run --from-input js|ts|lua|wat|wasm [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
 budo &lt;DIRECTORY&gt;
-budo init &lt;DIRECTORY&gt;
+budo init &lt;DIRECTORY&gt; [--template ui | --language c [--template canvas|gpu]]
 budo web-serve &lt;DIRECTORY&gt;
 budo web-export &lt;DIRECTORY&gt; [-o DIR]
 budo android-apk &lt;DIRECTORY&gt; [--release|--debug] [--install] [--no-build] [--clean] [-o DIR]
 budo android-aab &lt;DIRECTORY&gt; [--release|--debug] [--no-build] [--clean] [-o DIR]
 budo budo.d.ts
 budo budo-llm.md
+budo version          # also --version, -v
 budo help</code></pre></div></div>
 <h2 id="javascript-globals" class="has-anchor">JavaScript globals <a class="heading-anchor" href="#javascript-globals" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>JavaScript and TypeScript apps run in QuickJS. Budo injects <code>sys</code>, <code>console</code>, <code>fetch</code>, and subsystem aliases where documented.</p>
 <p>The <code>sys</code> tree contains <code>canvas</code>, <code>transform</code>, <code>path</code>, <code>svg</code>, <code>font</code>, <code>graphics</code>, <code>gl</code>, <code>math</code>, <code>input</code>, <code>window</code>, <code>animation</code>, <code>timer</code>, <code>audio</code>, <code>midi</code>, <code>db</code>, <code>file</code>, <code>network</code>, <code>udp</code>, <code>magneto</code>, <code>device</code>, <code>neural</code>, and <code>capabilities</code>.</p>
 <h2 id="sysanimation" class="has-anchor"><code>sys.animation</code> <a class="heading-anchor" href="#sysanimation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.animation.requestFrame(callback)
+sys.animation.waitForInput(callback, timeoutMs)
 sys.animation.cancelFrame(handle)</code></pre></div></div>
 <p>Register one frame callback. The callback receives a timestamp in milliseconds.</p>
+<p><code>waitForInput</code> registers the callback like <code>requestFrame</code>, but it runs only on the next input event, canvas resize, or after <code>timeoutMs</code> (optional). Until then the last frame stays on screen and Budo stops drawing: desktop builds sleep on window events and Android renders only when needed. End a frame with <code>waitForInput</code> when nothing animates and <code>requestFrame</code> while something moves; an app with <code>sys.gl</code> passes that draw to the screen after the canvas keeps calling <code>requestFrame</code>.</p>
 <h2 id="systimer" class="has-anchor"><code>sys.timer</code> <a class="heading-anchor" href="#systimer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.timer.once(delay, callback)
 sys.timer.every(interval, callback)
@@ -123,8 +131,26 @@ sys.canvas.rotate(degrees, px, py)
 sys.canvas.scale(sx, sy)
 sys.canvas.skew(sx, sy)
 sys.canvas.reset()
-sys.canvas.clipRect(x, y, width, height)</code></pre></div></div>
+sys.canvas.clipRect(x, y, width, height)
+sys.canvas.clipRoundRect(x, y, width, height, rx, ry)
+sys.canvas.clipPath(path)
+sys.canvas.saveLayer(alpha, x, y, width, height, backdropBlur)
+sys.canvas.drawParagraph(text, x, y, width, fontSize, options)
+sys.canvas.measureParagraph(text, width, fontSize, options)
+sys.canvas.drawRichText(spans, x, y, width, options)
+sys.canvas.measureRichText(spans, width, options)</code></pre></div></div>
 <p>The optional <code>fontSize</code> defaults to 32 for drawing and measurement.</p>
+<p><code>clipRoundRect</code> and <code>clipPath</code> clip with anti-aliased edges; <code>ry</code> defaults to <code>rx</code>. Undo a clip with <code>restore()</code> after <code>save()</code>.</p>
+<p><code>saveLayer(alpha = 255, x?, y?, width?, height?, backdropBlur = 0)</code> draws what follows into an offscreen layer that <code>restore()</code> composites back with one opacity (0–255), so overlapping shapes fade as a group. With a rectangle the layer is clipped to it. A <code>backdropBlur</code> above 0 starts the layer with a blurred copy of what is already drawn below it, for frosted-glass panels:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.save()
+sys.canvas.clipRoundRect(x, y, w, h, 16)
+sys.canvas.saveLayer(255, x, y, w, h, 24)
+sys.canvas.setFillColor(&#x27;#FFFFFF99&#x27;)
+sys.canvas.drawRect(x, y, w, h)
+sys.canvas.restore()
+sys.canvas.restore()</code></pre></div></div>
+<p><code>drawRichText(spans, x, y, width, options)</code> and <code>measureRichText(spans, width, options)</code> lay out a paragraph made of spans: strings, or <code>{ text, size, color, font }</code> objects (<code>font</code> is a name registered with <code>sys.font.load</code>). Lines grow to their largest span and baselines align; <code>options</code> adds <code>size</code>, the default span size, to the paragraph options.</p>
+<p><code>drawParagraph</code> wraps text to <code>width</code> (0 disables wrapping) at spaces and <code>\n</code>, breaking words that are wider than a line. <code>y</code> is the top of the paragraph, not a baseline. <code>options</code> takes <code>align</code> (<code>&#x27;left&#x27;</code>, <code>&#x27;center&#x27;</code>, <code>&#x27;right&#x27;</code>), <code>lineHeight</code> (a multiple of the font size, default 1.25), and <code>maxLines</code> (the last line ends with an ellipsis). Both functions return <code>{ width, height, lines }</code>, so <code>measureParagraph</code> can size a layout before drawing.</p>
 <p>Colors accept <code>#RRGGBB</code>, <code>#RRGGBBAA</code>, or numeric ARGB.</p>
 <h2 id="canvas-paint-state" class="has-anchor">Canvas paint state <a class="heading-anchor" href="#canvas-paint-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.setFillColor(color)
@@ -137,8 +163,15 @@ sys.canvas.setStrokeJoin(join)
 sys.canvas.setBlendMode(mode)
 sys.canvas.setImageFilter(name, ...args)
 sys.canvas.setColorFilter(name, ...args)
+sys.canvas.setGradient(kind, ...args)
 sys.canvas.getError()</code></pre></div></div>
 <p>Blend modes, image filters, and color filters are advanced Skia APIs.</p>
+<p>Gradients replace the paint color for fills, strokes, and text:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.setGradient(&#x27;linear&#x27;, x0, y0, x1, y1, [&#x27;#2E7D6F&#x27;, &#x27;#8FD3C1&#x27;])
+sys.canvas.setGradient(&#x27;radial&#x27;, cx, cy, radius, [&#x27;#FFFFFF&#x27;, &#x27;#FFFFFF00&#x27;], [0, 1])
+sys.canvas.setGradient(&#x27;sweep&#x27;, cx, cy, [&#x27;#F00&#x27;, &#x27;#0F0&#x27;, &#x27;#00F&#x27;, &#x27;#F00&#x27;])
+sys.canvas.setGradient(null)</code></pre></div></div>
+<p><code>colors</code> holds 2 to 16 colors and the optional <code>stops</code> one 0–1 position per color. Colors blend in OKLab, so transitions stay even and transparent stops do not turn gray. A gradient makes the paint opaque (<code>setAlpha</code> then fades it) and lasts until <code>setGradient(null)</code> or the next <code>setFillColor</code> or <code>setStrokeColor</code>.</p>
 <h2 id="syspath" class="has-anchor"><code>sys.path</code> <a class="heading-anchor" href="#syspath" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const path = sys.path.create()
 sys.path.reset(path)
@@ -149,6 +182,7 @@ sys.path.cubicTo(path, x1, y1, x2, y2, x3, y3)
 sys.path.close(path)
 sys.path.addRect(path, x, y, width, height)
 sys.path.addCircle(path, cx, cy, radius)
+sys.path.addSvg(path, d)        // SVG path data; false when it does not parse
 sys.canvas.drawPath(path)</code></pre></div></div>
 <h2 id="syssvg-and-sysfont" class="has-anchor"><code>sys.svg</code> and <code>sys.font</code> <a class="heading-anchor" href="#syssvg-and-sysfont" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const svg = sys.svg.load(&#x27;icon.svg&#x27;)
@@ -161,25 +195,25 @@ sys.svg.getHeight(svg)
 sys.font.load(path, name)
 sys.font.loadFromBuffer(fontBytes, name)
 sys.canvas.setFont(name)
-sys.font.reset()</code></pre></div></div>
+sys.canvas.setFont(null)       // back to the default font (nil in Lua)</code></pre></div></div>
 <h2 id="sysgl" class="has-anchor"><code>sys.gl</code> <a class="heading-anchor" href="#sysgl" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const program = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const program = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
+const fromBytes = sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)
 sys.gl.bindScreen()
-program.uniform1f(&#x27;u_strength&#x27;, 0.5).drawFullscreen()
-
-const handle = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;)
-const handleFromBytes = sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)
-sys.gl.destroyProgram(program)
+sys.gl.bindRenderTarget(targetId)
+sys.gl.setUniform1f(program, &#x27;u_strength&#x27;, 0.5)
+sys.gl.bindTexture2D(program, &#x27;u_image&#x27;, texture, 1)
+sys.gl.bindTexture(program, &#x27;u_scene&#x27;, targetId, 1)
+sys.gl.bindCanvasTexture(program, &#x27;u_ui&#x27;, canvasTexture, 1)
 sys.gl.drawFullscreen(program)
 sys.gl.drawFullscreenImmediate(program, sourceTexture)
 sys.gl.drawRegion(program, x, y, width, height, targetId)
-sys.gl.drawRegionImmediate(program, x, y, width, height, targetId)
-sys.gl.drawMeshImmediate(program, layout, options)
+sys.gl.drawMesh(program, layout, options)
+sys.gl.destroyProgram(program)
 sys.gl.getLastError()
 sys.gl.getProjectDir()</code></pre></div></div>
-<p>GL operations are immediate. Uniforms include scalar, vector, array, and matrix forms such as <code>setUniform1f</code>, <code>setUniform3fv</code>, and <code>setUniformMatrix4</code>.</p>
-<p><code>createShaderProgram</code> returns a chainable <code>ShaderProgram</code> wrapper around the same immediate GL state. It supports <code>use</code>, <code>uniform1i</code>, <code>uniform1f</code>, <code>uniform2f</code>, <code>uniform3f</code>, <code>uniform4f</code>, <code>uniformMatrix4</code>, <code>texture</code>, <code>canvasTexture</code>, <code>renderTargetTexture</code>, <code>drawFullscreen</code>, <code>drawRegion</code>, and <code>drawMesh</code>. The handle API and object API can be mixed when that keeps setup code readable.</p>
-<p>Render targets, buffers, vertex layouts, textures, cubemaps, mesh draws, and instanced mesh draws are also available. Resource loaders that normally take project-relative paths also have <code>FromBuffer</code> variants for bytes from <code>file.readBinary()</code>, <code>fetch().arrayBuffer()</code>, or other sources. See <a href="rendering-and-shaders.html">Rendering and shaders</a> for the model and <code>budo-llm.md</code> for the full signature list.</p>
+<p>GL operations are immediate. Programs, render targets, buffers, layouts, and textures are numeric handles, and every <code>sys.gl</code> call takes the program handle first. Uniforms include scalar, vector, array, and matrix forms such as <code>setUniform1f</code>, <code>setUniform3fv</code>, and <code>setUniformMatrix4</code>.</p>
+<p>Render targets, buffers, vertex layouts, textures, cubemaps, and mesh draws are also available. Resource loaders that normally take project-relative paths also have <code>FromBuffer</code> variants for bytes from <code>file.readBinary()</code>, <code>fetch().arrayBuffer()</code>, or other sources. See <a href="rendering-and-shaders.html">Rendering and shaders</a> for the model and <code>budo-llm.md</code> for the full signature list.</p>
 <h2 id="sysgraphics" class="has-anchor"><code>sys.graphics</code> <a class="heading-anchor" href="#sysgraphics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const surface = sys.graphics.createCanvasTexture(512, 256)
 surface.canvas.drawText(&#x27;HUD&#x27;, 32, 96, 42)
@@ -318,6 +352,11 @@ sys.sensors.getAccel()
 sys.sensors.getCompass()
 
 sys.device.keepScreenOn(enabled)
+sys.device.setClipboardText(text)
+sys.device.getClipboardText()
+sys.device.haptic(kind)
+sys.device.getPreferences()
+sys.device.setCursor(name)
 
 sys.neural.isAvailable()
 sys.neural.getError()
@@ -329,6 +368,26 @@ sys.neural.setInput(model, name, data, shape)
 sys.neural.run(model, inputs)
 sys.neural.getOutput(model, name)</code></pre></div></div>
 <p>Neural inference requires ONNX Runtime support and <code>&quot;neural&quot;: true</code> in <code>app.json</code>.</p>
+<p><code>getClipboardText()</code> returns <code>null</code> when the clipboard holds no text. Browsers only read the clipboard asynchronously, so on the web it returns the last text copied, cut, or pasted on the page.</p>
+<p><code>haptic(kind)</code> plays <code>light</code> (default), <code>medium</code>, <code>heavy</code>, <code>selection</code>, <code>success</code>, <code>warning</code>, or <code>error</code> feedback; it returns <code>false</code> on devices without haptics (desktop).</p>
+<p><code>getPreferences()</code> returns <code>{ darkMode, reducedMotion, highContrast, fontScale, safeArea: { top, right, bottom, left }, keyboardInset }</code>: the system appearance, motion and contrast settings, the text size multiplier, insets (physical pixels) to keep free of notches and system bars, and the height (physical pixels, from the bottom) the on-screen keyboard covers, 0 when it is hidden or on desktop. Lay out above <code>keyboardInset</code> while a text field is focused: budo-ui does it for you. It is cheap to call every frame.</p>
+<p><code>setCursor(name)</code> takes CSS cursor names: <code>default</code>, <code>text</code>, <code>pointer</code>, <code>grab</code>, <code>grabbing</code>, <code>move</code>, <code>ew-resize</code>, <code>ns-resize</code>, <code>nwse-resize</code>, <code>nesw-resize</code>, <code>not-allowed</code>, <code>wait</code>, <code>crosshair</code>, or <code>none</code>.</p>
+<h2 id="sysaccessibility" class="has-anchor"><code>sys.accessibility</code> <a class="heading-anchor" href="#sysaccessibility" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.accessibility.isAvailable()
+sys.accessibility.isActive()
+sys.accessibility.update(nodes)
+sys.accessibility.takeActions()</code></pre></div></div>
+<p>Budo draws everything itself, so screen readers only know what the app tells them. Publish a flat list of nodes in reading order whenever the UI changes:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.accessibility.update([
+  { id: &#x27;save&#x27;, role: &#x27;button&#x27;, label: &#x27;Save&#x27;, x, y, width, height },
+  { id: &#x27;dark&#x27;, role: &#x27;switch&#x27;, label: &#x27;Dark mode&#x27;, checked: true, x, y, width, height },
+  { id: &#x27;level&#x27;, role: &#x27;slider&#x27;, label: &#x27;Volume&#x27;, min: 0, max: 100, rangeValue: 40, value: &#x27;40%&#x27;, x, y, width, height },
+])
+for (const { id, action, value } of sys.accessibility.takeActions()) {
+  // action: &#x27;press&#x27;, &#x27;focus&#x27;, &#x27;increment&#x27;, &#x27;decrement&#x27;, or &#x27;setValue&#x27; (with value)
+}</code></pre></div></div>
+<p>Roles: <code>button</code>, <code>checkbox</code>, <code>radio</code>, <code>switch</code>, <code>slider</code>, <code>textbox</code>, <code>list</code>, <code>listitem</code>, <code>heading</code>, <code>text</code>, <code>combobox</code>, <code>option</code>, <code>tab</code>, <code>image</code>, <code>group</code>, <code>link</code>. Bounds are physical canvas pixels. On the web the nodes become invisible ARIA elements over the canvas; on Android they are exposed to TalkBack; on macOS to VoiceOver. Windows and Linux report <code>isAvailable() === false</code> for now. <code>BUDO_ACCESSIBILITY=1</code> forces <code>isActive()</code> on macOS, for checking a tree with Accessibility Inspector.</p>
+<p><code>isActive()</code> tells whether a screen reader probably runs (always <code>true</code> on the web, where browsers do not tell), so apps can skip building the tree.</p>
 <h2 id="lua-reference" class="has-anchor">Lua reference <a class="heading-anchor" href="#lua-reference" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>Lua uses the same <code>sys</code> namespace names for canvas, paint, transform, path, SVG, font, GL, input, window, animation, audio, MIDI, SQLite, files/assets, network, UDP, sensors, device, neural, math, and capabilities.</p>
 <p>Differences are language-shaped. Lists are 1-based. <code>fetch</code> is callback-based. <code>readBinary</code> returns a Lua string. Neural tensors are Lua tables. <code>sys.timer</code> is JavaScript-only.</p>
@@ -347,6 +406,19 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <p>&lt;!-- BEGIN GENERATED API AVAILABILITY --&gt;</p>
 <h2 id="runtime-availability" class="has-anchor">Runtime availability <a class="heading-anchor" href="#runtime-availability" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>This section is generated from <code>api/contracts/*.json</code>. Each cell names the guest-visible export; <code>-</code> means that operation is not exposed to that runtime. Platform lists describe where each runtime adapter is registered.</p>
+<h3 id="accessibility" class="has-anchor"><code>accessibility</code> <a class="heading-anchor" href="#accessibility" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop.</p>
+<div class="api-availability-table">
+<table>
+<thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
+<tbody>
+<tr><td><code>is_available</code></td><td>() -&gt; bool</td><td><code>sys.accessibility.isAvailable</code></td><td><code>sys.accessibility.isAvailable</code></td><td><code>env.accessibility_is_available</code></td><td>-</td></tr>
+<tr><td><code>is_active</code></td><td>() -&gt; bool</td><td><code>sys.accessibility.isActive</code></td><td><code>sys.accessibility.isActive</code></td><td><code>env.accessibility_is_active</code></td><td>-</td></tr>
+<tr><td><code>update</code></td><td>(nodes: nodes) -&gt; bool</td><td><code>sys.accessibility.update</code></td><td><code>sys.accessibility.update</code></td><td><code>env.accessibility_update</code></td><td>-</td></tr>
+<tr><td><code>take_actions</code></td><td>() -&gt; actions</td><td><code>sys.accessibility.takeActions</code></td><td><code>sys.accessibility.takeActions</code></td><td><code>env.accessibility_take_actions</code></td><td>-</td></tr>
+</tbody>
+</table>
+</div>
 <h3 id="audio" class="has-anchor"><code>audio</code> <a class="heading-anchor" href="#audio" aria-label="Copy link to this section" title="Copy link">#</a></h3>
 <p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> unsupported.</p>
 <div class="api-availability-table">
@@ -378,6 +450,21 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>stop_buffer</code></td><td>(playback_id: i32) -&gt; void</td><td><code>sys.audio.stopBuffer</code></td><td><code>sys.audio.stopBuffer</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>midi_to_frequency</code></td><td>(midi_note: i32) -&gt; f32 frequency_hz</td><td><code>sys.audio.midiToFreq</code></td><td><code>sys.audio.midiToFreq</code></td><td><code>env.audio_midi_to_freq</code></td><td>-</td></tr>
 <tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.audio.getError</code></td><td><code>sys.audio.getError</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>get_sample_rate</code></td><td>() -&gt; i32 frames per second of the device (stream callbacks run at it)</td><td><code>sys.audio.getSampleRate</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>open_output</code></td><td>(options?: {channels: 1|2, latencyMs}, callback: (buffer: f32[] interleaved, info) -&gt; void) -&gt; i32 stream; -1 on failure</td><td><code>sys.audio.openOutput</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>close_output</code></td><td>(stream: i32) -&gt; void</td><td><code>sys.audio.closeOutput</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>open_input</code></td><td>(options?: {channels: 1|2, latencyMs}, callback: (samples: f32[] interleaved, info) -&gt; void) -&gt; i32 stream; -1 on failure</td><td><code>sys.audio.openInput</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>close_input</code></td><td>(stream: i32) -&gt; void</td><td><code>sys.audio.closeInput</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>open_decoder</code></td><td>(source: assets/|files/ path | bytes, options?: {sampleRate, channels}) -&gt; i32 decoder; -1 on failure</td><td><code>sys.audio.openDecoder</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>create_decoder</code></td><td>(options?: {sampleRate, channels}) -&gt; i32 push decoder</td><td><code>sys.audio.createDecoder</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>feed_decoder</code></td><td>(decoder: i32, bytes: bytes|null, end?: bool) -&gt; bool</td><td><code>sys.audio.feedDecoder</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>decode</code></td><td>(decoder: i32, out: f32[]) -&gt; i32 frames; 0 at the end or when bytes are needed; -1 on failure</td><td><code>sys.audio.decode</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>get_decoder_info</code></td><td>(decoder: i32) -&gt; decoder info</td><td><code>sys.audio.getDecoderInfo</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>seek_decoder</code></td><td>(decoder: i32, seconds: f64) -&gt; bool</td><td><code>sys.audio.seekDecoder</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>close_decoder</code></td><td>(decoder: i32) -&gt; void</td><td><code>sys.audio.closeDecoder</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>fft</code></td><td>(re: f32[], im: f32[], inverse: bool) -&gt; bool; in place, power-of-two lengths</td><td><code>sys.audio.fft</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>get_spectrum</code></td><td>(samples: f32[], out_db: f32[]) -&gt; f32[] Hann-windowed levels in dB, samples.length / 2 bins</td><td><code>sys.audio.getSpectrum</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>detect_pitch</code></td><td>(samples: f32[], sample_rate: f64, options: pitch options) -&gt; pitch {frequency, clarity, level}</td><td><code>sys.audio.detectPitch</code></td><td>-</td><td>-</td><td>-</td></tr>
 </tbody>
 </table>
 </div>
@@ -427,7 +514,20 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>scale</code></td><td>(sx:f32, sy:f32) -&gt; void</td><td><code>sys.canvas.scale</code></td><td><code>sys.canvas.scale</code></td><td><code>env.transform_scale</code></td><td><code>env.transform_scale</code></td></tr>
 <tr><td><code>skew</code></td><td>(sx:f32, sy:f32) -&gt; void</td><td><code>sys.canvas.skew</code></td><td><code>sys.canvas.skew</code></td><td><code>env.canvas_skew</code></td><td>-</td></tr>
 <tr><td><code>reset_transform</code></td><td>() -&gt; void</td><td><code>sys.canvas.reset</code></td><td><code>sys.canvas.reset</code></td><td><code>env.canvas_reset_transform</code></td><td>-</td></tr>
-<tr><td><code>clip_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.clipRect</code></td><td><code>sys.canvas.clipRect</code></td><td><code>env.canvas_clip_rect</code></td><td>-</td></tr>
+<tr><td><code>clip_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.canvas.clipRect</code></td><td><code>sys.canvas.clipRect</code></td><td><code>env.canvas_clip_rect</code></td><td><code>env.canvas_clip_rect</code></td></tr>
+<tr><td><code>set_gradient</code></td><td>set or clear a linear/radial/sweep gradient on the default paint</td><td><code>sys.canvas.setGradient</code></td><td><code>sys.canvas.setGradient</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>set_linear_gradient</code></td><td>(x0:f32, y0:f32, x1:f32, y1:f32, colors_ptr:i32, stops_ptr:i32, count:i32) -&gt; void; stops_ptr &lt; 0 spaces colors evenly</td><td>-</td><td>-</td><td><code>env.canvas_set_linear_gradient</code></td><td><code>env.canvas_set_linear_gradient</code></td></tr>
+<tr><td><code>set_radial_gradient</code></td><td>(cx:f32, cy:f32, radius:f32, colors_ptr:i32, stops_ptr:i32, count:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_radial_gradient</code></td><td><code>env.canvas_set_radial_gradient</code></td></tr>
+<tr><td><code>set_sweep_gradient</code></td><td>(cx:f32, cy:f32, colors_ptr:i32, stops_ptr:i32, count:i32) -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_set_sweep_gradient</code></td><td><code>env.canvas_set_sweep_gradient</code></td></tr>
+<tr><td><code>clear_gradient</code></td><td>() -&gt; void</td><td>-</td><td>-</td><td><code>env.canvas_clear_gradient</code></td><td><code>env.canvas_clear_gradient</code></td></tr>
+<tr><td><code>clip_round_rect</code></td><td>(x:f32, y:f32, width:f32, height:f32, rx:f32, ry:f32) -&gt; void; managed bindings default ry to rx</td><td><code>sys.canvas.clipRoundRect</code></td><td><code>sys.canvas.clipRoundRect</code></td><td><code>env.canvas_clip_round_rect</code></td><td><code>env.canvas_clip_round_rect</code></td></tr>
+<tr><td><code>clip_path</code></td><td>(path) -&gt; void; unknown paths throw in managed bindings</td><td><code>sys.canvas.clipPath</code></td><td><code>sys.canvas.clipPath</code></td><td><code>env.canvas_clip_path</code></td><td><code>env.canvas_clip_path</code></td></tr>
+<tr><td><code>save_layer</code></td><td>(alpha?:0..255, x?, y?, width?, height?, backdropBlur?) -&gt; void; restore() composites the layer</td><td><code>sys.canvas.saveLayer</code></td><td><code>sys.canvas.saveLayer</code></td><td><code>env.canvas_save_layer</code></td><td><code>env.canvas_save_layer</code></td></tr>
+<tr><td><code>save_layer_bounds</code></td><td>(x:f32, y:f32, width:f32, height:f32, alpha:i32, backdrop_blur:f32) -&gt; void; clips the layer to its bounds</td><td>-</td><td>-</td><td><code>env.canvas_save_layer_bounds</code></td><td><code>env.canvas_save_layer_bounds</code></td></tr>
+<tr><td><code>draw_paragraph</code></td><td>draw wrapped UTF-8 text in a box and return its metrics</td><td><code>sys.canvas.drawParagraph</code></td><td><code>sys.canvas.drawParagraph</code></td><td><code>env.canvas_draw_paragraph</code></td><td><code>env.canvas_draw_paragraph</code></td></tr>
+<tr><td><code>measure_paragraph</code></td><td>measure wrapped UTF-8 text</td><td><code>sys.canvas.measureParagraph</code></td><td><code>sys.canvas.measureParagraph</code></td><td><code>env.canvas_measure_paragraph</code></td><td><code>env.canvas_measure_paragraph</code></td></tr>
+<tr><td><code>draw_rich_text</code></td><td>draw wrapped text made of styled spans and return its metrics</td><td><code>sys.canvas.drawRichText</code></td><td><code>sys.canvas.drawRichText</code></td><td><code>env.canvas_draw_rich_text</code></td><td><code>env.canvas_draw_rich_text</code></td></tr>
+<tr><td><code>measure_rich_text</code></td><td>measure wrapped styled spans</td><td><code>sys.canvas.measureRichText</code></td><td><code>sys.canvas.measureRichText</code></td><td><code>env.canvas_measure_rich_text</code></td><td><code>env.canvas_measure_rich_text</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -463,6 +563,9 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>set_image_filter</code></td><td>set or clear a managed blur/drop-shadow image filter</td><td><code>CanvasTexture.canvas.setImageFilter</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>set_color_filter</code></td><td>set or clear a managed matrix/blend color filter</td><td><code>CanvasTexture.canvas.setColorFilter</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>font_set</code></td><td>(registered name or null) -&gt; void</td><td><code>CanvasTexture.canvas.setFont</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>set_gradient</code></td><td>set or clear a linear/radial/sweep gradient on the owner default paint</td><td><code>CanvasTexture.canvas.setGradient</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_draw_paragraph</code></td><td>(text:string, x:f32, y:f32, width:f32, font_size?:f32, options?) -&gt; { width, height, lines } using the owner active font and default paint</td><td><code>CanvasTexture.canvas.drawParagraph</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>canvas_measure_paragraph</code></td><td>(text:string, width:f32, font_size?:f32, options?) -&gt; { width, height, lines } using the owner active font</td><td><code>CanvasTexture.canvas.measureParagraph</code></td><td>-</td><td>-</td><td>-</td></tr>
 </tbody>
 </table>
 </div>
@@ -494,12 +597,17 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 </table>
 </div>
 <h3 id="device" class="has-anchor"><code>device</code> <a class="heading-anchor" href="#device" aria-label="Copy link to this section" title="Copy link">#</a></h3>
-<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop.</p>
+<p><strong>JavaScript:</strong> desktop, android, web; <strong>Lua:</strong> desktop, android, web; <strong>Wasmtime:</strong> desktop; <strong>Browser WASM:</strong> web.</p>
 <div class="api-availability-table">
 <table>
 <thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
 <tbody>
-<tr><td><code>keep_screen_on</code></td><td>(bool enabled) -&gt; bool</td><td><code>sys.device.keepScreenOn</code></td><td><code>sys.device.keepScreenOn</code></td><td><code>env.device_keep_screen_on</code></td><td>-</td></tr>
+<tr><td><code>keep_screen_on</code></td><td>(bool enabled) -&gt; bool</td><td><code>sys.device.keepScreenOn</code></td><td><code>sys.device.keepScreenOn</code></td><td><code>env.device_keep_screen_on</code></td><td><code>env.device_keep_screen_on</code></td></tr>
+<tr><td><code>set_clipboard_text</code></td><td>(text: string) -&gt; bool</td><td><code>sys.device.setClipboardText</code></td><td><code>sys.device.setClipboardText</code></td><td><code>env.device_set_clipboard_text</code></td><td><code>env.device_set_clipboard_text</code></td></tr>
+<tr><td><code>get_clipboard_text</code></td><td>() -&gt; string|null</td><td><code>sys.device.getClipboardText</code></td><td><code>sys.device.getClipboardText</code></td><td><code>env.device_get_clipboard_text</code></td><td><code>env.device_get_clipboard_text</code></td></tr>
+<tr><td><code>haptic</code></td><td>(kind?: haptic) -&gt; bool</td><td><code>sys.device.haptic</code></td><td><code>sys.device.haptic</code></td><td><code>env.device_haptic</code></td><td><code>env.device_haptic</code></td></tr>
+<tr><td><code>get_preferences</code></td><td>() -&gt; preferences</td><td><code>sys.device.getPreferences</code></td><td><code>sys.device.getPreferences</code></td><td><code>env.device_get_preference</code></td><td><code>env.device_get_preference</code></td></tr>
+<tr><td><code>set_cursor</code></td><td>(name?: cursor) -&gt; bool</td><td><code>sys.device.setCursor</code></td><td><code>sys.device.setCursor</code></td><td><code>env.device_set_cursor</code></td><td><code>env.device_set_cursor</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -518,6 +626,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>path_close</code></td><td>(path) -&gt; void</td><td><code>sys.path.close</code></td><td><code>sys.path.close</code></td><td><code>env.path_close</code></td><td><code>env.path_close</code></td></tr>
 <tr><td><code>path_add_rect</code></td><td>(path, x:f32, y:f32, width:f32, height:f32) -&gt; void</td><td><code>sys.path.addRect</code></td><td><code>sys.path.addRect</code></td><td><code>env.path_add_rect</code></td><td>-</td></tr>
 <tr><td><code>path_add_circle</code></td><td>(path, cx:f32, cy:f32, radius:f32) -&gt; void</td><td><code>sys.path.addCircle</code></td><td><code>sys.path.addCircle</code></td><td><code>env.path_add_circle</code></td><td>-</td></tr>
+<tr><td><code>path_add_svg</code></td><td>(path, data:string) -&gt; bool</td><td><code>sys.path.addSvg</code></td><td><code>sys.path.addSvg</code></td><td><code>env.path_add_svg</code></td><td><code>env.path_add_svg</code></td></tr>
 <tr><td><code>svg_load</code></td><td>(safe project-relative path) -&gt; SVG handle or -1</td><td><code>sys.svg.load</code></td><td><code>sys.svg.load</code></td><td><code>env.svg_load</code></td><td>-</td></tr>
 <tr><td><code>svg_load_from_buffer</code></td><td>(SVG XML bytes) -&gt; SVG handle or -1</td><td><code>sys.svg.loadFromBuffer</code></td><td><code>sys.svg.loadFromBuffer</code></td><td><code>env.svg_load_from_buffer</code></td><td>-</td></tr>
 <tr><td><code>svg_destroy</code></td><td>(SVG handle) -&gt; void</td><td><code>sys.svg.destroy</code></td><td><code>sys.svg.destroy</code></td><td><code>env.svg_destroy</code></td><td>-</td></tr>
@@ -546,6 +655,11 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>pick_text</code></td><td>(callback, extension?: string) -&gt; bool</td><td><code>sys.files.pickText</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>save_text</code></td><td>(name: string, text: string, callback) -&gt; bool</td><td><code>sys.files.saveText</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>open_read</code></td><td>(path: string) -&gt; i32 handle|null</td><td><code>sys.files.openRead</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>read_block</code></td><td>(handle: i32, max_bytes?: i32) -&gt; bytes (empty at the end)|null</td><td><code>sys.files.read</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>seek</code></td><td>(handle: i32, byte_offset: f64) -&gt; bool</td><td><code>sys.files.seek</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>get_read_info</code></td><td>(handle: i32) -&gt; {size, position}</td><td><code>sys.files.getReadInfo</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>close_read</code></td><td>(handle: i32) -&gt; void</td><td><code>sys.files.closeRead</code></td><td>-</td><td>-</td><td>-</td></tr>
 </tbody>
 </table>
 </div>
@@ -750,6 +864,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>load_entrypoint</code></td><td>load and execute the configured application entrypoint</td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td><td><code>runtime.entrypoint</code></td></tr>
 <tr><td><code>guest_memory</code></td><td>guest-exported linear memory used by pointer/buffer host ABIs</td><td>-</td><td>-</td><td><code>guest.exports.memory</code></td><td><code>guest.exports.memory</code></td></tr>
 <tr><td><code>guest_init</code></td><td>optional guest export init() called once after instantiation and memory wiring</td><td>-</td><td>-</td><td><code>guest.exports.init</code></td><td><code>guest.exports.init</code></td></tr>
+<tr><td><code>exit</code></td><td>end the application with an exit status</td><td><code>runtime.exit</code></td><td><code>runtime.exit</code></td><td><code>runtime.app_exit</code></td><td><code>runtime.app_exit</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -815,6 +930,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tbody>
 <tr><td><code>animation_start</code></td><td>(callback(timestamp_ms)) -&gt; void; replace the persistent Lua frame callback</td><td>-</td><td><code>sys.animation.start</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>request_frame</code></td><td>(callback(timestamp_ms)) -&gt; handle 1; replace the persistent managed frame callback</td><td><code>sys.animation.requestFrame</code></td><td><code>sys.animation.requestFrame</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>wait_for_input</code></td><td>(callback(timestamp_ms), timeout_ms?) -&gt; handle 1; like request_frame, but the callback runs only on the next input event, canvas resize, or timeout; hosts may sleep meanwhile</td><td><code>sys.animation.waitForInput</code></td><td><code>sys.animation.waitForInput</code></td><td><code>guest.exports.animation_wait_for_input</code></td><td><code>guest.exports.animation_wait_for_input</code></td></tr>
 <tr><td><code>cancel_frame</code></td><td>(handle ignored) -&gt; void; clear the single managed frame callback</td><td><code>sys.animation.cancelFrame</code></td><td><code>sys.animation.cancelFrame</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>timer_once</code></td><td>(delay_ms:number, callback) -&gt; timer id or undefined; non-positive delay fires on a later timer-processing pass</td><td><code>sys.timer.once</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>timer_every</code></td><td>(interval_ms:number, callback) -&gt; timer id or undefined; interval is clamped to at least 1 ms</td><td><code>sys.timer.every</code></td><td>-</td><td>-</td><td>-</td></tr>
@@ -972,11 +1088,15 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

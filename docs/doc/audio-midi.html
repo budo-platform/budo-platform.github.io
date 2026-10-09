@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Audio and MIDI — Budo Documentation</title>
+    <meta name="description" content="Use audio synthesis, decoded audio files, MIDI, RTP-MIDI.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="audio-midi.html" class="current">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="audio-and-midi" class="has-anchor">Audio and MIDI <a class="heading-anchor" href="#audio-and-midi" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo gives you several audio tools, each suited to a different job. Pick the simplest one that does what you need:</p>
+<ul><li><strong>Oscillators</strong> play tones and simple synthesizer voices, with an optional envelope. Use them for beeps, UI feedback, and instruments.</li><li><strong>Buffers</strong> hold short sounds in memory: samples you generate, or WAV, MP3, Ogg Vorbis, and FLAC files loaded with <code>sys.audio.loadBuffer</code>. Use them for sound effects and short loops.</li><li><strong>Streams</strong> call your function for every chunk of audio, so your code writes the samples (a synthesizer, a sequencer, a mixer) or receives them from the microphone.</li><li><strong>Decoders</strong> read long audio files a block at a time, usually into an output stream, so music of any length plays without being loaded whole.</li><li><strong>Analysis</strong> computes spectra and detects pitch natively, for meters, tuners, and visualizers.</li><li><strong>MIDI</strong> talks to MIDI keyboards and controllers, and to other apps over the network with RTP-MIDI.</li></ul>
+<p>Oscillators, buffers, and MIDI are available in JavaScript and Lua. Streams, decoders, and analysis are available in JavaScript only.</p>
+<h2 id="starting-audio" class="has-anchor">Starting audio <a class="heading-anchor" href="#starting-audio" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The audio context starts stopped. Calls that play sound, such as <code>startOscillator</code>, <code>noteOn</code>, <code>playBuffer</code>, and <code>openOutput</code>, start it for you, so most apps never call <code>sys.audio.start()</code> themselves.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Start the audio context explicitly (optional: playback calls do it for you).
+sys.audio.start();
+// Set the master volume, from 0.0 to 1.0 (the default is 0.5).
+sys.audio.setMasterGain(0.8);</code></pre></div></div>
+<p>The master gain applies to oscillators and buffers, and is clamped to the range <code>0.0</code> to <code>1.0</code>. Browsers only let a page play sound after the user has interacted with it, so on the web, start sound from a tap, a click, or a key press.</p>
+<h2 id="oscillators" class="has-anchor">Oscillators <a class="heading-anchor" href="#oscillators" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>An oscillator is a tone generator identified by an integer ID. Create it once, set its waveform, frequency, and gain, then start and stop it as often as you need.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Create the oscillator once, at startup.
+const osc = sys.audio.createOscillator();
+sys.audio.setOscillatorType(osc, &#x27;sine&#x27;);
+sys.audio.setOscillatorFrequency(osc, 220);
+sys.audio.setOscillatorGain(osc, 0.25);
+let playing = false;
+
+function frame() {
+  const input = sys.input.get();
+  // Each tap toggles the tone.
+  if (input.pointer.pressed) {
+    playing = !playing;
+    if (playing) sys.audio.startOscillator(osc);
+    else sys.audio.stopOscillator(osc);
+  }
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(playing ? &#x27;#7c6ff7&#x27; : &#x27;#3a3d4a&#x27;);
+  sys.canvas.drawCircle(80, 80, 28);
+  sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+  sys.canvas.drawText(playing ? &#x27;220 Hz sine: tap to stop&#x27; : &#x27;Tap to play a 220 Hz sine&#x27;, 128, 88, 22);
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create an oscillator and keep its ID.
+const osc = sys.audio.createOscillator();
+// Choose the waveform.
+sys.audio.setOscillatorType(osc, &#x27;sine&#x27;);
+// Tune it to A3 (220 Hz).
+sys.audio.setOscillatorFrequency(osc, 220);
+// Set its volume, from 0.0 to 1.0.
+sys.audio.setOscillatorGain(osc, 0.25);
+// Start playing; it plays until stopOscillator.
+sys.audio.startOscillator(osc);</code></pre></div></div>
+<p>The waveform is one of <code>&#x27;sine&#x27;</code>, <code>&#x27;square&#x27;</code>, <code>&#x27;sawtooth&#x27;</code>, <code>&#x27;triangle&#x27;</code>, or <code>&#x27;noise&#x27;</code>, or the matching constant (<code>sys.audio.SINE</code>, <code>SQUARE</code>, <code>SAWTOOTH</code>, <code>TRIANGLE</code>, <code>NOISE</code>). <code>setOscillatorDetune(osc, cents)</code> shifts the pitch by hundredths of a semitone. Every setter applies immediately, including while the oscillator plays, so you can glide a pitch from your frame function. Release an oscillator you no longer need with <code>destroyOscillator</code>.</p>
+<h3 id="envelopes" class="has-anchor">Envelopes <a class="heading-anchor" href="#envelopes" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>An ADSR envelope shapes each note for you: it rises over the attack, falls over the decay to the sustain level, holds while the note is on, and fades over the release. <code>noteOn</code> starts a note and <code>noteOff</code> releases it.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// One oscillator with an envelope, played on every tap.
+const osc = sys.audio.createOscillator();
+sys.audio.setOscillatorType(osc, &#x27;triangle&#x27;);
+sys.audio.setOscillatorFrequency(osc, sys.audio.midiToFreq(69));
+sys.audio.setOscillatorGain(osc, 0.3);
+sys.audio.setOscillatorEnvelope(osc, 0.01, 0.12, 0.7, 0.25);
+
+function frame() {
+  const input = sys.input.get();
+  if (input.pointer.pressed) {
+    // Start the note, then release it 300 ms later.
+    sys.audio.noteOn(osc);
+    sys.timer.once(300, () =&gt; sys.audio.noteOff(osc));
+  }
+  sys.canvas.clear(&#x27;#f8fafc&#x27;);
+  sys.canvas.setFillColor(&#x27;#111318&#x27;);
+  sys.canvas.drawText(&#x27;Tap to play a note (A4, 440 Hz)&#x27;, 32, 72, 22);
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Attack 10 ms, decay 120 ms, sustain at 70%, release 250 ms.
+sys.audio.setOscillatorEnvelope(osc, 0.01, 0.12, 0.7, 0.25);
+// Start the note: attack, then decay to the sustain level.
+sys.audio.noteOn(osc);
+// Release the note 300 milliseconds later.
+sys.timer.once(300, () =&gt; sys.audio.noteOff(osc));</code></pre></div></div>
+<p>Times are in seconds and the sustain level goes from <code>0.0</code> to <code>1.0</code>. <code>sys.audio.midiToFreq(note)</code> converts a MIDI note number to a frequency: <code>midiToFreq(69)</code> is <code>440</code>, the A above middle C.</p>
+<h2 id="buffers" class="has-anchor">Buffers <a class="heading-anchor" href="#buffers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A buffer holds sample data in memory. Play it with <code>playBuffer(buffer, loop, gain)</code>, which returns a playback ID; stop that playback with <code>stopBuffer</code>, and free the buffer with <code>destroyBuffer</code> when you are done with it. The same buffer can play several times at once.</p>
+<h3 id="generated-sounds" class="has-anchor">Generated sounds <a class="heading-anchor" href="#generated-sounds" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>To synthesize a sound ahead of time, create a buffer and fill it with samples between <code>-1.0</code> and <code>1.0</code>.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Build one second of a quiet 110 Hz sine wave, once.
+const sampleRate = 44100;
+const samples = new Array(sampleRate);
+for (let i = 0; i &lt; samples.length; i++) {
+  samples[i] = Math.sin((i / sampleRate) * Math.PI * 2 * 110) * 0.25;
+}
+const buffer = sys.audio.createBuffer(sampleRate, 1, samples.length);
+sys.audio.setBufferData(buffer, samples, 0);
+
+function frame() {
+  // Each tap plays the buffer once.
+  if (sys.input.get().pointer.pressed) sys.audio.playBuffer(buffer, false, 1.0);
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+  sys.canvas.drawText(&#x27;Tap to play a generated 110 Hz buffer&#x27;, 32, 72, 22);
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// The buffer&#x27;s sample rate, in samples per second.
+const sampleRate = 44100;
+// One second of mono samples, in a plain array.
+const samples = new Array(sampleRate);
+
+// Fill it with a quiet 110 Hz sine wave.
+for (let i = 0; i &lt; samples.length; i++) {
+  // The sample index, turned into a phase angle.
+  samples[i] = Math.sin((i / sampleRate) * Math.PI * 2 * 110) * 0.25;
+}
+
+// Create a mono buffer that holds the samples.
+const buffer = sys.audio.createBuffer(sampleRate, 1, samples.length);
+// Copy the samples in, starting at sample 0.
+sys.audio.setBufferData(buffer, samples, 0);
+// Play it once (no loop) at full gain.
+const playback = sys.audio.playBuffer(buffer, false, 1.0);</code></pre></div></div>
+<p><code>createBuffer(sampleRate, channels, frames)</code> takes 1 or 2 channels; a stereo buffer holds interleaved samples (left, right, left, …). <code>setBufferData</code> takes a plain array of numbers, not a <code>Float32Array</code>.</p>
+<h3 id="audio-files" class="has-anchor">Audio files <a class="heading-anchor" href="#audio-files" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>For sound effects, music cues, and voice clips, load a WAV, MP3, Ogg Vorbis, or FLAC file with <code>sys.audio.loadBuffer(path)</code>. Budo decodes the whole file into a buffer and returns its ID, which plays, loops, and stops like any other buffer.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Decode a file from the project folder into a buffer.
+const hit = sys.audio.loadBuffer(&#x27;sounds/hit.ogg&#x27;);
+
+if (hit &lt; 0) {
+  // The file is missing, unreadable, or not a supported format.
+  console.log(&#x27;Cannot load hit.ogg: &#x27; + sys.audio.getError());
+} else {
+  // Play it once at 80% gain.
+  sys.audio.playBuffer(hit, false, 0.8);
+}</code></pre></div></div>
+<p>The path is relative to your project folder, such as <code>sounds/hit.ogg</code> or <code>music/theme.flac</code>. Absolute paths, empty segments, and <code>.</code> or <code>..</code> segments are rejected, which keeps an app inside its own files. When loading fails, <code>loadBuffer</code> returns <code>-1</code> and <code>sys.audio.getError()</code> says why.</p>
+<p>To decode bytes you already have, from a file in <code>files/</code>, a network response, or generated data, pass an <code>ArrayBuffer</code> to <code>sys.audio.loadBufferFromBuffer</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a downloaded file, then decode its bytes.
+const bytes = sys.files.readBinary(&#x27;files/downloads/voice.mp3&#x27;);
+const voice = sys.audio.loadBufferFromBuffer(bytes);
+// Report a decoding failure.
+if (voice &lt; 0) console.log(sys.audio.getError());</code></pre></div></div>
+<p>To loop a sound, pass <code>true</code> as the second argument of <code>playBuffer</code>, and stop it with the playback ID.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load a background loop.
+const ambience = sys.audio.loadBuffer(&#x27;audio/ambience.mp3&#x27;);
+// Play it in a loop at a low gain.
+const ambiencePlayback = sys.audio.playBuffer(ambience, true, 0.35);
+
+// When the scene changes: stop the loop and free the buffer.
+sys.audio.stopBuffer(ambiencePlayback);
+sys.audio.destroyBuffer(ambience);</code></pre></div></div>
+<p><code>loadBuffer</code> decodes the whole file before it returns, so load sounds while entering a scene or opening a tool, not in the middle of an animation. For long music, use a <a href="#decoders">decoder</a> instead.</p>
+<h2 id="streams" class="has-anchor">Streams <a class="heading-anchor" href="#streams" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A stream calls a function you give it for each chunk of audio. For an output, Budo calls it whenever the stream needs more sound, and your function writes the next samples. For an input, Budo calls it with each chunk the microphone captured.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// The oscillator&#x27;s phase, kept between chunks.
+let phase = 0;
+
+// Open a stereo output; the callback fills each chunk.
+const tone = sys.audio.openOutput({ channels: 2 }, (buffer, info) =&gt; {
+  // The phase step of a 440 Hz tone at the device&#x27;s rate.
+  const step = 2 * Math.PI * 440 / info.sampleRate;
+  for (let i = 0; i &lt; info.frames; i++) {
+    const value = Math.sin(phase) * 0.2;
+    buffer[i * 2] = value;     // left
+    buffer[i * 2 + 1] = value; // right
+    phase += step;
+  }
+});
+
+// Later: stop the stream.
+sys.audio.closeOutput(tone);</code></pre></div></div>
+<p><code>openOutput(options, callback)</code> and <code>openInput(options, callback)</code> return a stream handle, or <code>-1</code> on failure (see <code>sys.audio.getError()</code>). The options are optional; <code>channels</code> is 1 or 2, and defaults to 2 for outputs and 1 for inputs.</p>
+<p>Each call handles one chunk of 256 frames. <code>buffer</code> is a <code>Float32Array</code> of <code>info.frames * info.channels</code> interleaved samples (left, right, left, …). An output's buffer starts silent, so whatever you leave untouched plays as silence. <code>info</code> also gives:</p>
+<ul><li><code>sampleRate</code>: the device's rate, the same as <code>sys.audio.getSampleRate()</code>;</li><li><code>time</code>: the stream time of the chunk's first frame, in seconds;</li><li><code>latency</code>: the current size of the stream's queue, in seconds;</li><li><code>underruns</code> (outputs): how many times the queue ran dry because the app was late; a dropout counts once, however long it lasts;</li><li><code>overruns</code> (inputs): how many times captured audio was dropped because the app fell behind.</li></ul>
+<p>An output plays exactly the samples you write: the master gain does not apply. It is mixed with oscillators and buffers.</p>
+<h3 id="latency" class="has-anchor">Latency <a class="heading-anchor" href="#latency" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>Between your function and the device sits a queue of audio. When you leave out <code>latencyMs</code>, an output's queue is adaptive: it starts small (20 ms, 40 ms on Android, 30 ms on the web), grows after an underrun by the frames that were missing, and shrinks back when playback has been steady. Read <code>info.latency</code> to see its current size.</p>
+<p>Pass <code>latencyMs</code> (1 to 2000) for a fixed queue instead. A smaller queue responds faster; a larger one survives slower frames.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A fixed 100 ms queue, for a sequencer that must never drop out.
+const sequencer = sys.audio.openOutput({ channels: 2, latencyMs: 100 }, fillSequencer);</code></pre></div></div>
+<h3 id="when-callbacks-run" class="has-anchor">When callbacks run <a class="heading-anchor" href="#when-callbacks-run" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>Stream callbacks run on the app's thread, before and after each frame's drawing, as many times as needed to keep the queue filled. Keep them quick, and avoid long work in your frame function, because the stream is only refilled between frames. If a callback throws, Budo stops calling it and <code>sys.audio.getError()</code> reports the error.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="let phase = 0;
+let note = 220;
+let stream = -1;
+
+function frame() {
+  const input = sys.input.get();
+  // A tap opens the stream, the next one closes it.
+  if (input.pointer.pressed) {
+    if (stream &lt; 0) {
+      stream = sys.audio.openOutput((buffer, info) =&gt; {
+        const step = 2 * Math.PI * note / info.sampleRate;
+        for (let i = 0; i &lt; info.frames; i++) {
+          const value = Math.sin(phase) * 0.15;
+          buffer[i * 2] = value;
+          buffer[i * 2 + 1] = value;
+          phase += step;
+        }
+      });
+    } else {
+      sys.audio.closeOutput(stream);
+      stream = -1;
+    }
+  }
+  // The pointer&#x27;s horizontal position sets the pitch.
+  note = 220 + 220 * (input.pointer.x / Math.max(1, sys.window.getWidth()));
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#e8eef7&#x27;);
+  sys.canvas.drawText(stream &lt; 0 ? &#x27;Tap to play&#x27; : &#x27;Playing &#x27; + note.toFixed(0) + &#x27; Hz: move to change, tap to stop&#x27;, 24, 48, 22);
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// The callback reads `note`, which the frame function updates.
+stream = sys.audio.openOutput((buffer, info) =&gt; {
+  // Advance the phase by the current note&#x27;s step.
+  const step = 2 * Math.PI * note / info.sampleRate;
+  for (let i = 0; i &lt; info.frames; i++) {
+    const value = Math.sin(phase) * 0.15;
+    buffer[i * 2] = value;     // left
+    buffer[i * 2 + 1] = value; // right
+    phase += step;
+  }
+});</code></pre></div></div>
+<h3 id="recording" class="has-anchor">Recording <a class="heading-anchor" href="#recording" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>An input stream works the same way: <code>samples</code> holds the chunk the microphone captured. It is valid only during the call, so copy what you want to keep.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// The microphone&#x27;s level, smoothed, from 0 to 1.
+let level = 0;
+
+// Open a mono input; the callback receives each captured chunk.
+const mic = sys.audio.openInput({ channels: 1 }, (samples, info) =&gt; {
+  // Find the chunk&#x27;s peak.
+  let peak = 0;
+  for (let i = 0; i &lt; samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+  // Jump up to a new peak, fall back slowly.
+  level = Math.max(peak, level * 0.9);
+});
+
+// -1 when the microphone is unavailable or permission is pending.
+if (mic &lt; 0) console.log(sys.audio.getError());</code></pre></div></div>
+<p>Recording needs the user's permission. On Android, list <code>RECORD_AUDIO</code> in the <code>permissions</code> of <code>app.json</code>. The first <code>openInput</code> asks the user and returns <code>-1</code>, so call it again once permission is granted, for example when the app regains focus. On the web, the page must be served over https (or from localhost), and the browser asks the user. Close the microphone with <code>closeInput</code> when you are done.</p>
+<p><code>examples/20_microphone</code> records, plays back, and monitors the microphone with input and output streams.</p>
+<h2 id="decoders" class="has-anchor">Decoders <a class="heading-anchor" href="#decoders" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A decoder turns a WAV, MP3, Ogg Vorbis, or FLAC file into samples a block at a time. Use one to play music of any length, or to process a file too large to hold in memory. Ask for the device's rate and channel count, and decode straight into an output stream's buffer.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Open a song for block reads, decoded at the device&#x27;s rate, in stereo.
+const song = sys.audio.openDecoder(&#x27;assets/music/mix.mp3&#x27;, {
+  sampleRate: sys.audio.getSampleRate(),
+  channels: 2,
+});
+if (song &lt; 0) console.log(sys.audio.getError());
+
+// Its length in seconds, among other details.
+const { duration } = sys.audio.getDecoderInfo(song);
+
+// Each chunk decodes the next frames; at the end, the rest stays silent.
+const player = sys.audio.openOutput({ channels: 2 }, (buffer) =&gt; {
+  sys.audio.decode(song, buffer);
+});
+
+// Jump to 1 minute 30 seconds.
+sys.audio.seekDecoder(song, 90);</code></pre></div></div>
+<p><code>openDecoder(source, options)</code> takes a path in the virtual file system (<code>assets/...</code> for files bundled with the app, <code>files/...</code> for the app's storage, as with <a href="data-files-network.html"><code>sys.files</code></a>), or bytes already in memory as an <code>ArrayBuffer</code> or typed array. It returns a decoder handle, or <code>-1</code> on failure. A file decoder reads the file in blocks, so it can seek and knows its duration. The options are <code>sampleRate</code> (0, the default, keeps the file's own rate) and <code>channels</code> (1 or 2, default 2).</p>
+<p><code>decode(decoder, out)</code> fills the <code>Float32Array</code> <code>out</code> with interleaved frames and returns how many frames it decoded: <code>0</code> at the end, and <code>-1</code> on error. <code>getDecoderInfo(decoder)</code> returns <code>sampleRate</code>, <code>channels</code>, <code>sourceSampleRate</code>, <code>sourceChannels</code>, <code>duration</code> and <code>position</code> in seconds, and the flags <code>ready</code>, <code>ended</code>, <code>needsData</code>, and <code>seekable</code>. <code>seekDecoder(decoder, seconds)</code> moves a file or memory decoder.</p>
+<h3 id="push-decoders" class="has-anchor">Push decoders <a class="heading-anchor" href="#push-decoders" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>A push decoder decodes bytes you give it as they arrive: the blocks of <code>sys.files.read</code>, a network response, or generated data. Create it with <code>createDecoder(options)</code> and pass bytes with <code>feedDecoder(decoder, bytes, end)</code>, setting <code>end</code> with the last bytes. It reads straight through, so it cannot seek and reports no duration (<code>-1</code>).</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Decode a recording a block at a time, without holding the file in memory.
+const file = sys.files.openRead(&#x27;files/recording.flac&#x27;);
+const decoder = sys.audio.createDecoder({ sampleRate: sys.audio.getSampleRate() });
+// Room for 4096 stereo frames.
+const block = new Float32Array(4096 * 2);
+
+for (;;) {
+  // Read the next 64 KiB of the file; an empty block means the end.
+  const bytes = sys.files.read(file, 65536);
+  if (bytes === null) break; // read error: see sys.files.getError()
+  const end = bytes.byteLength === 0;
+  // Give the bytes to the decoder; the last call says &quot;end&quot;.
+  sys.audio.feedDecoder(decoder, bytes, end);
+  // Take every frame the decoder can produce from them.
+  let frames;
+  while ((frames = sys.audio.decode(decoder, block)) &gt; 0) {
+    // Use block.subarray(0, frames * 2) here.
+  }
+  if (end) break;
+}
+
+// Release the file and the decoder.
+sys.files.closeRead(file);
+sys.audio.closeDecoder(decoder);</code></pre></div></div>
+<p>For a push decoder, <code>decode</code> also returns <code>0</code> when it needs more bytes; <code>getDecoderInfo(decoder).needsData</code> tells that case from the end. Close every decoder with <code>closeDecoder</code> when you are done: a file decoder keeps its file open until then.</p>
+<p><code>examples/07_file_explorer</code> plays audio files of any size with a decoder and an output stream, with a seek bar and looping.</p>
+<h2 id="analysis" class="has-anchor">Analysis <a class="heading-anchor" href="#analysis" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.audio</code> includes native signal analysis, much faster than the same maths in JavaScript. The functions take <code>Float32Array</code>s of mono samples, such as the chunks of an input stream.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Analysis size: the last 2048 samples.
+const size = 2048;
+const history = new Float32Array(size);
+// One level per frequency bin, in dB.
+const levels = new Float32Array(size / 2);
+let pitch = 0;
+
+sys.audio.openInput({ channels: 1 }, (samples) =&gt; {
+  // Shift the history and append the new chunk.
+  history.copyWithin(0, samples.length);
+  history.set(samples, size - samples.length);
+});
+
+function frame() {
+  // The pitch in Hz, or 0 when there is none.
+  pitch = sys.audio.detectPitch(history).frequency;
+  // The spectrum, in dB per bin.
+  sys.audio.getSpectrum(history, levels);
+  draw();
+  sys.animation.requestFrame(frame);
+}
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p><code>getSpectrum(samples, outDb)</code> writes the Hann-windowed spectrum of <code>samples</code>, in dB, to <code>outDb</code> and returns it. The length of <code>samples</code> is a power of two (4 to 2^20) and <code>outDb</code> holds half as many values; bin <code>k</code> is the frequency <code>k * sampleRate / samples.length</code>. A full-scale sine reads about 0 dB, and silence -180 dB.</p>
+<p><code>detectPitch(samples, sampleRate, options)</code> finds the pitch of a voice or an instrument with the McLeod pitch method, which finds the fundamental even when a harmonic is louder. <code>sampleRate</code> defaults to the device's rate. It returns <code>{ frequency, clarity, level }</code>: <code>frequency</code> in Hz, or 0 when there is no pitch (noise, silence, or out of range); <code>clarity</code>, from 0 to 1, how periodic the sound is (above 0.9 for a clear note); and <code>level</code>, the RMS level in dB. The options are:</p>
+<ul><li><code>minFrequency</code> and <code>maxFrequency</code>: the range of pitches reported, 50 to 4000 Hz by default;</li><li><code>minClarity</code>: the clarity below which there is no pitch, 0.7 by default;</li><li><code>minLevel</code>: the RMS level, in dB, below which there is no pitch, -60 by default.</li></ul>
+<p><code>samples</code> holds 16 or more values. The lowest pitch it can find has a period of half the samples: 2048 samples at 48 kHz reach down to 47 Hz.</p>
+<p><code>fft(re, im, inverse)</code> transforms two <code>Float32Array</code>s, the real and imaginary parts, in place, for your own analysis. Both have the same power-of-two length (2 to 2^20). The inverse is scaled by <code>1 / length</code>, so a forward transform followed by an inverse one gives back the input.</p>
+<p><code>examples/20_microphone</code> uses these functions for a spectrogram, a pitch readout, and a tuner.</p>
+<h2 id="midi-devices" class="has-anchor">MIDI devices <a class="heading-anchor" href="#midi-devices" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.midi</code> reads from and sends to MIDI devices: keyboards, controllers, synthesizers, and other apps. Start by scanning for devices.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Scan for devices before showing a picker.
+sys.midi.refreshDevices();
+
+// List the inputs: each has a position and a name.
+for (const device of sys.midi.getInputDevices()) {
+  console.log(device.id + &#x27;: &#x27; + device.name);
+}</code></pre></div></div>
+<p>A device's <code>id</code> is its position in the list, which is what <code>openInput</code> and <code>openOutput</code> take. Positions shift when a device is plugged in or out, so to keep using the same device, remember its name and look it up again when the devices change.</p>
+<h3 id="device-changes" class="has-anchor">Device changes <a class="heading-anchor" href="#device-changes" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>Register a listener with <code>onDevicesChanged</code> to hear when devices are connected or removed. It is not called at registration, only on later changes. A new registration replaces the previous listener; pass <code>null</code> to unsubscribe.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// React to devices being connected or removed.
+sys.midi.onDevicesChanged((event) =&gt; {
+  // Fresh lists of inputs and outputs.
+  console.log(event.inputs.length + &#x27; inputs, &#x27; + event.outputs.length + &#x27; outputs&#x27;);
+  // Reopen the devices you use here.
+});</code></pre></div></div>
+<p>The event carries fresh <code>inputs</code> and <code>outputs</code> lists and a <code>generation</code> number that increases with each change. It is called on the app's thread, between frames, and also reports a device replaced by another, even when the number of devices stays the same. In Lua, the same listener is <code>sys.midi.onDevicesChanged(function(event) ... end)</code>, and <code>nil</code> unsubscribes.</p>
+<h3 id="receiving-messages" class="has-anchor">Receiving messages <a class="heading-anchor" href="#receiving-messages" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>openInput(position, callback)</code> opens an input and calls your function with each message. It returns an input handle, or <code>-1</code> on failure.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Open the first input.
+const input = sys.midi.openInput(0, (message) =&gt; {
+  // A Note On with a velocity above 0 is a played note.
+  if (message.type === sys.midi.NOTE_ON &amp;&amp; message.data2 &gt; 0) {
+    console.log(&#x27;Note &#x27; + message.data1 + &#x27;, velocity &#x27; + message.data2);
+  }
+});</code></pre></div></div>
+<p>A message has <code>status</code>, <code>data1</code>, and <code>data2</code> bytes, its <code>type</code> (<code>sys.midi.NOTE_ON</code>, <code>NOTE_OFF</code>, <code>CONTROL_CHANGE</code>, <code>PROGRAM_CHANGE</code>, <code>PITCH_BEND</code>, <code>CHANNEL_PRESSURE</code>, <code>POLY_PRESSURE</code>, or <code>SYSEX</code>), and its <code>channel</code> (0 to 15, or -1 for system messages). <code>message.timestamp</code> is the receive time in microseconds from a monotonic clock, or 0 when the platform gives none.</p>
+<p>Messages arrive in the order the device sent them, System Exclusive included, between frames. A SysEx message (<code>type === sys.midi.SYSEX</code>) carries its complete bytes, <code>F0</code> through <code>F7</code>, in <code>message.data</code>, even when the device split it across many packets. SysEx messages up to 65535 bytes are delivered; longer ones are dropped. Running status is expanded, and real-time messages (clock, active sensing) are not reported. Up to 1024 messages, 32 of them SysEx, are kept between two frames.</p>
+<h3 id="sending-messages" class="has-anchor">Sending messages <a class="heading-anchor" href="#sending-messages" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>openOutput(position)</code> opens an output and returns its handle, or <code>-1</code> on failure. Channels are 0 to 15, and each send returns <code>true</code> on success.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Open the first output.
+const output = sys.midi.openOutput(0);
+// Play middle C (note 60) on channel 0 at velocity 100.
+sys.midi.noteOn(output, 0, 60, 100);
+// Release it.
+sys.midi.noteOff(output, 0, 60, 0);
+// Set the modulation wheel to half.
+sys.midi.controlChange(output, 0, sys.midi.CC_MOD_WHEEL, 64);
+// Bend the pitch up halfway (-8192 to 8191).
+sys.midi.pitchBend(output, 0, 4096);
+// Send a raw System Exclusive message (up to 65535 bytes).
+sys.midi.sendRaw(output, [0xf0, 0x7e, 0x7f, 0x06, 0x01, 0xf7]);</code></pre></div></div>
+<p>The output also has <code>programChange</code>, <code>channelPressure</code>, <code>polyPressure</code>, and <code>sendMessage(output, status, data1, data2)</code> for any three-byte message. <code>sys.midi.getType(status)</code> and <code>getChannel(status)</code> split a status byte. Close handles with <code>closeInput</code> and <code>closeOutput</code> when you are done.</p>
+<p><code>examples/11_midi</code> shows incoming messages, sends notes, and handles SysEx; <code>examples/21_midi_tempo</code> follows the devices as they change.</p>
+<h2 id="rtp-midi" class="has-anchor">RTP-MIDI <a class="heading-anchor" href="#rtp-midi" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>RTP-MIDI exchanges MIDI messages with other computers and apps over the network. Create a session, connect it to a peer, and send and receive through it.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Create a session named &quot;Jam&quot;; port 0 lets Budo choose.
+const session = sys.midi.createSession(&#x27;Jam&#x27;, 0);
+
+// Receive the session&#x27;s messages.
+sys.midi.onSessionMessage(session, (message) =&gt; {
+  console.log(&#x27;Network MIDI: status &#x27; + message.status);
+});
+
+// Connect to a peer.
+sys.midi.connectSession(session, &#x27;192.168.1.20&#x27;, 5004);
+// Send a note through the session.
+sys.midi.sessionNoteOn(session, 0, 64, 100);</code></pre></div></div>
+<p>Messages from a session have the same shape as device messages, with <code>network</code> set to <code>true</code>. A session also has <code>sessionNoteOff</code>, <code>sessionControlChange</code>, <code>sessionSend</code>, and <code>sessionSendRaw</code>. <code>getSessions()</code> lists the open sessions with their <code>name</code>, <code>port</code>, <code>state</code>, and <code>peerCount</code>, and <code>destroySession</code> closes one.</p>
+<p>RTP-MIDI uses UDP, so it is not available on the web, where browsers do not expose UDP sockets.</p>
+<h2 id="platform-notes" class="has-anchor">Platform notes <a class="heading-anchor" href="#platform-notes" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>MIDI depends on the platform's MIDI support: check <code>sys.capabilities.midi.available</code> and show a clear state when it is missing. On the web, MIDI uses the browser's Web MIDI API: the browser may ask the user for permission, and the device lists stay empty until it is granted, so listen with <code>onDevicesChanged</code>.</p>
+<p>Streams run at the device's rate (<code>sys.audio.getSampleRate()</code>): usually 44.1 or 48 kHz on desktop, the phone's own rate on Android, and the browser's on the web, where an AudioWorklet plays them (a ScriptProcessor where worklets are unavailable). Their callbacks run between frames, so a browser tab in the background, which gets no frames, lets them run dry.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="data-files-network.html" class="prev"><small>← Previous</small><span>Data, Files, and Network</span></a>
+                <a href="sensors.html" class="next"><small>Next →</small><span>Sensors and Device</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html" class="current">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,30 +63,34 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="project-model" class="has-anchor">Project Model <a class="heading-anchor" href="#project-model" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Budo projects are intentionally plain. A project directory contains an entrypoint, optional metadata, and any assets your app needs. There is no required package manager, manifest format, bundler, or generated source tree.</p>
-<p>That simplicity is useful only if the rules are predictable. This page explains the rules Budo applies before your first frame runs.</p>
+<p>A Budo project is a plain folder. It holds an entrypoint file, an optional <code>app.json</code>, and the assets your app uses. There is no package manager, bundler, or generated source tree: Budo runs the folder as it is, on desktop, on the web, and on Android.</p>
 <h2 id="entrypoints" class="has-anchor">Entrypoints <a class="heading-anchor" href="#entrypoints" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>At startup, Budo scans the project directory in this order:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">main.ts
-main.js
-main.lua
-main.wat
-main.wasm</code></pre></div></div>
-<p>The first file found selects the runtime. <code>main.ts</code> and <code>main.js</code> run in QuickJS. <code>main.lua</code> runs in Lua 5.4. <code>main.wat</code> and <code>main.wasm</code> run through Wasmtime on desktop.</p>
-<p>Android supports QuickJS apps and Lua apps in the native runtime. Web export supports QuickJS and Lua. Wasmtime is a desktop feature; browsers cannot host it inside the Emscripten build.</p>
-<p>When both <code>main.ts</code> and <code>main.js</code> exist, <code>main.ts</code> wins. This is convenient while migrating, but in a release project it is clearer to keep only the entrypoint you mean to ship.</p>
-<h2 id="javascript-and-typescript-loading" class="has-anchor">JavaScript and TypeScript loading <a class="heading-anchor" href="#javascript-and-typescript-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript files are evaluated once before the main loop starts. Budo detects ES module syntax in the entrypoint and chooses module evaluation when it sees <code>import</code> or <code>export</code> statements. Classic scripts still work, and runtime globals such as <code>sys</code>, <code>console</code>, <code>fetch</code>, and the subsystem objects are available either way.</p>
-<p>TypeScript support is deliberately lightweight. The runtime strips type annotations, interfaces, access modifiers, generic type syntax, <code>as</code> casts, and related TypeScript-only constructs while preserving line and column positions as much as possible. It then runs the stripped JavaScript in QuickJS.</p>
-<p>This gives a smooth editor experience with <code>budo.d.ts</code> and no build step. It does not run the TypeScript compiler, emit decorator transforms, bundle modules, or type-check before execution.</p>
-<h2 id="lua-loading" class="has-anchor">Lua loading <a class="heading-anchor" href="#lua-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Lua apps are loaded as normal Lua chunks with the standard Lua libraries opened. Budo injects <code>sys</code>, <code>fetch</code>, <code>json_parse</code>, and <code>console</code>. The rendering model is the same as JavaScript: register a function with <code>sys.animation.requestFrame</code>, draw, then request the next frame.</p>
-<p>Lua has no Budo-specific module resolver. Use the Lua facilities available in the opened standard libraries and keep asset paths project-relative when you cross into Budo APIs.</p>
-<h2 id="webassembly-loading" class="has-anchor">WebAssembly loading <a class="heading-anchor" href="#webassembly-loading" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Desktop WebAssembly apps import host functions from the <code>env</code> module. Budo calls an optional <code>init</code> export once, then calls a <code>frame</code> export once per frame when present. String-backed host functions require an exported <code>memory</code> so the host can read bytes from guest linear memory.</p>
-<p>WAT files are useful for small examples and tests. Larger projects usually generate <code>.wasm</code> from a language toolchain and keep a small compatibility layer around Budo's <code>env.*</code> imports.</p>
-<h2 id="appjson" class="has-anchor"><code>app.json</code> <a class="heading-anchor" href="#appjson" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The optional <code>app.json</code> file is read from the project directory. Budo uses it for app metadata and for policy decisions that must be explicit on some platforms.</p>
+<p>Budo picks the runtime from the name of the entrypoint file in the project root. It looks for these files, in this order:</p>
+<ul><li><code>main.ts</code> or <code>main.js</code>: JavaScript, run by QuickJS. If both exist, <code>main.ts</code> wins.</li><li><code>main.lua</code>: Lua 5.4.</li><li><code>main.wasm</code> or <code>main.wat</code>: WebAssembly, run by Wasmtime. If both exist, <code>main.wasm</code> wins.</li></ul>
+<p>A project uses one language. If the folder contains entrypoints for two languages, for example <code>main.js</code> and <code>main.lua</code>, Budo refuses to start it.</p>
+<p>Not every target runs every language:</p>
+<ul><li>Desktop runs JavaScript, TypeScript, Lua, and WebAssembly.</li><li>Web export runs JavaScript, TypeScript, and Lua.</li><li>Android packaging (Budo Pro) runs JavaScript, TypeScript, and Lua.</li></ul>
+<p><a href="lua-and-wasm.html">Lua and WebAssembly</a> covers the differences between the runtimes.</p>
+<p>Native C projects are a separate kind of project. They are trusted, unsandboxed code that you compile with <code>budo compile</code>, rather than <code>main.*</code> files that Budo runs in a sandbox. Create one with <code>budo init my-app --language c</code>. Native C projects can also be packaged for Android.</p>
+<h2 id="project-layout" class="has-anchor">Project layout <a class="heading-anchor" href="#project-layout" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A small app is a single <code>main.js</code>. As it grows, a typical project looks like this:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">my-app/
+  app.json          app name, version, and permissions
+  main.ts           entrypoint
+  draw.ts           modules imported by main.ts
+  state.ts
+  shader.vert       GLSL shaders
+  shader.frag
+  assets/
+    logo.svg        images and fonts
+    Inter-Regular.ttf
+  data/
+    seed.db         a SQLite database shipped with the app
+  models/
+    classifier.onnx an ONNX model for sys.neural</code></pre></div></div>
+<p>Only the entrypoint name is fixed. Name and arrange the other folders as you like, and refer to the files by their path from the project root.</p>
+<h2 id="the-appjson-file" class="has-anchor">The app.json file <a class="heading-anchor" href="#the-appjson-file" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>app.json</code> sits in the project root and describes your app and what it is allowed to do. It is optional; <code>budo init</code> creates one for you.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
   &quot;name&quot;: &quot;My Budo App&quot;,
   &quot;author&quot;: &quot;N. Developer&quot;,
@@ -92,54 +101,52 @@ main.wasm</code></pre></div></div>
   &quot;filesystem&quot;: false,
   &quot;neural&quot;: true
 }</code></pre></div></div>
-<p><code>version</code> may also be written as <code>version_name</code>. If metadata is missing, Budo falls back to the directory name, <code>Unknown</code> author, version <code>1.0</code>, and unspecified orientation.</p>
-<p>Network access is disabled by default. Set <code>network</code> to <code>&quot;*&quot;</code>, a comma-separated domain string, or an array of domains to allow HTTP fetches.</p>
-<p>On Android, external filesystem access is disabled by default. Bundled project files remain readable. Set <code>filesystem</code> to <code>true</code> only when the app genuinely needs shared storage access.</p>
-<p>ONNX Runtime inference is opt-in at the app level. Set <code>neural</code> to <code>true</code> before calling <code>sys.neural</code> APIs.</p>
-<p>Android packaging reads additional fields from <code>app.json</code> for identity, icons, SDK versions, permissions, signing, shrinking, store listing metadata, and output details. See <a href="packaging-and-deployment.html">Packaging and deployment</a> for the release-oriented shape.</p>
-<h2 id="asset-paths" class="has-anchor">Asset paths <a class="heading-anchor" href="#asset-paths" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Most APIs that load files resolve paths relative to the project directory: shaders, fonts, SVGs, textures, modules, ONNX models, and <code>app.json</code> policy references.</p>
-<p>Paths must be relative. Absolute paths and traversal through <code>..</code> are rejected by APIs that load project assets. This rule keeps desktop, Android packaging, and web export aligned: if a path works locally, it can usually be bundled safely.</p>
-<p><code>sys.files</code> exposes a virtual root. <code>assets/</code> resolves from the application bundle. <code>sys.assets</code> is a read-only convenience wrapper that prepends this mount; its paths are bundle-relative, it has no writes, and it shares the <code>sys.files</code> error state. <code>files/</code> resolves from host storage: on desktop it defaults to the project directory unless <code>--file-root</code> is passed; on Android it defaults to app-specific external files or uses broad external storage when enabled and granted by policy.</p>
+<p>The fields are:</p>
+<ul><li><code>name</code>, <code>author</code>, <code>version</code>, and <code>date</code> identify the app. Without them, Budo uses the folder name, <code>Unknown</code>, and <code>1.0</code>, and leaves the date empty.</li><li><code>orientation</code> is <code>portrait</code>, <code>landscape</code>, or <code>unspecified</code> (the default).</li><li><code>network</code> lists the domains your app may reach with HTTP. Use <code>&quot;*&quot;</code> to allow any domain, a comma-separated string, or an array of domains. Without it, HTTP requests are refused.</li><li><code>filesystem</code> set to <code>true</code> asks for access to shared storage on Android. Your app can always read its own files and write to its private storage without it, so leave it off unless you need it.</li><li><code>neural</code> set to <code>true</code> enables ONNX inference with <code>sys.neural</code>.</li></ul>
+<p>SQLite databases need no permission.</p>
+<p>Android packaging reads more fields from <code>app.json</code>: package identity, icons, SDK versions, Android permissions, signing, and store listing details. <a href="packaging-and-deployment.html">Packaging and deployment</a> describes them.</p>
+<h2 id="file-paths" class="has-anchor">File paths <a class="heading-anchor" href="#file-paths" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>APIs that load files take paths relative to the project root: shaders, fonts, SVGs, textures, modules, and models. A path such as <code>shaders/blur.frag</code> works the same way on desktop, on the web, and on Android, because your project files are bundled with the app. Absolute paths and paths that climb out of the project with <code>..</code> are rejected.</p>
+<p><code>sys.files</code> reads and writes files through two folders:</p>
+<ul><li><code>assets/</code> is the app's own bundle, read-only. On desktop it is the project folder, so <code>assets/data/seed.db</code> refers to <code>data/seed.db</code> in your project.</li><li><code>files/</code> is the app's writable storage. On desktop it is the project folder too, unless you start the app with <code>budo run my-app --file-root &lt;path&gt;</code>. On Android it is the app's private external storage, and on the web it is stored in the browser.</li></ul>
+<p><code>sys.assets</code> is a shortcut for reading from the bundle: <code>sys.assets.readText(&quot;config.json&quot;)</code> is the same as <code>sys.files.readText(&quot;assets/config.json&quot;)</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a settings file shipped with the app (config.json in the project root).
+const defaults = sys.assets.readText(&quot;config.json&quot;);
+
+// Save the user&#x27;s settings in writable storage.
+sys.files.writeText(&quot;files/settings.json&quot;, defaults);</code></pre></div></div>
+<p><a href="data-files-network.html">Data, files, and network</a> covers the file API in full.</p>
+<h2 id="typescript-support" class="has-anchor">TypeScript support <a class="heading-anchor" href="#typescript-support" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo runs <code>main.ts</code> and imported <code>.ts</code> modules without a build step. Before running a file, it removes the TypeScript syntax: type annotations, interfaces, type aliases, generics, <code>as</code> casts, non-null assertions, access modifiers, <code>implements</code>, and <code>declare</code>. It keeps the line layout of your file, so error line numbers match your source.</p>
+<p>This is not the TypeScript compiler. Budo does not type-check, and these constructs are not supported:</p>
+<ul><li><code>enum</code></li><li><code>namespace</code> and <code>module</code> blocks</li><li>decorators</li><li><code>satisfies</code></li></ul>
+<p>Very dense expressions can also confuse the type remover, for example a ternary inside a function call with typed arguments. When you get an unexpected syntax error, split the expression into simpler statements. For type checking, use your editor with <code>budo.d.ts</code>, or run <code>tsc --noEmit</code>.</p>
 <h2 id="capabilities" class="has-anchor">Capabilities <a class="heading-anchor" href="#capabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The <code>sys.capabilities</code> object lets code adapt to the runtime it is actually running on.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Check for neural inference before loading a model.
-if (sys.capabilities.neural.available) {
-  // Use the feature only on builds that expose it.
-  console.log(&#x27;Neural inference is available&#x27;);
+<p>Some features depend on the platform or the build: the web has no UDP or ONNX inference, and sensors exist mostly on phones. <code>sys.capabilities</code> tells your code what the current runtime supports, so it can offer a fallback instead of failing.</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Check once at startup, and keep the answers.
+const hasSensors = sys.capabilities.sensors.available;
+const hasMidi = sys.capabilities.midi.available;
+
+function frame() {
+  // Clear the canvas and pick a light text color.
+  sys.canvas.clear(&quot;#222831&quot;);
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  // Pick the steering method from the sensor check.
+  sys.canvas.drawText(hasSensors ? &quot;Tilt to steer&quot; : &quot;Use the arrow keys to steer&quot;, 24, 48, 24);
+  // Report whether MIDI devices can be used.
+  sys.canvas.drawText(hasMidi ? &quot;MIDI is available&quot; : &quot;MIDI is not available&quot;, 24, 84, 24);
+  // Keep the frame loop going.
+  sys.animation.requestFrame(frame);
 }
 
-// Check for sensor support before offering tilt controls.
-if (!sys.capabilities.sensors.available) {
-  // Pick a fallback that still works on desktop.
-  console.log(&#x27;Using keyboard fallback for tilt controls&#x27;);
-}</code></pre></div></div>
-<p>The main capability entries are <code>neural</code>, <code>midi</code>, <code>udp</code>, <code>http</code> and <code>sensors</code>. JavaScript and Lua expose the same shape on native desktop and Android builds, such as <code>sys.capabilities.neural.available</code>. WebAssembly uses <code>capability_*</code> imports.</p>
-<p>The current web entrypoints do not expose <code>sys.capabilities</code> for JavaScript or Lua. When code is meant to run on web too, combine capability checks with optional chaining and normal feature fallbacks.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// This works on native builds and safely falls back on current web builds.
-const canUseUdp = sys.capabilities?.udp?.available === true;</code></pre></div></div>
-<p>Capabilities are not a substitute for normal error handling. They are a clean way to choose a path before importing or calling a feature that may not exist on the current target.</p>
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>Each entry has an <code>available</code> field. The entries are <code>neural</code>, <code>llamacpp</code>, <code>midi</code>, <code>udp</code>, <code>http</code>, and <code>sensors</code>.</p>
 <h2 id="runtime-lifecycle" class="has-anchor">Runtime lifecycle <a class="heading-anchor" href="#runtime-lifecycle" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>For JavaScript and Lua, the app file is evaluated once, then the runtime enters a frame loop. Each frame follows the same broad shape: poll platform events, update input and timing, poll asynchronous subsystems such as MIDI, UDP, and network completion, clear or prepare the canvas, invoke your animation callback, run pending QuickJS jobs when needed, and present the frame.</p>
-<p>The important part for app authors is that your frame callback should finish quickly and request the next frame when it wants continuous animation. Long blocking work will block rendering and input. For network and timer work, use the asynchronous APIs provided by the runtime.</p>
-<h2 id="project-shape" class="has-anchor">Project shape <a class="heading-anchor" href="#project-shape" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>A mature project often looks like this:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-text">my-app/
-  app.json
-  main.ts
-  draw.ts
-  input.ts
-  state.ts
-  shader.vert
-  shader.frag
-  assets/
-    logo.svg
-    Inter-Regular.ttf
-  data/
-    seed.db
-  models/
-    classifier.onnx</code></pre></div></div>
-<p>Budo does not require this layout. It is simply a practical one: code near the entrypoint, assets grouped by use, and paths short enough to remain readable in app code.</p>
+<p>When your app starts, Budo runs the entrypoint once, from top to bottom. Use that pass to set up state and load resources, then call <code>sys.animation.requestFrame</code> to start the frame loop.</p>
+<p>On each frame, Budo updates the input state, runs pending callbacks such as completed HTTP requests and MIDI messages, calls your frame function, and shows the result on screen. Your frame function should read input, update state, draw, and request the next frame.</p>
+<p>Keep the frame function short. While it runs, nothing else happens: no drawing, no input, no callbacks. Split long work across several frames or use the asynchronous APIs.</p>
+<p>When nothing on screen is moving, call <code>sys.animation.waitForInput(frame)</code> instead of <code>requestFrame</code>. Budo then runs <code>frame</code> only after the next input event or window resize, which saves battery.</p>
             </article>
 
             <nav class="doc-pager">
@@ -257,11 +264,15 @@ const canUseUdp = sys.capabilities?.udp?.available === true;</code></pre></div><
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

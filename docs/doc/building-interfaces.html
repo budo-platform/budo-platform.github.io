@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Building Interfaces — Budo Documentation</title>
+    <meta name="description" content="Build animated, accessible app interfaces with budo-ui, the immediate-mode toolkit for Budo canvas apps">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html" class="current">Building Interfaces</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="building-interfaces" class="has-anchor">Building interfaces <a class="heading-anchor" href="#building-interfaces" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo gives you a canvas, not widgets. For tools, editors, forms, and settings screens, budo-ui is a small JavaScript toolkit built on that canvas: buttons, fields, lists, tables, menus, dialogs, page navigation, and more. It handles motion, keyboard focus, touch gestures, screen readers, and system preferences for you, so a simple screen stays a few lines of code.</p>
+<p>Create a project with it:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo init my-ui-app --template ui</code></pre></div></div>
+<p>The library lands in <code>ui/</code>, next to a starter <code>main.js</code>. The files are yours: read them, change them, or delete the widgets you don't use. <code>ui/README.md</code> lists every widget and option. To add the library to an existing project, copy <code>examples/budo-ui/budo-ui.js</code> and the <code>examples/budo-ui/lib/</code> folder into a <code>ui/</code> folder of your project. The <a href="../demos/budo-ui/index.html">live demo</a> shows a workspace and the widget gallery.</p>
+<p>budo-ui is a JavaScript library. Lua and WebAssembly apps draw their interfaces with the <a href="drawing-and-layout.html">canvas API</a> directly.</p>
+<h2 id="a-first-screen" class="has-anchor">A first screen <a class="heading-anchor" href="#a-first-screen" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Import the toolkit from the project&#x27;s ui/ folder.
+import { createUI } from &#x27;./ui/budo-ui.js&#x27;;
+
+// Create the UI once, outside the frame loop.
+const ui = createUI();
+// The app owns its data: a text model and a flag.
+const name = { value: &#x27;&#x27; };
+let enabled = false;
+
+function frame() {
+  // Start the frame with this frame&#x27;s input, and paint the theme background.
+  ui.begin(sys.input.get());
+  ui.clear();
+  // Split the window, minus a 16 dp margin, into three 48 dp rows.
+  const [field, toggle, submit] = ui.rows(ui.inset(ui.bounds, ui.dp(16)), [48, 48, 48].map(ui.dp));
+  // A text field edits name.value in place.
+  ui.field(&#x27;name&#x27;, field, name, { placeholder: &#x27;Name&#x27; });
+  // A toggle returns its new value.
+  enabled = ui.toggle(&#x27;enabled&#x27;, &#x27;Enabled&#x27;, toggle, enabled);
+  // A button returns true on the frame it is clicked.
+  if (ui.button(&#x27;submit&#x27;, &#x27;Submit&#x27;, submit, { primary: true })) ui.toast(&#x27;Hello &#x27; + name.value);
+  // Finish the frame: overlays, toasts, focus, and accessibility.
+  ui.end();
+  // Ask for the next frame while something moves, otherwise wait for input.
+  ui.nextFrame(frame);
+}
+
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>The interface is immediate mode. Each frame, the app draws it from its own data, and controls return their results right away: <code>button</code> returns <code>true</code> when clicked; <code>toggle</code>, <code>checkbox</code>, <code>slider</code>, and <code>select</code> return the new value; <code>field</code> edits its <code>{ value }</code> model in place. Give each interactive control a stable, unique id. The library keeps only interaction and motion state under that id, and forgets ids that stop being drawn.</p>
+<p>Hover colors, the button's press feedback, the toggle's thumb, and the field's focus ring all animate without any animation code. Because <code>ui.nextFrame(frame)</code> waits for input when nothing moves, an idle app uses almost no CPU.</p>
+<h2 id="layout" class="has-anchor">Layout <a class="heading-anchor" href="#layout" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Layout works on plain rectangles, <code>{ x, y, width, height }</code>, in physical canvas pixels.</p>
+<p><code>ui.rows(rect, sizes)</code> and <code>ui.columns(rect, sizes)</code> split a rectangle. Each size is a number of pixels, a <code>{ weight: n }</code> share of the remaining space, or a <code>{ content: n }</code> natural size (measure it with <code>ui.textWidth(text)</code> or <code>ui.buttonWidth(label)</code>); content sizes shrink together when space runs out. <code>ui.inset(rect, amount)</code> shrinks a rectangle, and <code>ui.split</code>, <code>ui.scroll</code>, and <code>ui.panel</code> add a draggable splitter, a scroll area, and a surface.</p>
+<p>Two helpers convert sizes: <code>ui.dp(n)</code> turns density-independent pixels into physical ones, and <code>ui.sp(n)</code> does the same for text while following the user's text-size preference. <code>ui.bounds</code> is the window minus notches and system bars, and above the on-screen keyboard while it is open.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A sidebar of one third and an inspector, separated by a draggable splitter.
+ui.split(&#x27;workspace&#x27;, ui.bounds, drawSidebar, drawInspector, { ratio: 0.33 });
+
+function drawInspector(rect) {
+  // Content taller than the rectangle scrolls; draw it in the content rectangle.
+  ui.scroll(&#x27;inspector&#x27;, rect, ui.dp(1200), content =&gt; drawSettings(content));
+}</code></pre></div></div>
+<p>Widgets drawn later sit on top and get the pointer first. <code>ui.overlay(draw)</code> draws above everything, which is how menus, popovers, and toasts stay on top.</p>
+<h2 id="the-widgets" class="has-anchor">The widgets <a class="heading-anchor" href="#the-widgets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<table>
+<thead><tr><th>Kind</th><th>Widgets</th></tr></thead>
+<tbody>
+<tr><td>Actions</td><td><code>button</code> (secondary, primary, ghost, or danger, with an optional icon), <code>iconButton</code>, <code>menu</code>, <code>contextMenu</code></td></tr>
+<tr><td>Values</td><td><code>toggle</code>, <code>checkbox</code>, <code>radio</code>, <code>segmented</code>, <code>tabs</code>, <code>select</code>, <code>slider</code>, <code>field</code>, <code>inlineEdit</code>, <code>textArea</code></td></tr>
+<tr><td>Content</td><td><code>label</code>, <code>paragraph</code>, <code>richText</code>, <code>progress</code>, <code>spinner</code>, <code>skeleton</code>, <code>tooltip</code>, <code>toast</code></td></tr>
+<tr><td>Data</td><td><code>table</code>, <code>tree</code></td></tr>
+<tr><td>Structure</td><td><code>panel</code>, <code>split</code>, <code>scroll</code>, <code>list</code>, <code>navigator</code>, <code>shared</code>, <code>dialog</code>, <code>sheet</code>, <code>glass</code>, <code>layer</code>, <code>overlay</code></td></tr>
+</tbody>
+</table>
+<p>A few of them in use:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A drop-down: returns the picked value.
+color = ui.select(&#x27;color&#x27;, rect, [&#x27;Red&#x27;, &#x27;Green&#x27;, &#x27;Blue&#x27;], color);
+// A reorderable list: the app applies the move it reports.
+const result = ui.list(&#x27;library&#x27;, rect, items, { selectedId, reorder: true });
+if (result.move) moveItem(result.move.fromId, result.move.toId);
+// Wrapped text, cut after four lines.
+ui.paragraph(notes, rect, { color: ui.colors.muted, maxLines: 4 });
+// A modal dialog: returns true when the user dismisses it.
+if (ui.dialog(&#x27;confirm&#x27;, open, content =&gt; drawBody(content), { title: &#x27;Delete?&#x27; })) open = false;</code></pre></div></div>
+<p><code>ui.textArea(id, rect, model, options)</code> edits multiline text. It wraps and scrolls to follow the caret, selects with the mouse (double-click for a word, triple-click for a line), moves by words with Alt or Ctrl, and undoes whole runs of typing with Ctrl+Z. Its options are <code>placeholder</code>, <code>label</code>, <code>maxLength</code>, and <code>readOnly</code>.</p>
+<p>Lists animate insertions, removals, and reordering by themselves. Dialogs and sheets fade in over a dimmed backdrop, and toasts stack and leave on their own.</p>
+<h2 id="tables-and-trees" class="has-anchor">Tables and trees <a class="heading-anchor" href="#tables-and-trees" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>ui.table</code> and <code>ui.tree</code> draw only the visible rows, so ten thousand rows cost a screenful. A table asks for rows by index. Clicking a sortable header returns the new sort order, and the app sorts its own rows:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">const result = ui.table(&#x27;files&#x27;, rect, {
+  // Column widths are dp, or { weight } shares; Size is right-aligned.
+  columns: [
+    { key: &#x27;name&#x27;, label: &#x27;Name&#x27;, sortable: true },
+    { key: &#x27;size&#x27;, label: &#x27;Size&#x27;, width: 90, align: &#x27;right&#x27; },
+  ],
+  // The table asks for the rows it shows, by index.
+  rowCount: rows.length, row: i =&gt; rows[i], rowId: i =&gt; rows[i].id,
+  // The app owns the selection and the sort order.
+  selectedId, sort,
+});
+// Keep the selection the user made.
+selectedId = result.selectedId;
+// A header click reports a new sort: apply it to the app&#x27;s rows.
+if (result.sort) { sort = result.sort; rows.sort(compareBy(sort)); }
+// Enter or a double click activates a row.
+if (result.activatedId) openFile(result.activatedId);</code></pre></div></div>
+<p>Users can resize columns by dragging the header edges. A tree takes nested <code>{ id, label, children, icon }</code> nodes and remembers which ones are expanded. In both, the arrow keys move the selection, Left and Right collapse and expand tree nodes, and the selection scrolls into view.</p>
+<h2 id="icons" class="has-anchor">Icons <a class="heading-anchor" href="#icons" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>ui.icon(name, rect, { color })</code> draws an icon in any color, so it follows the theme and animates with it. 27 icons are built in: check, close, plus, minus, the four chevrons, two arrows, menu, more, search, trash, edit, copy, star, heart, home, user, info, alert, refresh, sun, moon, folder, and file. <code>ui.registerIcon(name, d)</code> adds your own from SVG path data on a 24-unit grid:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Register a lightning bolt from 24-unit SVG path data.
+ui.registerIcon(&#x27;bolt&#x27;, &#x27;M13 3L5 14h6l-1 7 8-11h-6z&#x27;);
+// An icon-only button; the label is what screen readers announce.
+if (ui.iconButton(&#x27;flash&#x27;, &#x27;bolt&#x27;, rect, { label: &#x27;Flash&#x27; })) flash();
+// A text button with a leading icon.
+ui.button(&#x27;add&#x27;, &#x27;Add&#x27;, rect, { primary: true, icon: &#x27;plus&#x27; });</code></pre></div></div>
+<p>Icon buttons are round and ghost-styled by default. Always give them a <code>label</code>; otherwise screen readers announce the icon's name.</p>
+<h2 id="pages-and-navigation" class="has-anchor">Pages and navigation <a class="heading-anchor" href="#pages-and-navigation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The app owns a stack of route names. <code>ui.navigator</code> draws the top page, slides pages in and out when the stack changes, and returns <code>true</code> when the user goes back with Escape or a drag from the left edge:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Draw the top route; pop the stack when the user goes back.
+if (ui.navigator(&#x27;nav&#x27;, rect, stack, (route, page) =&gt; drawPage(route, page))) stack.pop();</code></pre></div></div>
+<p>Inside a page, <code>ui.shared(tag, rect, draw)</code> marks an element that morphs between pages, such as a thumbnail that grows into a detail view.</p>
+<h2 id="motion" class="has-anchor">Motion <a class="heading-anchor" href="#motion" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For your own animation, ask for an animated value by key:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A number that springs toward its target: the drawer slides in and out.
+const x = ui.spring(&#x27;drawer&#x27;, open ? 0 : -ui.dp(320));
+// A color that moves to the new value through OKLab.
+const tint = ui.color(&#x27;banner&#x27;, error ? ui.theme.danger : ui.theme.accent);
+// Enter and exit: draw(t) runs while visible or leaving, with t from 0 to 1.
+ui.presence(&#x27;toast&#x27;, visible, t =&gt;
+  ui.layer(rect, { opacity: t, y: (1 - t) * ui.dp(24) }, () =&gt; drawToast(rect)));</code></pre></div></div>
+<p>Springs are interruptible and independent of the frame rate: a new target redirects the motion without a jump. <code>ui.layer(rect, options, draw)</code> fades, moves, and scales a group, and with <code>backdrop</code> it frosts what is behind it. When the system asks for reduced motion, every animation jumps to its end; set <code>ui.reducedMotion</code> to override it.</p>
+<h2 id="themes" class="has-anchor">Themes <a class="heading-anchor" href="#themes" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>createUI(tokens)</code> and <code>ui.setTheme(tokens)</code> take colors (<code>background</code>, <code>surface</code>, <code>ink</code>, <code>accent</code>, <code>danger</code>, ...) and sizes in dp (<code>font</code>, <code>row</code>, <code>radius</code>, <code>gap</code>, <code>padding</code>), merged over the light theme. Two more tokens shape surfaces: <code>elevation</code>, the three shadow levels that menus, dialogs, and toasts use (and that <code>ui.shadow(rect, level)</code> draws), and <code>accentGradient</code>, top-to-bottom colors that replace flat accent fills on primary buttons, progress bars, and toggles. Changing the theme animates every color to its new value.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Import the built-in themes along with the toolkit.
+import { createUI, themes } from &#x27;./ui/budo-ui.js&#x27;;
+
+// Start from the dark theme, with a violet accent and gradient.
+const ui = createUI({ ...themes.dark, accent: &#x27;#7C6FF7&#x27;, accentGradient: [&#x27;#9D8FFF&#x27;, &#x27;#6252E6&#x27;] });
+// Or follow the system&#x27;s dark mode with themes.light and themes.dark.
+ui.setTheme(&#x27;system&#x27;);</code></pre></div></div>
+<h2 id="keyboard-gestures-and-the-system" class="has-anchor">Keyboard, gestures, and the system <a class="heading-anchor" href="#keyboard-gestures-and-the-system" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>budo-ui follows the platform without extra code in the app.</p>
+<p>Tab and Shift+Tab move a focus ring through the widgets in drawing order, and Enter or Space activates the focused one. Menus and selects move the focus into their items, and dialogs and sheets keep it inside until they close.</p>
+<p>On touch screens, scrolling carries momentum and stretches past the ends, list rows with a swipe action slide away, sheets drag down to close, and pages drag back. A text field focuses and opens the on-screen keyboard when the tap is released, so a drag that starts on a field scrolls instead. While the keyboard is open, <code>ui.bounds</code> shrinks above it and the focused field scrolls into view, so it stays visible above the keyboard.</p>
+<p>Reduced motion and text size follow the system settings, and <code>ui.setTheme(&#x27;system&#x27;)</code> follows dark mode. Hovered widgets set the mouse cursor, fields copy and paste through the clipboard, and toggles and picks give haptic feedback on devices that have it. Every widget also describes itself to screen readers, which can operate it; see <a href="accessibility.html">Accessibility</a>.</p>
+<h2 id="custom-widgets" class="has-anchor">Custom widgets <a class="heading-anchor" href="#custom-widgets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Draw with <code>ui.fill</code>, <code>ui.outline</code>, and <code>ui.text</code>, or with <code>sys.canvas</code> directly, then ask for interaction:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Hit-test the swatch, show a pointer cursor, and describe it to screen readers.
+const { hovered, held, clicked } = ui.interact(&#x27;swatch&#x27;, rect, {
+  cursor: &#x27;pointer&#x27;,
+  a11y: { role: &#x27;button&#x27;, label: &#x27;Pick red&#x27; },
+});
+// Animate its color between the rest, hover, and pressed states.
+ui.fill(rect, ui.color(&#x27;swatch-fill&#x27;, held ? &#x27;#b91c1c&#x27; : hovered ? &#x27;#dc2626&#x27; : &#x27;#ef4444&#x27;), ui.dp(8));
+// Act on a click, a tap, Enter or Space, or a screen-reader press.
+if (clicked) pick(&#x27;red&#x27;);</code></pre></div></div>
+<p><code>ui.interact</code> returns <code>{ hovered, held, clicked, focused }</code>. Passing <code>a11y</code> makes the widget reachable with Tab and visible to screen readers.</p>
+<h2 id="testing" class="has-anchor">Testing <a class="heading-anchor" href="#testing" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>examples/budo-ui/gallery.js</code> draws every widget. The snapshot tests draw each gallery section on a recording canvas, a stub <code>sys</code> object that logs every call, and compare the calls with stored JSON, so any visual change shows up as a reviewable diff. Run them from the repository root:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Compare the gallery with the stored snapshots.
+node --test examples/budo-ui/budo-ui.snapshots.test.mjs
+# Accept the current drawing as the new snapshots.
+UPDATE_SNAPSHOTS=1 node --test examples/budo-ui/budo-ui.snapshots.test.mjs</code></pre></div></div>
+<p>The same approach works for your own screens: install a recording <code>sys</code> stub, drive <code>ui.begin</code> with synthetic input, and assert on what was drawn or clicked.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="drawing-and-layout.html" class="prev"><small>← Previous</small><span>Drawing and Layout</span></a>
+                <a href="rendering-and-shaders.html" class="next"><small>Next →</small><span>Rendering and Shaders</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

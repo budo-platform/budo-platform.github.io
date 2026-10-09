@@ -8,8 +8,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
-    <title>Native C Debugging — Budo Documentation</title>
-    <meta name="description" content="Debug Budo native C applications on desktop and Android.">
+    <title>Installation — Budo Documentation</title>
+    <meta name="description" content="Developer documentation for installing Budo on desktop.">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="../theme-base.css">
@@ -40,18 +40,20 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html" class="current">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
-                    <li><a href="native-c-projects.html">Native C Projects</a></li>
-                    <li><a href="native-c-api.html">Native C API</a></li>
-                    <li><a href="native-c-debugging.html" class="current">Native C Debugging</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
                 </ul>
@@ -60,24 +62,58 @@
 
         <main class="doc-main">
             <article class="doc-article">
-                <h1 id="native-c-debugging" class="has-anchor">Native C debugging <a class="heading-anchor" href="#native-c-debugging" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Native C applications run as trusted, unsandboxed code in the Budo host process. A crash, deadlock, or memory error can terminate or corrupt the host.</p>
-<h2 id="desktop-symbols-and-compilation-database" class="has-anchor">Desktop symbols and compilation database <a class="heading-anchor" href="#desktop-symbols-and-compilation-database" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Use <code>budo compile my-app --debug</code> for the clearest source-level debugging, or the default <code>RelWithDebInfo</code> build for optimized code with symbols. The command prints the executable path; by default it is <code>.budo/native/build/bin/&lt;application&gt;</code>. The compilation database is generated at <code>.budo/native/build/compile_commands.json</code>, and the C starter configures VS Code to use it.</p>
-<p>Set breakpoints in <code>budo_get_application()</code>, <code>initialize</code>, <code>surface_created</code>, <code>frame</code>, <code>context_lost</code>, and <code>shutdown</code>. Launch the produced executable with LLDB on macOS, GDB on Linux, or the Visual Studio C++ debugger on Windows. The application does not define <code>main()</code>; stepping through startup first enters the Budo launcher before descriptor discovery.</p>
-<h2 id="sanitizers" class="has-anchor">Sanitizers <a class="heading-anchor" href="#sanitizers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Clang and GCC builds can instrument application sources:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo compile my-app --debug --sanitize address,undefined --run</code></pre></div></div>
-<p>AddressSanitizer catches many invalid accesses and lifetime bugs; UBSan catches selected undefined behavior. Budo, Skia, SDL, and other prebuilt SDK libraries are not instrumented by this switch. Sanitizers are intentionally unavailable with <code>--release</code> and unsupported compiler families.</p>
-<h2 id="android" class="has-anchor">Android <a class="heading-anchor" href="#android" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Build a debug APK, open the staged Android project in Android Studio, select the native debugger, and place breakpoints in the same descriptor and lifecycle callbacks. Native debug packages retain symbols and route host/application logs to logcat. Public callbacks and graphics run on the GLSurfaceView render thread, not the Android UI thread. Exercise pause/resume and surface recreation when debugging graphics resources; destroy generation-bound handles from <code>context_lost</code> and recreate them from <code>surface_created</code>.</p>
-<h2 id="build-and-abi-diagnostics" class="has-anchor">Build and ABI diagnostics <a class="heading-anchor" href="#build-and-abi-diagnostics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Inspect <code>.budo/native/budo-native-build.json</code> for the selected SDK, target tuple, compiler, configuration, sanitizers, component digests, cache status, and executable. Use <code>budo cache native inspect</code> and <code>budo cache sdk inspect</code> when diagnosing stale or missing artifacts. An SDK built for another operating system, architecture, or compiler family cannot be reused; select the matching SDK and recompile.</p>
+                <h1 id="installation" class="has-anchor">Installation <a class="heading-anchor" href="#installation" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo ships as a single command-line program, <code>budo</code>. You use it to create projects, run them on your desktop, export them to the web, and package them for Android.</p>
+<h2 id="install-with-the-script" class="has-anchor">Install with the script <a class="heading-anchor" href="#install-with-the-script" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>On macOS and Linux, run the installer script:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Download the budo binary for your system and install it in ~/.local/bin.
+curl -fsSL https://budo-platform.dev/install.sh | bash</code></pre></div></div>
+<p>The script detects your operating system and CPU (x86_64 or arm64), then installs the binary at <code>~/.local/bin/budo</code>. It does not need root and does not edit your shell profile. If <code>~/.local/bin</code> is not on your <code>PATH</code> yet, the script prints the line to add to your profile:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Make the commands in ~/.local/bin available in new terminals.
+export PATH=&quot;$HOME/.local/bin:$PATH&quot;</code></pre></div></div>
+<p>Open a new terminal and check that the command works:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Print the installed version and build details.
+budo version</code></pre></div></div>
+<p>The <a href="../index.html#download">download section</a> of the Budo website has other packages: a macOS DMG, a Linux AppImage and Flatpak, and a Windows zip.</p>
+<h2 id="the-budo-command" class="has-anchor">The budo command <a class="heading-anchor" href="#the-budo-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>These are the commands you will use most:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project in my-app/.
+budo init my-app
+
+# Run the project in a desktop window.
+budo run my-app
+
+# Run it, and restart it whenever a project file changes.
+budo run my-app --watch
+
+# Export a self-contained web build to dist/web.
+budo web-export my-app
+
+# Export the web build and serve it on http://localhost:8080.
+budo web-serve my-app
+
+# Build an Android APK (Budo Pro).
+budo android-apk my-app
+
+# Build an Android App Bundle for the Play Store (Budo Pro).
+budo android-aab my-app
+
+# Print the TypeScript declarations for the sys API.
+budo budo.d.ts
+
+# Print the full API reference as Markdown.
+budo budo-llm.md
+
+# List every command and option.
+budo help</code></pre></div></div>
+<p><code>budo my-app</code> is a shorthand for <code>budo run my-app</code>. You can also run a single source file without a project folder, as in <code>budo sketch.js</code>.</p>
+<p>Android packaging is a Budo Pro feature, included for free in the released binaries during Budo's public launch; a later release will make it paid. <a href="packaging-and-deployment.html">Packaging and deployment</a> covers web export, Android builds, and their options.</p>
+<p>Next, build your first app in <a href="getting-started.html">Getting started</a>.</p>
             </article>
 
             <nav class="doc-pager">
-                <a href="native-c-api.html" class="prev"><small>← Previous</small><span>Native C API</span></a>
-                <a href="packaging-and-deployment.html" class="next"><small>Next →</small><span>Packaging and Deployment</span></a>
+                <a href="index.html" class="prev"><small>← Previous</small><span>Introduction</span></a>
+                <a href="getting-started.html" class="next"><small>Next →</small><span>Getting Started</span></a>
             </nav>
         </main>
     </div>
@@ -190,11 +226,15 @@
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

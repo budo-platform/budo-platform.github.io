@@ -8,8 +8,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
-    <title>Introduction — Budo Documentation</title>
-    <meta name="description" content="Developer documentation for building JavaScript, Lua, and WebAssembly apps with Budo.">
+    <title>Accessibility — Budo Documentation</title>
+    <meta name="description" content="Make canvas-drawn interfaces usable with screen readers and the keyboard">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="../theme-base.css">
@@ -40,7 +40,7 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html" class="current">Introduction</a></li>
+                    <li><a href="index.html">Introduction</a></li>
                     <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
@@ -52,7 +52,7 @@
                     <li><a href="audio-midi.html">Audio and MIDI</a></li>
                     <li><a href="sensors.html">Sensors and Device</a></li>
                     <li><a href="ai-inference.html">AI Inference</a></li>
-                    <li><a href="accessibility.html">Accessibility</a></li>
+                    <li><a href="accessibility.html" class="current">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -62,19 +62,67 @@
 
         <main class="doc-main">
             <article class="doc-article">
-                <h1 id="introduction" class="has-anchor">Introduction <a class="heading-anchor" href="#introduction" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Budo is a runtime for building graphical applications in JavaScript, TypeScript, Lua, or WebAssembly. You write a small project folder with a <code>main</code> file, and Budo runs it in a desktop window, exports it as a web page, or packages it for Android. Trusted native C projects are supported too, through a separate compile step.</p>
-<p>Your code talks to the platform through one global object, <code>sys</code>. It gives you 2D canvas drawing, GPU shaders and 3D meshes, pointer, keyboard and touch input, audio and MIDI, SQLite databases, files, HTTP, sensors, and local AI inference with ONNX and llama.cpp models.</p>
-<p>This documentation is for developers building apps with Budo. It opens with a tutorial, then covers each part of the platform in depth.</p>
-<h2 id="where-to-begin" class="has-anchor">Where to begin <a class="heading-anchor" href="#where-to-begin" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Most code samples in these pages have a <strong>run</strong> button in their top-right corner. It runs the sample in your browser, using the web version of Budo, so you can try things before installing anything. The <a href="../playground.html">playground</a> gives you the same runtime in an interactive editor.</p>
-<p>When you are ready to work locally, read these pages in order:</p>
-<ol><li><a href="installation.html">Installation</a> puts the <code>budo</code> command on your machine.</li><li><a href="getting-started.html">Getting started</a> walks you through a first app: you create a project, draw and animate a shape, and make it follow the pointer.</li><li><a href="project-model.html">Project model</a> explains how a project folder is organized: entrypoints, <code>app.json</code>, file paths, and capabilities.</li></ol>
-<p>The pages after that cover one topic each, such as drawing, shaders, input, data, audio, and packaging. The <a href="api-reference.html">API reference</a> lists every function and constant that Budo provides.</p>
+                <h1 id="accessibility" class="has-anchor">Accessibility <a class="heading-anchor" href="#accessibility" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Budo apps draw everything on a canvas, so the operating system cannot see their buttons, fields, or text on its own. <code>sys.accessibility</code> lets an app describe what it draws as a flat list of nodes, each with a role, a label, a position, and a state. Screen readers read and navigate those nodes, and the actions their users perform come back to the app.</p>
+<p>If you build your interface with <a href="building-interfaces.html">budo-ui</a>, this is already done for you; the last section explains what it covers. Read on to describe a custom interface yourself.</p>
+<table>
+<thead><tr><th>Platform</th><th>Nodes are exposed to</th></tr></thead>
+<tbody>
+<tr><td>Web</td><td>Browser screen readers, through invisible ARIA elements laid over the canvas</td></tr>
+<tr><td>Android</td><td>TalkBack and the other accessibility services, through an accessibility node provider</td></tr>
+<tr><td>macOS</td><td>VoiceOver and Switch Control</td></tr>
+<tr><td>Windows, Linux</td><td>Not available: <code>isAvailable()</code> returns <code>false</code>, and <code>update()</code> still accepts the nodes</td></tr>
+</tbody>
+</table>
+<h2 id="publishing-nodes" class="has-anchor">Publishing nodes <a class="heading-anchor" href="#publishing-nodes" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Call <code>sys.accessibility.update(nodes)</code> with the nodes in reading order. Calling it every frame is fine: the runtime republishes only when something changed.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">sys.accessibility.update([
+  // A heading that names the screen.
+  { id: &#x27;title&#x27;, role: &#x27;heading&#x27;, label: &#x27;Settings&#x27;, x: 24, y: 20, width: 300, height: 32 },
+  // A switch reports whether it is on.
+  { id: &#x27;dark&#x27;, role: &#x27;switch&#x27;, label: &#x27;Dark mode&#x27;, checked: darkMode, x: 24, y: 70, width: 300, height: 44 },
+  // A slider gives its range, its value, and a readable form of the value.
+  { id: &#x27;volume&#x27;, role: &#x27;slider&#x27;, label: &#x27;Volume&#x27;, min: 0, max: 100, rangeValue: volume,
+    value: volume + &#x27;%&#x27;, x: 24, y: 120, width: 300, height: 44 },
+  // A text field gives its text and whether it is being edited.
+  { id: &#x27;name&#x27;, role: &#x27;textbox&#x27;, label: &#x27;Name&#x27;, value: name, focused: editing, x: 24, y: 170, width: 300, height: 44 },
+  // A button that cannot be pressed yet.
+  { id: &#x27;save&#x27;, role: &#x27;button&#x27;, label: &#x27;Save&#x27;, disabled: !changed, x: 24, y: 230, width: 120, height: 44 },
+]);</code></pre></div></div>
+<p>Each node has these fields:</p>
+<ul><li><code>id</code>, a string that stays the same across frames; actions refer to it.</li><li><code>role</code>, one of <code>button</code>, <code>checkbox</code>, <code>radio</code>, <code>switch</code>, <code>slider</code>, <code>textbox</code>, <code>list</code>, <code>listitem</code>, <code>heading</code>, <code>text</code>, <code>combobox</code>, <code>option</code>, <code>tab</code>, <code>image</code>, <code>group</code>, or <code>link</code>. A node without a role is a <code>group</code>.</li><li><code>label</code>, what a screen reader announces, and <code>value</code>, the text of a field or a readable slider value.</li><li><code>x</code>, <code>y</code>, <code>width</code>, and <code>height</code>, in physical canvas pixels: the coordinates you draw with.</li><li>The state flags <code>checked</code>, <code>selected</code>, <code>focused</code>, <code>disabled</code>, and <code>expanded</code>. Leave <code>checked</code> out on nodes that cannot be checked.</li><li>For sliders, <code>min</code>, <code>max</code>, and <code>rangeValue</code>; the range applies when <code>max</code> is set.</li></ul>
+<p><code>update</code> takes at most 512 nodes and throws a <code>TypeError</code> beyond that. Describe what is on screen rather than every row of a long list.</p>
+<h2 id="handling-actions" class="has-anchor">Handling actions <a class="heading-anchor" href="#handling-actions" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Screen-reader users can press, focus, and change your controls. Each frame, take the actions they requested and apply them to your data:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Return and clear the actions requested since the last call.
+for (const { id, action, value } of sys.accessibility.takeActions()) {
+  // Press: activate a button or flip a switch.
+  if (action === &#x27;press&#x27; &amp;&amp; id === &#x27;dark&#x27;) darkMode = !darkMode;
+  if (action === &#x27;press&#x27; &amp;&amp; id === &#x27;save&#x27;) save();
+  // Increment and decrement: step a slider.
+  if (action === &#x27;increment&#x27; &amp;&amp; id === &#x27;volume&#x27;) volume = Math.min(100, volume + 10);
+  if (action === &#x27;decrement&#x27; &amp;&amp; id === &#x27;volume&#x27;) volume = Math.max(0, volume - 10);
+  // Set value: replace a field&#x27;s text with the given string.
+  if (action === &#x27;setValue&#x27; &amp;&amp; id === &#x27;name&#x27;) name = value;
+  // Focus: the user moved to a control; start editing a field.
+  if (action === &#x27;focus&#x27; &amp;&amp; id === &#x27;name&#x27;) startEditing();
+}</code></pre></div></div>
+<p>The actions are <code>press</code>, <code>focus</code>, <code>increment</code>, <code>decrement</code>, and <code>setValue</code>, which carries the new text in <code>value</code>. An app that ignores actions still reads correctly; it just cannot be operated from the screen reader.</p>
+<h2 id="when-to-build-the-tree" class="has-anchor">When to build the tree <a class="heading-anchor" href="#when-to-build-the-tree" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>An app with a large interface can skip building nodes when nothing will read them:</p>
+<ul><li><code>sys.accessibility.isAvailable()</code> tells whether the platform exposes nodes at all.</li><li><code>sys.accessibility.isActive()</code> tells whether a screen reader or another assistive service probably runs. On the web it is always <code>true</code>, because browsers do not reveal screen readers.</li></ul>
+<p>On macOS, set the environment variable <code>BUDO_ACCESSIBILITY=1</code> to make <code>isActive()</code> return <code>true</code>, so you can inspect the tree with Accessibility Inspector without running VoiceOver.</p>
+<h2 id="keyboard-access" class="has-anchor">Keyboard access <a class="heading-anchor" href="#keyboard-access" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Screen-reader users, and many others, rely on the keyboard. Let Tab and Shift+Tab move between controls, let Enter and Space activate them, and draw a visible focus indicator. Mark the focused control with <code>focused: true</code> so screen readers follow it.</p>
+<h2 id="other-languages" class="has-anchor">Other languages <a class="heading-anchor" href="#other-languages" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Lua passes a table of node tables to <code>sys.accessibility.update</code> and receives a table from <code>takeActions()</code>. WebAssembly modules call <code>accessibility_update(jsonPtr, jsonLen)</code> with the nodes as a JSON array, and <code>accessibility_take_actions(ptr, max)</code>, which writes the actions as a JSON array and returns its length; see the <a href="api-reference.html">API reference</a>.</p>
+<h2 id="with-budo-ui" class="has-anchor">With budo-ui <a class="heading-anchor" href="#with-budo-ui" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>budo-ui does all of this for you. Every widget describes itself with its role, label, state, and value, and screen-reader actions press buttons, flip switches, step sliders, and fill fields. Tab and Shift+Tab move a visible focus ring, and dialogs keep the focus inside until they close. For your own widgets, pass <code>{ a11y: { role, label, ... } }</code> to <code>ui.interact</code>. See <a href="building-interfaces.html">Building interfaces</a>.</p>
             </article>
 
             <nav class="doc-pager">
-                <a href="installation.html" class="next"><small>Next →</small><span>Installation</span></a>
+                <a href="ai-inference.html" class="prev"><small>← Previous</small><span>AI Inference</span></a>
+                <a href="lua-and-wasm.html" class="next"><small>Next →</small><span>Lua and WebAssembly</span></a>
             </nav>
         </main>
     </div>

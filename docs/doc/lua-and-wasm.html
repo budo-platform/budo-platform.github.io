@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html" class="current">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,10 +63,10 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="lua-and-webassembly" class="has-anchor">Lua and WebAssembly <a class="heading-anchor" href="#lua-and-webassembly" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>JavaScript is the shortest path into Budo, but it is not the only one. Lua apps use the same <code>sys</code> vocabulary with Lua-friendly tables. WebAssembly apps import host functions from <code>env</code> and exchange strings and data through linear memory.</p>
-<p>This page focuses on what changes when you leave JavaScript.</p>
+<p>Budo apps can also be written in Lua or WebAssembly. A Lua app calls the same <code>sys</code> API as JavaScript, with Lua tables in place of objects and arrays. A WebAssembly module imports host functions from <code>env</code> and passes strings and data through its linear memory.</p>
+<p>This page covers what changes when you leave JavaScript, and what stays JavaScript only.</p>
 <h2 id="lua-lifecycle" class="has-anchor">Lua lifecycle <a class="heading-anchor" href="#lua-lifecycle" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Create <code>main.lua</code> in the project directory. Budo loads it once, then your code registers an animation callback.</p>
+<p>Create <code>main.lua</code> in the project directory. Budo runs it once; to animate, register a frame callback with <code>sys.animation.requestFrame</code>, and request the next frame from inside it.</p>
 <div class="code-block" data-budo-entry="main.lua"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-lua">-- Store the circle position between frames.
 local x = 80
 
@@ -81,10 +86,10 @@ end
 
 -- Start the animation loop.
 sys.animation.requestFrame(frame)</code></pre></div></div>
-<p><code>sys.animation.start(callback)</code> is available as an alias for <code>requestFrame</code>.</p>
-<p>Lua exposes the standard libraries and adds <code>sys</code>, <code>console</code>, <code>fetch</code>, and <code>json_parse</code>.</p>
+<p><code>sys.animation.start(callback)</code> is an alias for <code>requestFrame</code>.</p>
+<p>Lua apps get the standard Lua libraries plus four globals: <code>sys</code>, <code>console</code>, <code>fetch</code>, and <code>json_parse</code>.</p>
 <h2 id="lua-data-shapes" class="has-anchor">Lua data shapes <a class="heading-anchor" href="#lua-data-shapes" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Lua arrays are 1-based. APIs that return lists follow that convention.</p>
+<p>Every list Budo returns to Lua is a 1-based table, and every list you pass in is one too.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Read the available MIDI input devices.
 local devices = sys.midi.getInputDevices()
 -- Lua arrays returned by Budo are 1-based.
@@ -92,15 +97,15 @@ for i = 1, #devices do
   -- Log the device name for a picker or diagnostics.
   console.log(devices[i].name)
 end</code></pre></div></div>
-<p>Binary reads return Lua strings rather than JavaScript <code>ArrayBuffer</code> objects.</p>
-<p>Lua exposes both the canonical virtual-root <code>sys.files</code> API and the read-only <code>sys.assets</code> convenience wrapper. Asset-wrapper paths are bundle-relative and omit the <code>assets/</code> prefix. Both namespaces share the last file error.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Read binary data as a Lua string.
+<p>Binary data is a Lua string, where JavaScript would use an <code>ArrayBuffer</code>. <code>sys.files</code> and <code>sys.assets</code> work as in JavaScript (see <a href="data-files-network.html">Data, Files, and Network</a>): <code>sys.files</code> paths start with <code>assets/</code> or <code>files/</code>, and <code>sys.assets</code> paths omit the <code>assets/</code> prefix.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Read a bundled binary file as a Lua string.
 local data = sys.files.readBinary(&#x27;assets/image.bin&#x27;)
+-- The same file through the read-only assets shortcut.
 local same_data = sys.assets.readBinary(&#x27;image.bin&#x27;)
--- Use the string length operator to count bytes.
+-- The length operator counts bytes.
 console.log(&#x27;Bytes: &#x27; .. #data)</code></pre></div></div>
-<p><code>sys.assets</code> has no <code>writeText</code> or <code>writeBinary</code>; persistent writes use <code>sys.files</code> paths under <code>files/</code>.</p>
-<p>SQLite queries return arrays of row tables.</p>
+<p>Writes go through <code>sys.files.writeText</code> and <code>sys.files.writeBinary</code> under <code>files/</code>, and return the saved path, or <code>nil</code> on failure.</p>
+<p>SQLite queries return a list of row tables.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Open or create the SQLite database.
 local db = sys.db.open(&#x27;notes&#x27;)
 -- Query rows as an array of Lua tables.
@@ -110,8 +115,10 @@ for i = 1, #rows do
   -- Read a column by name.
   console.log(rows[i].title)
 end</code></pre></div></div>
-<p>Lua neural tensors use a table with <code>data</code>, optional <code>shape</code>, and returned <code>dtype</code>.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Run inference with a named input tensor.
+<p>Neural tensors are tables with <code>data</code> and an optional <code>shape</code>. <code>sys.neural.run</code> returns one table per output, with <code>data</code>, <code>shape</code>, and <code>dtype</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Load an ONNX model (app.json must contain &quot;neural&quot;: true).
+local model = sys.neural.loadModel(&#x27;model.onnx&#x27;)
+-- Run inference with a named input tensor.
 local result = sys.neural.run(model, {
   -- The table key must match the model input name.
   input = {
@@ -122,7 +129,7 @@ local result = sys.neural.run(model, {
   }
 })</code></pre></div></div>
 <h2 id="lua-fetch" class="has-anchor">Lua fetch <a class="heading-anchor" href="#lua-fetch" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Lua fetch is callback-based.</p>
+<p>Lua has no promises, so <code>fetch</code> takes a callback, which receives the response table or an error message. Pass an options table before the callback to set <code>method</code>, <code>headers</code>, or <code>body</code>.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Fetch data from an allowed domain.
 fetch(&#x27;https://api.example.com/data&#x27;, function(response, error)
   -- Handle policy or transport errors first.
@@ -139,11 +146,13 @@ fetch(&#x27;https://api.example.com/data&#x27;, function(response, error)
 end)</code></pre></div></div>
 <p>The response table includes <code>status</code>, <code>statusText</code>, <code>ok</code>, <code>url</code>, <code>redirected</code>, <code>headers</code>, <code>body</code>, and <code>bodyLen</code>.</p>
 <h2 id="lua-differences-from-javascript" class="has-anchor">Lua differences from JavaScript <a class="heading-anchor" href="#lua-differences-from-javascript" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The largest difference is not naming; it is runtime idiom. Lua uses tables, callbacks, and explicit 1-based arrays. JavaScript uses promises, typed arrays, and modules. Budo keeps method names close enough that you can translate examples mentally.</p>
-<p>There is no <code>sys.timer</code> in Lua. Use the frame timestamp or write a tiny scheduler in Lua when you need delayed actions.</p>
-<p>There is no Budo-specific Lua module resolver. Keep simple apps in one file or use standard Lua loading patterns available in the runtime.</p>
+<p>Method names match JavaScript, so most examples translate line by line: objects become tables, promises become callbacks, and typed arrays become tables or strings.</p>
+<p>Lua has no <code>sys.timer</code>. To delay an action, compare the frame timestamp against the time you want it to happen.</p>
+<p>Budo adds no module system to Lua, so keep a Lua app in <code>main.lua</code>.</p>
+<h2 id="what-stays-javascript-only" class="has-anchor">What stays JavaScript only <a class="heading-anchor" href="#what-stays-javascript-only" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Some parts of Budo are available in JavaScript and TypeScript only, not in Lua or WebAssembly: timers (<code>sys.timer</code>), drawing into textures (<code>sys.graphics</code>), ES modules, the budo-ui toolkit, audio streams and decoders, audio analysis, block reads of large files (<code>sys.files.openRead</code>), <code>sys.files.appendBinary</code>, and the system file pickers (<code>pickText</code>, <code>saveText</code>). Choose JavaScript when your app depends on one of them.</p>
 <h2 id="webassembly-lifecycle" class="has-anchor">WebAssembly lifecycle <a class="heading-anchor" href="#webassembly-lifecycle" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Desktop WebAssembly apps may be written as WAT for small examples or compiled from another language into <code>.wasm</code>. Budo looks for optional <code>init</code> and <code>frame</code> exports.</p>
+<p>WebAssembly apps run on desktop, through Wasmtime; they cannot be exported to web or packaged for Android. Write the module as text in <code>main.wat</code>, which suits small examples, or compile it from another language into <code>main.wasm</code>. Budo calls two optional exports: <code>init</code>, once after the module loads, and <code>frame(timestamp)</code>, on every frame.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.wat</span></div><div class="code-body"><pre><code class="language-wat">(module
   ;; Import a host function that clears the canvas with an ARGB color.
   (import &quot;env&quot; &quot;canvas_clear&quot; (func $canvas_clear (param i32)))
@@ -172,9 +181,9 @@ end)</code></pre></div></div>
     call $canvas_draw_circle
   )
 )</code></pre></div></div>
-<p><code>frame</code> receives a timestamp in milliseconds. If no <code>frame</code> export exists, no per-frame guest callback runs. If <code>init</code> exists, Budo calls it once after instantiation.</p>
+<p><code>frame</code> receives the timestamp in milliseconds. A module without <code>frame</code> that never draws runs <code>init</code> without opening a window, then ends. To end the app yourself, import <code>app_exit(i32)</code> and call it with an exit status.</p>
 <h2 id="webassembly-memory-and-strings" class="has-anchor">WebAssembly memory and strings <a class="heading-anchor" href="#webassembly-memory-and-strings" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Numeric-only imports do not need guest memory. String-backed APIs need an exported memory so Budo can read UTF-8 bytes from the module.</p>
+<p>Imports that take only numbers need nothing more. Imports that take strings or buffers read them from the module's memory, so the module must export it as <code>memory</code>. A string is passed as a pointer and a byte length.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.wat</span></div><div class="code-body"><pre><code class="language-wat">(module
   ;; Export memory so the host can read string bytes.
   (memory (export &quot;memory&quot;) 1)
@@ -201,17 +210,21 @@ end)</code></pre></div></div>
     drop
   )
 )</code></pre></div></div>
-<p>The same pointer-and-length pattern appears in file, network, shader, SVG, font, SQLite, MIDI, and neural host imports.</p>
+<p>File, network, shader, SVG, SQLite, MIDI, and neural imports pass strings the same way.</p>
+<p>Imports that take lists use the same memory, in three shapes:</p>
+<ul><li>Arrays of numbers: <code>canvas_set_linear_gradient(x0, y0, x1, y1, colorsPtr, stopsPtr, count)</code> reads <code>count</code> u32 ARGB colors at <code>colorsPtr</code> and, unless <code>stopsPtr</code> is <code>-1</code>, <code>count</code> f32 positions at <code>stopsPtr</code>.</li><li>Records: <code>canvas_draw_rich_text(spansPtr, count, x, y, width, align, lineHeight, maxLines)</code> reads <code>count</code> 16-byte spans <code>{ i32 textPtr, i32 textLen, f32 size, u32 argb }</code>; a size of 0 uses the default and a color of 0 the paint color.</li><li>JSON: <code>accessibility_update(jsonPtr, jsonLen)</code> takes the same node objects as <code>sys.accessibility.update</code>, and <code>accessibility_take_actions(ptr, max)</code> writes a JSON array of actions and returns its length (it writes nothing when the buffer is too small, so call it again with more room).</li></ul>
+<p>Results with several values come back through an output pointer: <code>canvas_measure_paragraph(..., outPtr)</code> writes <code>{ f32 width, f32 height, i32 lines }</code>. Device preferences use one import per value, <code>device_get_preference(id)</code>, and frames on demand use <code>animation_wait_for_input(timeoutMs)</code> from <code>frame</code>. The <a href="api-reference.html">API reference</a> lists every import.</p>
 <h2 id="webassembly-capabilities" class="has-anchor">WebAssembly capabilities <a class="heading-anchor" href="#webassembly-capabilities" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Some imports exist only when a capability is available. Advanced Skia paint imports are a good example. A module that imports a missing host function will fail to instantiate, so either target a known platform or split optional features behind capability-specific modules.</p>
-<p>Capability host imports return integer availability flags such as <code>capability_neural</code> and <code>capability_udp</code>.</p>
+<p>A module that imports a function the host does not provide fails to load. The neural imports exist only in Budo builds with ONNX support, so a module that uses them loads only there.</p>
+<p>To check a feature at run time, import its probe: <code>capability_neural</code>, <code>capability_llamacpp</code>, <code>capability_midi</code>, <code>capability_udp</code>, <code>capability_http</code>, and <code>capability_sensors</code> each return <code>1</code> when the feature is available and <code>0</code> otherwise. <code>capability_llamacpp</code> always returns <code>0</code> in WebAssembly.</p>
+<p>The WebAssembly API is narrower than JavaScript's. It cannot load fonts, write files, or play audio buffers; SQLite queries return JSON strings; HTTP responses and UDP datagrams are polled rather than delivered to callbacks; and neural tensors are <code>float32</code> only.</p>
 <h2 id="choosing-a-runtime" class="has-anchor">Choosing a runtime <a class="heading-anchor" href="#choosing-a-runtime" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript and TypeScript are best for fast iteration, modules, typed arrays, and broad examples. Lua is excellent for compact scripts, embeddable game logic, and teams that prefer a small dynamic language. WebAssembly is useful when you already have a compiled core, want a stable ABI boundary, or need to share logic with another platform.</p>
-<p>The drawing and platform model is the same across all three. Choose the guest language for your app architecture, not because the runtime pushes you toward one.</p>
+<p>JavaScript and TypeScript have the complete API, run on every platform, and are the fastest way to iterate. Lua suits compact scripts and game logic, runs on desktop, web, and Android, and covers most of the API. WebAssembly fits when you already have a compiled core in another language; it runs on desktop only.</p>
+<p>Drawing, input, and the frame loop work the same way in all three, so choose the language that fits your app and your team.</p>
             </article>
 
             <nav class="doc-pager">
-                <a href="media-devices-ai.html" class="prev"><small>← Previous</small><span>Audio, MIDI, Sensors, and AI</span></a>
+                <a href="accessibility.html" class="prev"><small>← Previous</small><span>Accessibility</span></a>
                 <a href="packaging-and-deployment.html" class="next"><small>Next →</small><span>Packaging and Deployment</span></a>
             </nav>
         </main>
@@ -325,11 +338,15 @@ end)</code></pre></div></div>
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

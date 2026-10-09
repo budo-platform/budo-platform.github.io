@@ -208,6 +208,31 @@
             border-radius: 50%;
         }
 
+        .editor-header select,
+        .editor-header input {
+            max-width: 100%;
+            flex: 1;
+            padding: 0.2rem 0.5rem;
+        }
+
+        .editor-header input {
+            background: var(--color-bg);
+            border: 1px solid var(--color-primary);
+            color: var(--color-text);
+            font-family: var(--font-mono);
+        }
+
+        .editor-header button {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text);
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            padding: 0.25rem 0.5rem;
+        }
+
         .editor-container {
             flex: 1;
             overflow: hidden;
@@ -669,13 +694,13 @@
         <div class="toolbar-divider"></div>
 
         <select id="example-select">
-            <option value="">Examples…</option>
-            <option value="hello">Hello World</option>
-            <option value="ball">Interactive Ball</option>
-            <option value="clock">Analog Clock</option>
-            <option value="particles">Particle Fountain</option>
-            <option value="starfield">Starfield</option>
-            <option value="rainbow">Rainbow Circles</option>
+            <option value="shader_demo">Shader demo</option>
+            <option value="canvas_texture">Canvas texture</option>
+            <option value="clock_demo">Analog clock</option>
+            <option value="particles">Particles</option>
+            <option value="3d_cube">3D cube</option>
+            <option value="03_lua_spaceshooter">Lua space shooter</option>
+            <option value="01_drum_loop_machine">Drum loop machine</option>
         </select>
 
         <button id="btn-run" class="btn btn-run" title="Run (Ctrl+Enter)">&#9654; Run</button>
@@ -690,7 +715,9 @@
         <div class="editor-panel" id="editor-panel">
             <div class="editor-header">
                 <span class="dot" style="background:#f7df1e"></span>
-                main.js
+                <select id="file-select" aria-label="Project file"></select>
+                <input id="new-file-path" type="text" placeholder="shaders/effect.frag" aria-label="New file path" hidden>
+                <button id="btn-new-file" type="button" title="New project file" aria-label="New project file">+</button>
             </div>
             <div class="editor-container" id="editor-container"></div>
         </div>
@@ -756,373 +783,13 @@
     <!-- CodeMirror 5 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/lua/lua.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/hint/show-hint.min.js"></script>
 
     <script>
-        // ── Example snippets ────────────────────────────────────────────
-
-        const EXAMPLES = {
-            hello: `// Hello World — your first Budo app!
-
-function frame(timestamp) {
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-
-    sys.canvas.clear('#1a1a2e');
-
-    // Bouncing text
-    const y = h / 2 + Math.sin(timestamp / 600) * 30;
-
-    sys.canvas.setFillColor('#7c6ff7');
-    sys.canvas.drawText('Hello, Budo!', w / 2 - 130, y, 36);
-
-    sys.canvas.setFillColor('#9895a8');
-    sys.canvas.drawText('Edit this code and click Run', w / 2 - 150, y + 50, 18);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`,
-
-            ball: `// Interactive Ball — click to move, watch it trail!
-
-let ballX = 200, ballY = 200;
-let targetX = 200, targetY = 200;
-let trail = [];
-
-function frame(timestamp) {
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-    const input = sys.input.get();
-
-    if (input.mouse.left) {
-        targetX = input.mouse.x;
-        targetY = input.mouse.y;
-    }
-
-    // Smooth follow
-    ballX += (targetX - ballX) * 0.08;
-    ballY += (targetY - ballY) * 0.08;
-
-    // Trail
-    trail.push({ x: ballX, y: ballY });
-    if (trail.length > 30) trail.shift();
-
-    sys.canvas.clear('#0a0a1a');
-
-    // Draw trail
-    for (let i = 0; i < trail.length; i++) {
-        const alpha = Math.floor((i / trail.length) * 180);
-        const radius = (i / trail.length) * 20;
-        sys.canvas.setFillColor('#7c6ff7');
-        sys.canvas.setAlpha(alpha);
-        sys.canvas.drawCircle(trail[i].x, trail[i].y, radius);
-    }
-    sys.canvas.setAlpha(255);
-
-    // Draw ball
-    sys.canvas.setFillColor('#9b8aff');
-    sys.canvas.drawCircle(ballX, ballY, 24);
-    sys.canvas.setFillColor('#c4bbff');
-    sys.canvas.drawCircle(ballX - 6, ballY - 6, 8);
-
-    // Instructions
-    sys.canvas.setFillColor('#555');
-    sys.canvas.drawText('Click anywhere to move the ball', 16, 28, 14);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`,
-
-            clock: `// Analog Clock
-
-function frame(timestamp) {
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-    const cx = w / 2, cy = h / 2;
-    const radius = Math.min(w, h) * 0.35;
-
-    sys.canvas.clear('#1a1a2e');
-
-    // Clock face
-    sys.canvas.setFillColor('#16213e');
-    sys.canvas.drawCircle(cx, cy, radius);
-    sys.canvas.setStrokeColor('#0f3460');
-    sys.canvas.setStrokeWidth(3);
-    sys.canvas.drawCircle(cx, cy, radius);
-
-    // Tick marks
-    for (let i = 0; i < 60; i++) {
-        const angle = (i / 60) * Math.PI * 2 - Math.PI / 2;
-        const major = i % 5 === 0;
-        const inner = radius * (major ? 0.82 : 0.88);
-        const outer = radius * 0.93;
-        sys.canvas.setStrokeColor(major ? '#f8f8f8' : '#4a5568');
-        sys.canvas.setStrokeWidth(major ? 2.5 : 1);
-        sys.canvas.drawLine(
-            cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner,
-            cx + Math.cos(angle) * outer, cy + Math.sin(angle) * outer
-        );
-    }
-
-    // Time
-    const now = new Date();
-    const sec = now.getSeconds() + now.getMilliseconds() / 1000;
-    const min = now.getMinutes() + sec / 60;
-    const hr = (now.getHours() % 12) + min / 60;
-
-    // Hour hand
-    const hAngle = (hr / 12) * Math.PI * 2 - Math.PI / 2;
-    sys.canvas.setStrokeColor('#e94560');
-    sys.canvas.setStrokeWidth(7);
-    sys.canvas.drawLine(cx, cy,
-        cx + Math.cos(hAngle) * radius * 0.5,
-        cy + Math.sin(hAngle) * radius * 0.5);
-
-    // Minute hand
-    const mAngle = (min / 60) * Math.PI * 2 - Math.PI / 2;
-    sys.canvas.setStrokeColor('#f8f8f8');
-    sys.canvas.setStrokeWidth(4);
-    sys.canvas.drawLine(cx, cy,
-        cx + Math.cos(mAngle) * radius * 0.72,
-        cy + Math.sin(mAngle) * radius * 0.72);
-
-    // Second hand
-    const sAngle = (sec / 60) * Math.PI * 2 - Math.PI / 2;
-    sys.canvas.setStrokeColor('#ffd700');
-    sys.canvas.setStrokeWidth(2);
-    sys.canvas.drawLine(cx, cy,
-        cx + Math.cos(sAngle) * radius * 0.8,
-        cy + Math.sin(sAngle) * radius * 0.8);
-
-    // Center dot
-    sys.canvas.setFillColor('#e94560');
-    sys.canvas.drawCircle(cx, cy, 6);
-
-    // Digital time
-    const timeStr = now.toLocaleTimeString();
-    sys.canvas.setFillColor('#00ff88');
-    sys.canvas.drawText(timeStr, cx - 55, cy + radius + 40, 20);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`,
-
-            particles: `// Particle Fountain
-
-const particles = [];
-const MAX = 500;
-
-function spawn(x, y) {
-    const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
-    const speed = 150 + Math.random() * 200;
-    const hue = Math.floor(Math.random() * 360);
-    particles.push({
-        x, y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 1.5 + Math.random() * 1.5,
-        maxLife: 2.5,
-        size: 2 + Math.random() * 4,
-        hue
-    });
-    if (particles.length > MAX) particles.shift();
-}
-
-function hsl(h, s, l) {
-    return 'hsl(' + h + ',' + s + '%,' + l + '%)';
-}
-
-let lastT = 0;
-
-function frame(timestamp) {
-    const dt = lastT ? (timestamp - lastT) / 1000 : 0.016;
-    lastT = timestamp;
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-
-    // Emit particles
-    for (let i = 0; i < 4; i++) spawn(w / 2, h * 0.75);
-
-    sys.canvas.clear('#0a0a1a');
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.vy += 220 * dt;  // gravity
-        p.life -= dt;
-
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-            continue;
-        }
-
-        const alpha = Math.floor((p.life / p.maxLife) * 255);
-        sys.canvas.setFillColor(hsl(p.hue, 80, 60));
-        sys.canvas.setAlpha(alpha);
-        sys.canvas.drawCircle(p.x, p.y, p.size * (p.life / p.maxLife));
-    }
-    sys.canvas.setAlpha(255);
-
-    sys.canvas.setFillColor('#555');
-    sys.canvas.drawText('Particles: ' + particles.length, 16, 28, 14);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`,
-
-            starfield: `// Starfield — fly through the stars!
-
-const stars = [];
-const NUM_STARS = 400;
-const SPEED = 4;
-
-function init(w, h) {
-    for (let i = 0; i < NUM_STARS; i++) {
-        stars.push({
-            x: (Math.random() - 0.5) * w * 2,
-            y: (Math.random() - 0.5) * h * 2,
-            z: Math.random() * w,
-            pz: 0
-        });
-    }
-}
-
-let initialized = false;
-
-function frame(timestamp) {
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-
-    if (!initialized) { init(w, h); initialized = true; }
-
-    sys.canvas.clear('#000000');
-
-    for (const s of stars) {
-        s.pz = s.z;
-        s.z -= SPEED;
-        if (s.z <= 1) {
-            s.x = (Math.random() - 0.5) * w * 2;
-            s.y = (Math.random() - 0.5) * h * 2;
-            s.z = w;
-            s.pz = w;
-        }
-
-        const sx = (s.x / s.z) * (w / 2) + w / 2;
-        const sy = (s.y / s.z) * (h / 2) + h / 2;
-        const px = (s.x / s.pz) * (w / 2) + w / 2;
-        const py = (s.y / s.pz) * (h / 2) + h / 2;
-        const r = Math.max(2.5, (2 - s.z / w) * 4);
-        const brightness = Math.floor((1 - s.z / w) * 255);
-        const hex = brightness.toString(16).padStart(2, '0');
-
-        sys.canvas.setStrokeColor('#' + hex + hex + hex);
-        sys.canvas.setStrokeWidth(r);
-        sys.canvas.drawLine(px, py, sx, sy);
-    }
-
-    sys.canvas.setFillColor('#444');
-    sys.canvas.drawText('Starfield', 16, 28, 14);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`,
-
-            rainbow: `// Rainbow Circles — mesmerizing patterns
-
-function hsl(h, s, l) {
-    // Convert HSL to hex
-    h /= 360; s /= 100; l /= 100;
-    let r, g, b;
-    if (s === 0) { r = g = b = l; }
-    else {
-        const hue2rgb = (p, q, t) => {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-            return p;
-        };
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
-    }
-    const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
-    return '#' + toHex(r) + toHex(g) + toHex(b);
-}
-
-function frame(timestamp) {
-    const w = sys.window.getWidth();
-    const h = sys.window.getHeight();
-    const t = timestamp / 1000;
-
-    sys.canvas.clear('#0e0e12');
-
-    const cx = w / 2, cy = h / 2;
-    const numCircles = 12;
-    const orbitRadius = Math.min(w, h) * 0.25;
-
-    for (let i = 0; i < numCircles; i++) {
-        const angle = (i / numCircles) * Math.PI * 2 + t * 0.8;
-        const hue = ((i / numCircles) * 360 + t * 60) % 360;
-        const pulse = 15 + Math.sin(t * 3 + i) * 8;
-
-        const x = cx + Math.cos(angle) * orbitRadius;
-        const y = cy + Math.sin(angle) * orbitRadius;
-
-        // Glow
-        sys.canvas.setFillColor(hsl(hue, 80, 50));
-        sys.canvas.setAlpha(60);
-        sys.canvas.drawCircle(x, y, pulse + 10);
-        sys.canvas.setAlpha(255);
-
-        // Core
-        sys.canvas.setFillColor(hsl(hue, 90, 65));
-        sys.canvas.drawCircle(x, y, pulse);
-
-        // Inner ring on each circle
-        for (let j = 0; j < 6; j++) {
-            const a2 = (j / 6) * Math.PI * 2 - t * 2;
-            const r2 = pulse * 0.6;
-            const px = x + Math.cos(a2) * r2;
-            const py = y + Math.sin(a2) * r2;
-            sys.canvas.setFillColor(hsl((hue + 60) % 360, 80, 70));
-            sys.canvas.setAlpha(180);
-            sys.canvas.drawCircle(px, py, 3);
-        }
-        sys.canvas.setAlpha(255);
-    }
-
-    // Center pulsing ring
-    const centerR = 20 + Math.sin(t * 2) * 10;
-    sys.canvas.setStrokeColor('#7c6ff7');
-    sys.canvas.setStrokeWidth(2);
-    sys.canvas.drawCircle(cx, cy, centerR);
-    sys.canvas.setFillColor('#7c6ff7');
-    sys.canvas.drawCircle(cx, cy, 5);
-
-    sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);
-`
-        };
-
         // ── Budo API completions (derived from budo.d.ts) ────
 
         const BUDO_API = {
@@ -1471,7 +1138,7 @@ sys.animation.requestFrame(frame);
         // ── Editor setup ────────────────────────────────────────────
 
         const editor = CodeMirror(document.getElementById('editor-container'), {
-            value: EXAMPLES.hello,
+            value: '',
             mode: 'javascript',
             theme: 'material-darker',
             lineNumbers: true,
@@ -1496,7 +1163,7 @@ sys.animation.requestFrame(frame);
 
         // Auto-show completions after typing a dot
         editor.on('inputRead', function (cm, change) {
-            if (change.text[0] === '.') {
+            if (activeFile && /\.(js|ts)$/.test(activeFile.path) && change.text[0] === '.') {
                 cm.showHint({ hint: hintBudo, completeSingle: false });
             }
         });
@@ -1509,6 +1176,9 @@ sys.animation.requestFrame(frame);
         const btnRun = document.getElementById('btn-run');
         const btnStop = document.getElementById('btn-stop');
         const exampleSelect = document.getElementById('example-select');
+        const fileSelect = document.getElementById('file-select');
+        const btnNewFile = document.getElementById('btn-new-file');
+        const newFilePath = document.getElementById('new-file-path');
         const previewContainer = document.getElementById('preview-container');
         const previewPlaceholder = document.getElementById('preview-placeholder');
         const btnFullscreen = document.getElementById('btn-fullscreen');
@@ -1516,6 +1186,110 @@ sys.animation.requestFrame(frame);
         const statusText = document.getElementById('status-text');
         const consoleOutput = document.getElementById('console-output');
         const btnClearConsole = document.getElementById('btn-clear-console');
+        let projectFiles = [];
+        let activeFile = null;
+        let loadVersion = 0;
+
+        function validProjectPath(path) {
+            return typeof path === 'string' && !path.startsWith('/') && !path.includes('\\') &&
+                path.split('/').every(function (part) { return part && part !== '.' && part !== '..'; });
+        }
+
+        function selectFile(path) {
+            const file = projectFiles.find(function (item) { return item.path === path; });
+            if (!file || !file.text) return;
+            if (activeFile) activeFile.content = editor.getValue();
+            activeFile = file;
+            fileSelect.value = path;
+            editor.setOption('mode', /\.(js|ts)$/.test(path) ? 'javascript' :
+                /\.(vert|frag|glsl)$/.test(path) ? 'x-shader/x-fragment' :
+                    path.endsWith('.lua') ? 'lua' : 'text/plain');
+            editor.setValue(file.content);
+            editor.clearHistory();
+        }
+
+        async function loadExample(name) {
+            const version = ++loadVersion;
+            btnRun.disabled = true;
+            newFilePath.value = '';
+            newFilePath.hidden = true;
+            fileSelect.hidden = false;
+            setStatus('', 'Loading example…');
+            try {
+                const base = new URL('demos/' + encodeURIComponent(name) + '/', location.href);
+                const page = await fetch(new URL('index.html', base));
+                if (!page.ok) throw new Error('Demo index: HTTP ' + page.status);
+                const documentHtml = new DOMParser().parseFromString(await page.text(), 'text/html');
+                const manifest = documentHtml.getElementById('demo-files');
+                if (!manifest) throw new Error('Demo file manifest missing');
+                const entries = JSON.parse(manifest.textContent);
+                const files = await Promise.all(entries.map(async function (entry) {
+                    if (!validProjectPath(entry.path)) throw new Error('Invalid project path: ' + entry.path);
+                    const response = await fetch(new URL(entry.path.split('/').map(encodeURIComponent).join('/'), base));
+                    if (!response.ok) throw new Error(entry.path + ': HTTP ' + response.status);
+                    const data = await response.arrayBuffer();
+                    return {
+                        path: entry.path,
+                        text: entry.text,
+                        content: entry.text ? new TextDecoder().decode(data) : null,
+                        data: entry.text ? null : data
+                    };
+                }));
+                if (version !== loadVersion) return;
+                if (!files.some(function (file) { return file.path === 'main.js' || file.path === 'main.ts' || file.path === 'main.lua'; })) {
+                    throw new Error('No supported entry point in ' + name);
+                }
+                projectFiles = files;
+                activeFile = null;
+                fileSelect.replaceChildren();
+                files.forEach(function (file) {
+                    const option = new Option(file.path + (file.text ? '' : ' (asset)'), file.path);
+                    option.disabled = !file.text;
+                    fileSelect.add(option);
+                });
+                const main = files.find(function (file) { return /^main\.(ts|js|lua)$/.test(file.path); });
+                selectFile(main.path);
+                btnRun.disabled = false;
+                setStatus('', 'Ready');
+            } catch (error) {
+                if (version !== loadVersion) return;
+                projectFiles = [];
+                activeFile = null;
+                fileSelect.replaceChildren();
+                editor.setValue('');
+                setStatus('error', 'Example unavailable');
+                appendConsole('Could not load example: ' + error.message + '. Run make website-demos.', 'error');
+            }
+        }
+
+        fileSelect.addEventListener('change', function () { selectFile(fileSelect.value); });
+        btnNewFile.addEventListener('click', function () {
+            if (!projectFiles.length) return;
+            fileSelect.hidden = true;
+            newFilePath.hidden = false;
+            newFilePath.focus();
+        });
+        newFilePath.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== 'Escape') return;
+            event.preventDefault();
+            if (event.key === 'Escape') {
+                newFilePath.hidden = true;
+                fileSelect.hidden = false;
+                return;
+            }
+            const path = newFilePath.value.trim();
+            if (!validProjectPath(path) || projectFiles.some(function (file) { return file.path === path; })) {
+                appendConsole('Invalid or duplicate project file path: ' + path, 'error');
+                return;
+            }
+            projectFiles.push({ path: path, text: true, content: '', data: null });
+            fileSelect.add(new Option(path, path));
+            newFilePath.value = '';
+            newFilePath.hidden = true;
+            fileSelect.hidden = false;
+            selectFile(path);
+            editor.focus();
+        });
 
         // ── Console ─────────────────────────────────────────────────
 
@@ -1596,6 +1370,7 @@ sys.animation.requestFrame(frame);
         }
 
         function runCode() {
+            if (!projectFiles.length) return;
             // Stop previous run
             if (currentIframe) {
                 currentIframe.remove();
@@ -1605,7 +1380,10 @@ sys.animation.requestFrame(frame);
             clearConsole();
             appendConsole('Starting Budo runtime…', 'info');
 
-            const code = editor.getValue();
+            if (activeFile) activeFile.content = editor.getValue();
+            const files = projectFiles.map(function (file) {
+                return { path: file.path, data: file.text ? new TextEncoder().encode(file.content).buffer : file.data };
+            });
 
             // Create iframe
             const iframe = document.createElement('iframe');
@@ -1625,7 +1403,7 @@ sys.animation.requestFrame(frame);
             btnFullscreen.classList.add('visible');
             setStatus('', 'Loading…');
 
-            // Wait for iframe to signal ready, then send code
+            // Wait for iframe to signal ready, then send project files
             var codeSent = false;
             function onMessage(event) {
                 if (!event.data || event.data.source !== 'budo-runner') return;
@@ -1639,7 +1417,7 @@ sys.animation.requestFrame(frame);
                             iframe.contentWindow.postMessage({
                                 source: 'budo-playground',
                                 type: 'run',
-                                code: code
+                                files: files
                             }, '*');
                         }
                         break;
@@ -1681,11 +1459,10 @@ sys.animation.requestFrame(frame);
         btnStop.addEventListener('click', stopCode);
 
         exampleSelect.addEventListener('change', function () {
-            var key = this.value;
-            if (key && EXAMPLES[key]) {
-                editor.setValue(EXAMPLES[key]);
-            }
+            stopCode();
+            loadExample(this.value);
         });
+        loadExample(exampleSelect.value);
 
         // ── Resize handle ───────────────────────────────────────────
 

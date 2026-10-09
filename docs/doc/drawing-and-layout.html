@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
     <title>Drawing and Layout — Budo Documentation</title>
-    <meta name="description" content="Use Budo&#x27;s canvas, path, transform, text, SVG, and density APIs.">
+    <meta name="description" content="Use Budo&#x27;s canvas, paint, gradient, clipping, layer, path, text, SVG, and density APIs.">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="../theme-base.css">
@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html" class="current">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,10 +63,10 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="drawing-and-layout" class="has-anchor">Drawing and Layout <a class="heading-anchor" href="#drawing-and-layout" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Budo's drawing API is built around a global <code>sys.canvas</code> namespace and a small set of stateful helpers: <code>sys.path</code>, <code>sys.svg</code>, and <code>sys.font</code>. The model is intentionally close to creative coding and native canvas libraries: set state, draw, set different state, draw again.</p>
-<p>The canvas is backed by Skia on desktop, Android, and web. On desktop and web export, it ultimately participates in a GPU pipeline that can be sampled by shader passes. For normal 2D drawing, you can treat it as an immediate drawing surface.</p>
+<p>Everything a Budo app shows is drawn on one canvas, <code>sys.canvas</code>, rendered by Skia on every platform. The model is the one of creative-coding and native canvas libraries: set some state (a color, a stroke width, a transform), draw, change the state, draw again. Three helpers sit next to it: <code>sys.path</code> for vector shapes, <code>sys.svg</code> for SVG files, and <code>sys.font</code> for typefaces.</p>
+<p>This page starts with shapes, colors, and text, which cover most apps, then moves to transforms, clipping, paths, gradients, layers, density, and pixel readback.</p>
 <h2 id="canvas-basics" class="has-anchor">Canvas basics <a class="heading-anchor" href="#canvas-basics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Clear the frame first, then issue drawing commands.</p>
+<p>Each frame, clear the canvas, draw, and ask for the next frame.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="// Draw one frame of the scene.
 function frame() {
   // Clear the previous frame with a dark background.
@@ -83,6 +88,7 @@ function frame() {
   sys.animation.requestFrame(frame);
 }
 
+// Start the frame loop.
 sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw one frame of the scene.
 function frame() {
   // Clear the previous frame with a dark background.
@@ -102,144 +108,272 @@ function frame() {
 
   // Request the next frame so the app keeps rendering.
   sys.animation.requestFrame(frame);
-}</code></pre></div></div>
-<p>Rectangle-like calls use <code>x</code>, <code>y</code>, <code>width</code>, and <code>height</code>. Arc angles are degrees. Text returns the measured width of the drawn text, which is useful for simple alignment.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#111318&#x27;);
-sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-const width = sys.canvas.drawText(&#x27;Centered&#x27;, 0, 0, 24);
-sys.canvas.drawText(&#x27;Centered&#x27;, (sys.window.getWidth() - width) * 0.5, 80, 24);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Select the text color.
-sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-// Draw once at the origin to get the rendered text width.
-const width = sys.canvas.drawText(&#x27;Centered&#x27;, 0, 0, 24);
-// Draw again using the measured width for simple horizontal centering.
-sys.canvas.drawText(&#x27;Centered&#x27;, (sys.window.getWidth() - width) * 0.5, 80, 24);</code></pre></div></div>
-<h2 id="paint-state" class="has-anchor">Paint state <a class="heading-anchor" href="#paint-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.canvas</code> stores the current fill, stroke, alpha, antialiasing, stroke cap, stroke join, and advanced Skia-only filters. A fill color switches subsequent primitive drawing to fill style. A stroke color switches it to stroke style.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#f8fafc&#x27;);
-sys.canvas.setAntiAlias(true);
-sys.canvas.setFillColor(&#x27;#ffcc66&#x27;);
-sys.canvas.setAlpha(220);
-sys.canvas.drawRoundRect(24, 24, 160, 64, 10, 10);
+}
 
-sys.canvas.setAlpha(255);
-sys.canvas.setStrokeColor(&#x27;#101116&#x27;);
-sys.canvas.setStrokeWidth(3);
-sys.canvas.drawLine(32, 92, 176, 32);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Enable smoother edges for rounded corners and diagonal lines.
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>Coordinates are physical canvas pixels with the origin at the top-left corner. Rectangle-like calls (<code>drawRect</code>, <code>drawRoundRect</code>, <code>drawOval</code>) take <code>x</code>, <code>y</code>, <code>width</code>, and <code>height</code>; circles take a center and a radius; <code>drawLine</code> takes two points and <code>drawPoint</code> one. <code>drawArc(x, y, width, height, startAngle, sweepAngle, useCenter)</code> takes angles in degrees, and <code>useCenter: true</code> draws a pie wedge. <code>clear()</code> with no color clears to white.</p>
+<h2 id="colors-and-paint" class="has-anchor">Colors and paint <a class="heading-anchor" href="#colors-and-paint" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The canvas keeps one current paint: a color, a style (fill or stroke), a stroke width, cap and join, an alpha, and anti-aliasing. <code>setFillColor</code> sets the color and switches the following shapes to fill; <code>setStrokeColor</code> sets the color and switches them to stroke.</p>
+<p>Colors are hex strings, <code>#RRGGBB</code> or <code>#RRGGBBAA</code> (the last pair is the opacity), or numbers in ARGB order such as <code>0xffff0000</code> for opaque red. A string in any other form, including CSS names such as <code>&#x27;transparent&#x27;</code>, reads as opaque black; use <code>&#x27;#00000000&#x27;</code> for transparent.</p>
+<p><code>setAlpha(alpha)</code> fades the following draws, from 0 (invisible) to 255 (opaque). Setting a color replaces the alpha with the color's own, so call <code>setAlpha</code> after choosing the color.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+// Smooth the edges of curves and diagonals.
 sys.canvas.setAntiAlias(true);
-// Select the fill color and switch the paint to fill mode.
+// Fill with a warm yellow, then fade it slightly.
 sys.canvas.setFillColor(&#x27;#ffcc66&#x27;);
-// Apply partial opacity to following draw calls.
 sys.canvas.setAlpha(220);
 // Draw a rounded rectangle with 10-pixel corner radii.
 sys.canvas.drawRoundRect(24, 24, 160, 64, 10, 10);
 
-// Select the stroke color and switch the paint to stroke mode.
+// A new color is opaque again: no need to reset the alpha.
 sys.canvas.setStrokeColor(&#x27;#101116&#x27;);
-// Use a visible line width for the diagonal stroke.
+// Use rounded line ends and a visible width.
+sys.canvas.setStrokeCap(&#x27;round&#x27;);
 sys.canvas.setStrokeWidth(3);
 // Draw a line across the rounded rectangle.
-sys.canvas.drawLine(32, 92, 176, 32);</code></pre></div></div>
-<p>Colors may be hex strings in <code>#RRGGBB</code> or <code>#RRGGBBAA</code> form, or numeric ARGB values such as <code>0xffff0000</code>. Internally, Budo uses ARGB everywhere.</p>
+sys.canvas.drawLine(32, 92, 176, 32);
+// A translucent color carries its own opacity.
+sys.canvas.setFillColor(&#x27;#7c6ff780&#x27;);
+sys.canvas.drawCircle(200, 60, 36);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Smooth the edges of curves and diagonals.
+sys.canvas.setAntiAlias(true);
+// Fill with a warm yellow, then fade it slightly.
+sys.canvas.setFillColor(&#x27;#ffcc66&#x27;);
+sys.canvas.setAlpha(220);
+// Draw a rounded rectangle with 10-pixel corner radii.
+sys.canvas.drawRoundRect(24, 24, 160, 64, 10, 10);
+
+// A new color is opaque again: no need to reset the alpha.
+sys.canvas.setStrokeColor(&#x27;#101116&#x27;);
+// Use rounded line ends and a visible width.
+sys.canvas.setStrokeCap(&#x27;round&#x27;);
+sys.canvas.setStrokeWidth(3);
+// Draw a line across the rounded rectangle.
+sys.canvas.drawLine(32, 92, 176, 32);
+// A translucent color carries its own opacity.
+sys.canvas.setFillColor(&#x27;#7c6ff780&#x27;);
+sys.canvas.drawCircle(200, 60, 36);</code></pre></div></div>
+<p>Stroke caps are <code>&#x27;butt&#x27;</code>, <code>&#x27;round&#x27;</code>, and <code>&#x27;square&#x27;</code>; joins are <code>&#x27;miter&#x27;</code>, <code>&#x27;round&#x27;</code>, and <code>&#x27;bevel&#x27;</code>. For effects, <code>setBlendMode</code> selects how shapes composite (<code>&#x27;multiply&#x27;</code>, <code>&#x27;screen&#x27;</code>, <code>&#x27;plus&#x27;</code>, and the other Skia modes), <code>setImageFilter</code> adds a blur or a drop shadow, and <code>setColorFilter</code> applies a color matrix; the <a href="api-reference.html">API reference</a> lists their arguments.</p>
+<h2 id="text-and-fonts" class="has-anchor">Text and fonts <a class="heading-anchor" href="#text-and-fonts" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>drawText(text, x, y, fontSize)</code> draws one line whose baseline sits at <code>y</code>, and returns the width it drew. The default size is 32. To lay text out before drawing it, <code>measureText(text, fontSize)</code> returns its width and <code>measureTextRect(text, fontSize)</code> returns <code>{ width, height }</code>.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a dark background.
+sys.canvas.clear(&#x27;#101116&#x27;);
+// Measure the label at 18 pixels.
+const box = sys.canvas.measureTextRect(&#x27;Ready&#x27;, 18);
+// Draw a pill 24 pixels wider and 18 pixels taller than the text.
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+sys.canvas.drawRoundRect(24, 24, box.width + 24, box.height + 18, 8, 8);
+// Draw the label inside the pill; y is the baseline.
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(&#x27;Ready&#x27;, 36, 24 + box.height + 4, 18);
+
+// Center a title horizontally in the window.
+const title = &#x27;Centered&#x27;;
+const width = sys.canvas.measureText(title, 24);
+sys.canvas.drawText(title, (sys.window.getWidth() - width) / 2, 120, 24);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Measure the label at 18 pixels.
+const box = sys.canvas.measureTextRect(&#x27;Ready&#x27;, 18);
+// Draw a pill 24 pixels wider and 18 pixels taller than the text.
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+sys.canvas.drawRoundRect(24, 24, box.width + 24, box.height + 18, 8, 8);
+// Draw the label inside the pill; y is the baseline.
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(&#x27;Ready&#x27;, 36, 24 + box.height + 4, 18);
+
+// Center a title horizontally in the window.
+const title = &#x27;Centered&#x27;;
+const width = sys.canvas.measureText(title, 24);
+sys.canvas.drawText(title, (sys.window.getWidth() - width) / 2, 120, 24);</code></pre></div></div>
+<p>Text takes the current paint, so <code>setFillColor</code> picks its color. The runtime ships a default font. To use your own, load a font file from the project and select it by the name you gave it:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load a font file from the project directory and name it Inter.
+sys.font.load(&#x27;assets/Inter-Regular.ttf&#x27;, &#x27;Inter&#x27;);
+// Make Inter the active font for the following text.
+sys.canvas.setFont(&#x27;Inter&#x27;);
+// Draw text with the loaded font.
+sys.canvas.setFillColor(&#x27;#f8fafc&#x27;);
+sys.canvas.drawText(&#x27;Loaded font&#x27;, 32, 64, 26);
+// Return to the runtime&#x27;s default font.
+sys.canvas.setFont(null);</code></pre></div></div>
+<p><code>sys.font.loadFromBuffer(buffer, name)</code> registers a font from bytes you already hold, such as a download. In Lua, <code>setFont(nil)</code> returns to the default font.</p>
+<h3 id="paragraphs" class="has-anchor">Paragraphs <a class="heading-anchor" href="#paragraphs" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>drawParagraph(text, x, y, width, fontSize, options)</code> wraps text to <code>width</code>. Unlike <code>drawText</code>, <code>y</code> is the top of the paragraph. Lines break at spaces and at <code>\n</code>, and a word wider than a line breaks between characters. <code>options</code> takes <code>align</code> (<code>&#x27;left&#x27;</code>, <code>&#x27;center&#x27;</code>, or <code>&#x27;right&#x27;</code>), <code>lineHeight</code> (a multiple of the font size, 1.25 by default), and <code>maxLines</code> (the last line then ends with an ellipsis).</p>
+<p><code>drawParagraph</code> returns <code>{ width, height, lines }</code>, and <code>measureParagraph(text, width, fontSize, options)</code> returns the same metrics without drawing, so you can size a container first.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+const text = &#x27;Paragraphs wrap to their width, break words that are too long, and stop with an ellipsis after a number of lines when asked to.&#x27;;
+// Measure first to size the card around the text.
+const m = sys.canvas.measureParagraph(text, 260, 17, { maxLines: 3 });
+sys.canvas.setFillColor(&#x27;#e2e8f0&#x27;);
+sys.canvas.drawRoundRect(16, 16, 292, m.height + 32, 12, 12);
+// Draw the text with a 16-pixel margin inside the card.
+sys.canvas.setFillColor(&#x27;#101116&#x27;);
+sys.canvas.drawParagraph(text, 32, 32, 260, 17, { maxLines: 3 });"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">const text = &#x27;Paragraphs wrap to their width, break words that are too long, ...&#x27;;
+// Measure first to size the card around the text.
+const m = sys.canvas.measureParagraph(text, 260, 17, { maxLines: 3 });
+sys.canvas.setFillColor(&#x27;#e2e8f0&#x27;);
+sys.canvas.drawRoundRect(16, 16, 292, m.height + 32, 12, 12);
+// Draw the text with a 16-pixel margin inside the card; y is the top.
+sys.canvas.setFillColor(&#x27;#101116&#x27;);
+sys.canvas.drawParagraph(text, 32, 32, 260, 17, { maxLines: 3 });</code></pre></div></div>
+<h3 id="rich-text" class="has-anchor">Rich text <a class="heading-anchor" href="#rich-text" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>drawRichText(spans, x, y, width, options)</code> lays out one paragraph from up to 64 spans. A span is a plain string or a <code>{ text, size, color, font }</code> object, where <code>font</code> names a font registered with <code>sys.font.load</code>. Each line is as tall as its largest span, and baselines line up. <code>options</code> takes the paragraph options plus <code>size</code>, the size of spans that set none (32 by default). Spans without a color use the current paint. <code>measureRichText(spans, width, options)</code> measures without drawing.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+// The color of spans that do not set one.
+sys.canvas.setFillColor(&#x27;#334155&#x27;);
+// One paragraph, 420 pixels wide, mixing sizes and colors.
+sys.canvas.drawRichText([
+  { text: &#x27;Rich text &#x27;, size: 26, color: &#x27;#7c6ff7&#x27; },
+  &#x27;mixes sizes and colors: &#x27;,
+  { text: &#x27;warnings stand out&#x27;, color: &#x27;#dc2626&#x27; },
+  &#x27;, and lines grow to fit their &#x27;,
+  { text: &#x27;largest&#x27;, size: 30 },
+  &#x27; span.&#x27;,
+], 24, 24, 420, { size: 17 });"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// The color of spans that do not set one.
+sys.canvas.setFillColor(&#x27;#334155&#x27;);
+// One paragraph, 420 pixels wide, mixing sizes and colors.
+sys.canvas.drawRichText([
+  { text: &#x27;Rich text &#x27;, size: 26, color: &#x27;#7c6ff7&#x27; },
+  &#x27;mixes sizes and colors: &#x27;,
+  { text: &#x27;warnings stand out&#x27;, color: &#x27;#dc2626&#x27; },
+  &#x27;, and lines grow to fit their &#x27;,
+  { text: &#x27;largest&#x27;, size: 30 },
+  &#x27; span.&#x27;,
+], 24, 24, 420, { size: 17 });</code></pre></div></div>
+<p>Lua uses the same calls, with tables for spans and options. WebAssembly passes text and spans through linear memory; see the <a href="api-reference.html">WebAssembly section of the API reference</a>.</p>
 <h2 id="transforms" class="has-anchor">Transforms <a class="heading-anchor" href="#transforms" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Transforms apply to drawing calls until they are changed. Use <code>save</code> and <code>restore</code> to localize a transformation.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#f8fafc&#x27;);
+<p><code>translate</code>, <code>rotate</code> (in degrees), <code>scale</code>, and <code>skew</code> change the coordinate system of every draw that follows. Wrap them in <code>save()</code> and <code>restore()</code> to keep the change local; <code>reset()</code> returns to the identity transform.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+// Save the current transform so the following changes stay local.
 sys.canvas.save();
+// Move the origin to the center of the shape, then rotate and scale.
 sys.canvas.translate(200, 140);
 sys.canvas.rotate(30);
 sys.canvas.scale(1.2, 1.2);
-
+// Draw around the new origin.
 sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
 sys.canvas.drawRect(-40, -30, 80, 60);
-
+// Return to the transform saved above.
 sys.canvas.restore();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Save the current transform so the following changes stay local.
 sys.canvas.save();
-// Move the local origin to the center of the shape.
+// Move the origin to the center of the shape, then rotate and scale.
 sys.canvas.translate(200, 140);
-// Rotate subsequent drawing by 30 degrees.
 sys.canvas.rotate(30);
-// Scale subsequent drawing evenly on both axes.
 sys.canvas.scale(1.2, 1.2);
-
-// Select the rectangle fill color.
+// Draw around the new origin.
 sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-// Draw around the local origin, which is now translated and rotated.
 sys.canvas.drawRect(-40, -30, 80, 60);
-
-// Restore the transform that was active before this block.
+// Return to the transform saved above.
 sys.canvas.restore();</code></pre></div></div>
-<p>There is also a pivot form for rotation:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Rotate later drawing around the given center point.
+<p>To rotate around a point without translating first, pass the point:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Rotate the following draws by 15 degrees around (centerX, centerY).
 sys.canvas.rotate(15, centerX, centerY);</code></pre></div></div>
-<p>Clipping is part of the transform namespace because it belongs to canvas state. <code>clipRect</code> restricts subsequent drawing to a rectangle in the current coordinate system.</p>
+<p><code>save()</code> and <code>restore()</code> cover the transform and the clip, not the paint: colors and stroke settings stay as you last set them.</p>
+<h2 id="clipping" class="has-anchor">Clipping <a class="heading-anchor" href="#clipping" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A clip restricts drawing to a region until the <code>restore()</code> that matches the <code>save()</code> before it. <code>clipRect</code> keeps drawing inside a rectangle, <code>clipRoundRect(x, y, width, height, radiusX, radiusY)</code> inside a rounded rectangle (<code>radiusY</code> defaults to <code>radiusX</code>), and <code>clipPath</code> inside any path from <code>sys.path</code>. Rounded and path clips have anti-aliased edges.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+sys.canvas.save();
+// Everything drawn until restore() stays inside a rounded rectangle.
+sys.canvas.clipRoundRect(24, 24, 220, 120, 28);
+for (let i = 0; i &lt; 12; i++) {
+  // Alternate two colors.
+  sys.canvas.setFillColor(i % 2 ? &#x27;#7c6ff7&#x27; : &#x27;#2dd4bf&#x27;);
+  // These stripes are taller than the clip: their ends are cut off.
+  sys.canvas.drawRect(i * 24, 0, 24, 200);
+}
+// Remove the clip.
+sys.canvas.restore();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.save();
+// Everything drawn until restore() stays inside a rounded rectangle.
+sys.canvas.clipRoundRect(24, 24, 220, 120, 28);
+for (let i = 0; i &lt; 12; i++) {
+  // Alternate two colors.
+  sys.canvas.setFillColor(i % 2 ? &#x27;#7c6ff7&#x27; : &#x27;#2dd4bf&#x27;);
+  // These stripes are taller than the clip: their ends are cut off.
+  sys.canvas.drawRect(i * 24, 0, 24, 200);
+}
+// Remove the clip.
+sys.canvas.restore();</code></pre></div></div>
 <h2 id="paths" class="has-anchor">Paths <a class="heading-anchor" href="#paths" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Paths are runtime-managed handles. Create a path once, update it when the shape changes, and draw it whenever you need it.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#101116&#x27;);
+<p>A path is an integer handle to a shape you build from segments: <code>moveTo</code>, <code>lineTo</code>, <code>quadTo</code>, <code>cubicTo</code>, <code>close</code>, and the <code>addRect</code> and <code>addCircle</code> shortcuts. Build it once and draw it with <code>sys.canvas.drawPath</code> as often as you need; it takes the current paint and transform.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a dark background.
+sys.canvas.clear(&#x27;#101116&#x27;);
 
+// Build a triangle around its own origin.
 const badge = sys.path.create();
 sys.path.moveTo(badge, 0, -42);
 sys.path.lineTo(badge, 38, 24);
 sys.path.lineTo(badge, -38, 24);
 sys.path.close(badge);
 
-function drawBadge(x, y) {
+// Draw the badge path at a chosen position.
+function drawBadge(x, y, color) {
   sys.canvas.save();
   sys.canvas.translate(x, y);
-  sys.canvas.setFillColor(&#x27;#2dd4bf&#x27;);
+  sys.canvas.setFillColor(color);
   sys.canvas.drawPath(badge);
   sys.canvas.restore();
 }
 
-drawBadge(120, 96);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a path handle once and keep it for reuse.
+// The same path, drawn twice.
+drawBadge(120, 96, &#x27;#2dd4bf&#x27;);
+drawBadge(240, 96, &#x27;#f472b6&#x27;);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a path handle once and keep it for reuse.
 const badge = sys.path.create();
 // Start the triangle at its top point.
 sys.path.moveTo(badge, 0, -42);
-// Add the lower-right corner.
+// Add the lower-right and lower-left corners.
 sys.path.lineTo(badge, 38, 24);
-// Add the lower-left corner.
 sys.path.lineTo(badge, -38, 24);
 // Close the shape back to the top point.
 sys.path.close(badge);
 
 // Draw the badge path at a chosen position.
-function drawBadge(x, y) {
-  // Keep translation local to this helper.
+function drawBadge(x, y, color) {
+  // Keep the translation local to this helper.
   sys.canvas.save();
   // Move the path origin to the requested position.
   sys.canvas.translate(x, y);
-  // Select the fill color for the badge.
-  sys.canvas.setFillColor(&#x27;#2dd4bf&#x27;);
   // Draw the path with the current paint.
+  sys.canvas.setFillColor(color);
   sys.canvas.drawPath(badge);
   // Restore the previous transform.
   sys.canvas.restore();
 }</code></pre></div></div>
-<p>Use <code>reset</code> when a path handle should keep its identity but receive new geometry. This is helpful in hot loops because the wrapper layer can reuse the same path slot.</p>
-<h2 id="text-and-fonts" class="has-anchor">Text and fonts <a class="heading-anchor" href="#text-and-fonts" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The runtime has a default font. You can load project-relative font files and switch the active typeface.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load a font file from the project directory and name it Inter.
-sys.font.load(&#x27;assets/Inter-Regular.ttf&#x27;, &#x27;Inter&#x27;);
-// Make Inter the active font for later text drawing.
-sys.canvas.setFont(&#x27;Inter&#x27;);
+<p>Paths are not destroyed one by one, so create them once rather than every frame. When a shape changes, <code>sys.path.reset(path)</code> empties the handle and you rebuild its segments into it.</p>
+<h3 id="svg-path-data" class="has-anchor">SVG path data <a class="heading-anchor" href="#svg-path-data" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>sys.path.addSvg(path, d)</code> appends SVG path data, the <code>d</code> attribute of an SVG <code>&lt;path&gt;</code> element, with every command (<code>M L H V C S Q T A Z</code>, absolute or relative). It returns <code>false</code> and leaves the path unchanged when the data does not parse.</p>
+<p>A path takes the current paint, unlike an SVG file drawn with <code>sys.svg</code>, which keeps its own colors. That makes path data the right format for icons that follow a theme. Draw them at any size with <code>translate</code> and <code>scale</code>:</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a dark background.
+sys.canvas.clear(&#x27;#101116&#x27;);
+// A heart drawn on a 24-unit grid, like most icon sets.
+const heart = sys.path.create();
+sys.path.addSvg(heart, &#x27;M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z&#x27;);
+sys.canvas.save();
+// Place the icon, then scale 24 units to 144 pixels; the stroke scales too.
+sys.canvas.translate(72, 24);
+sys.canvas.scale(6, 6);
+// Stroke it with rounded corners.
+sys.canvas.setStrokeColor(&#x27;#f472b6&#x27;);
+sys.canvas.setStrokeWidth(2);
+sys.canvas.setStrokeJoin(&#x27;round&#x27;);
+sys.canvas.drawPath(heart);
+sys.canvas.restore();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// A heart drawn on a 24-unit grid, like most icon sets.
+const heart = sys.path.create();
+sys.path.addSvg(heart, &#x27;M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z&#x27;);
 
-// Select the text fill color.
-sys.canvas.setFillColor(&#x27;#f8fafc&#x27;);
-// Draw text with the loaded font.
-sys.canvas.drawText(&#x27;Loaded font&#x27;, 32, 64, 26);</code></pre></div></div>
-<p><code>sys.canvas.measureText</code> returns width. <code>sys.canvas.measureTextRect</code> returns an object with <code>width</code> and <code>height</code>.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#101116&#x27;);
-sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-const box = sys.canvas.measureTextRect(&#x27;Ready&#x27;, 18);
-sys.canvas.drawRoundRect(24, 24, box.width + 24, box.height + 18, 8, 8);
-sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-sys.canvas.drawText(&#x27;Ready&#x27;, 36, 24 + box.height, 18);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Measure the bounds of the text at the chosen font size.
-const box = sys.canvas.measureTextRect(&#x27;Ready&#x27;, 18);
-// Draw a pill that is slightly larger than the measured text.
-sys.canvas.drawRoundRect(24, 24, box.width + 24, box.height + 18, 8, 8);
-// Draw the text inside the measured pill.
-sys.canvas.drawText(&#x27;Ready&#x27;, 36, 24 + box.height, 18);</code></pre></div></div>
-<p>Call <code>sys.font.reset()</code> to return to the runtime default font.</p>
-<h2 id="svgs" class="has-anchor">SVGs <a class="heading-anchor" href="#svgs" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>SVG files are loaded through <code>sys.svg</code> and represented by integer handles.</p>
+sys.canvas.save();
+// Place the icon, then scale 24 units to 144 pixels; the stroke scales too.
+sys.canvas.translate(72, 24);
+sys.canvas.scale(6, 6);
+// Stroke it with rounded corners.
+sys.canvas.setStrokeColor(&#x27;#f472b6&#x27;);
+sys.canvas.setStrokeWidth(2);
+sys.canvas.setStrokeJoin(&#x27;round&#x27;);
+sys.canvas.drawPath(heart);
+sys.canvas.restore();</code></pre></div></div>
+<h2 id="svg-files" class="has-anchor">SVG files <a class="heading-anchor" href="#svg-files" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.svg.load(path)</code> loads an SVG file from the project and returns a handle, or <code>-1</code> when the file cannot be loaded. <code>sys.canvas.drawSvg(svg, x, y, width, height)</code> draws it scaled into a rectangle, in the colors the file defines.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load an SVG file from the project directory.
 const logo = sys.svg.load(&#x27;assets/logo.svg&#x27;);
 
@@ -247,62 +381,162 @@ const logo = sys.svg.load(&#x27;assets/logo.svg&#x27;);
 function frame() {
   // Clear to white so transparent SVG content is visible.
   sys.canvas.clear(&#x27;#ffffff&#x27;);
-  // A non-negative handle means the SVG loaded successfully.
+  // A non-negative handle means the SVG loaded.
   if (logo &gt;= 0) {
     // Draw the SVG scaled into a 96 by 96 rectangle.
     sys.canvas.drawSvg(logo, 24, 24, 96, 96);
   }
   // Keep rendering.
   sys.animation.requestFrame(frame);
-}</code></pre></div></div>
-<p>The width and height accessors return the SVG's intrinsic dimensions when available. Destroy handles you no longer need in long-lived tools that load many assets over time.</p>
+}
+
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p><code>sys.svg.getWidth(svg)</code> and <code>getHeight(svg)</code> return the file's intrinsic size, useful to keep its aspect ratio. <code>sys.svg.loadFromBuffer(bytes)</code> loads SVG data you already hold, and <code>sys.svg.destroy(svg)</code> frees a handle you no longer need.</p>
+<h2 id="gradients" class="has-anchor">Gradients <a class="heading-anchor" href="#gradients" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>setGradient</code> fills and strokes with a gradient instead of the paint color. It has three forms: <code>&#x27;linear&#x27;</code> between two points, <code>&#x27;radial&#x27;</code> around a center with a radius, and <code>&#x27;sweep&#x27;</code> (conic) around a center, starting at the positive x axis. Colors blend in OKLab, so transitions stay even and fading to a transparent stop does not turn gray.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a dark background.
+sys.canvas.clear(&#x27;#101116&#x27;);
+// A fill color selects fill style; the gradient then replaces the color.
+sys.canvas.setFillColor(&#x27;#000000&#x27;);
+// Linear: from (24, 24) to (264, 104), through three colors.
+sys.canvas.setGradient(&#x27;linear&#x27;, 24, 24, 264, 104, [&#x27;#2dd4bf&#x27;, &#x27;#7c6ff7&#x27;, &#x27;#f472b6&#x27;]);
+sys.canvas.drawRoundRect(24, 24, 240, 80, 16, 16);
+// Radial: a soft glow fading to transparent.
+sys.canvas.setGradient(&#x27;radial&#x27;, 340, 64, 48, [&#x27;#fde68a&#x27;, &#x27;#fde68a00&#x27;]);
+sys.canvas.drawCircle(340, 64, 48);
+// Sweep: colors around the center.
+sys.canvas.setGradient(&#x27;sweep&#x27;, 460, 64, [&#x27;#f87171&#x27;, &#x27;#facc15&#x27;, &#x27;#4ade80&#x27;, &#x27;#60a5fa&#x27;, &#x27;#f87171&#x27;]);
+sys.canvas.drawCircle(460, 64, 40);
+// Back to plain colors.
+sys.canvas.setGradient(null);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// A fill color selects fill style; the gradient then replaces the color.
+sys.canvas.setFillColor(&#x27;#000000&#x27;);
+// Linear: from (24, 24) to (264, 104), through three colors.
+sys.canvas.setGradient(&#x27;linear&#x27;, 24, 24, 264, 104, [&#x27;#2dd4bf&#x27;, &#x27;#7c6ff7&#x27;, &#x27;#f472b6&#x27;]);
+sys.canvas.drawRoundRect(24, 24, 240, 80, 16, 16);
+// Radial: a soft glow fading to transparent.
+sys.canvas.setGradient(&#x27;radial&#x27;, 340, 64, 48, [&#x27;#fde68a&#x27;, &#x27;#fde68a00&#x27;]);
+sys.canvas.drawCircle(340, 64, 48);
+// Sweep: colors around the center.
+sys.canvas.setGradient(&#x27;sweep&#x27;, 460, 64, [&#x27;#f87171&#x27;, &#x27;#facc15&#x27;, &#x27;#4ade80&#x27;, &#x27;#60a5fa&#x27;, &#x27;#f87171&#x27;]);
+sys.canvas.drawCircle(460, 64, 40);
+// Back to plain colors.
+sys.canvas.setGradient(null);</code></pre></div></div>
+<p><code>colors</code> holds 2 to 16 colors. An optional last argument, <code>stops</code>, holds one position from 0 to 1 per color; without it, colors are evenly spaced. The gradient applies to shapes and text, makes the paint opaque (call <code>setAlpha</code> afterwards to fade it), and lasts until <code>setGradient(null)</code> or the next <code>setFillColor</code> or <code>setStrokeColor</code>.</p>
+<h2 id="layers-and-frosted-glass" class="has-anchor">Layers and frosted glass <a class="heading-anchor" href="#layers-and-frosted-glass" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>saveLayer(alpha)</code> draws what follows into an offscreen layer, and the matching <code>restore()</code> composites it back with one opacity from 0 to 255. <code>setAlpha</code> fades each shape on its own, so overlapping shapes show through each other; a layer fades the group as one image. Use a layer to fade a card, a menu, or a page.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+// A card made of two overlapping shapes.
+function card(x) {
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawRoundRect(x, 30, 140, 90, 14, 14);
+  sys.canvas.setFillColor(&#x27;#2dd4bf&#x27;);
+  sys.canvas.drawCircle(x + 110, 75, 40);
+}
+// Left: each shape fades on its own (setAlpha after each color).
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+sys.canvas.setAlpha(128);
+sys.canvas.drawRoundRect(24, 30, 140, 90, 14, 14);
+sys.canvas.setFillColor(&#x27;#2dd4bf&#x27;);
+sys.canvas.setAlpha(128);
+sys.canvas.drawCircle(134, 75, 40);
+// Right: the group fades as one image.
+sys.canvas.saveLayer(128);
+card(220);
+sys.canvas.restore();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Fading each shape: the circle shows the card through it.
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+sys.canvas.setAlpha(128);
+sys.canvas.drawRoundRect(24, 30, 140, 90, 14, 14);
+sys.canvas.setFillColor(&#x27;#2dd4bf&#x27;);
+sys.canvas.setAlpha(128);
+sys.canvas.drawCircle(134, 75, 40);
+
+// Fading the group: the same drawing, faded as one image.
+sys.canvas.saveLayer(128);
+// card(x) draws the same rounded rectangle and circle at x.
+card(220);
+sys.canvas.restore();</code></pre></div></div>
+<p>The full form is <code>saveLayer(alpha, x, y, width, height, backdropBlur)</code>. The rectangle bounds and clips the layer, and <code>backdropBlur</code> starts the layer with a blurred copy of what is already drawn below it. Clip to a rounded rectangle first to get a frosted panel:</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// A colorful background to blur.
+sys.canvas.clear(&#x27;#101116&#x27;);
+for (let i = 0; i &lt; 8; i++) {
+  sys.canvas.setFillColor(i % 2 ? &#x27;#f472b6&#x27; : &#x27;#2dd4bf&#x27;);
+  sys.canvas.drawCircle(40 + i * 60, 80, 34);
+}
+// Clip to the panel&#x27;s rounded shape.
+sys.canvas.save();
+sys.canvas.clipRoundRect(60, 40, 360, 90, 20);
+// Start with a blurred copy of the background, then tint it.
+sys.canvas.saveLayer(255, 60, 40, 360, 90, 14);
+sys.canvas.setFillColor(&#x27;#ffffff40&#x27;);
+sys.canvas.drawRect(60, 40, 360, 90);
+sys.canvas.restore();
+sys.canvas.restore();
+// Draw the label over the glass.
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(&#x27;Frosted glass&#x27;, 90, 94, 26);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Clip to the panel&#x27;s rounded shape.
+sys.canvas.save();
+sys.canvas.clipRoundRect(x, y, width, height, 20);
+// Start with a blurred copy of the background, then tint it.
+sys.canvas.saveLayer(255, x, y, width, height, 14);
+sys.canvas.setFillColor(&#x27;#ffffff40&#x27;);
+sys.canvas.drawRect(x, y, width, height);
+// Composite the layer, then remove the clip.
+sys.canvas.restore();
+sys.canvas.restore();</code></pre></div></div>
+<p>Each layer costs an offscreen pass. Use layers for panels, menus, and transitions, not for every row of a list.</p>
 <h2 id="density-aware-layout" class="has-anchor">Density-aware layout <a class="heading-anchor" href="#density-aware-layout" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.window.getDisplayDensity()</code> returns a display scaling factor. Desktop returns <code>1.0</code>. Android returns the device density, and web returns the browser-backed value used by the runtime.</p>
-<p>For interface elements that should feel physically similar across devices, multiply measurements by density.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#f8fafc&#x27;);
+<p>The canvas, the pointer, and <code>sys.window.getWidth()</code> and <code>getHeight()</code> all count physical pixels, so a 16-pixel margin looks half as large on a high-density screen. <code>sys.window.getDisplayDensity()</code> returns how many physical pixels make one logical pixel: 1 on a standard desktop monitor, 2 on a Retina display, the device density on Android, and <code>devicePixelRatio</code> in the browser.</p>
+<p>Multiply the sizes you choose (margins, radii, font sizes, hit targets) by the density so the interface keeps its physical size across devices. Do not multiply values the runtime gives you, such as the window size or pointer position: they are already in physical pixels.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Start from a light background.
+sys.canvas.clear(&#x27;#f8fafc&#x27;);
+// Read the display density once per frame.
 const density = sys.window.getDisplayDensity();
+// Scale the authored sizes by density.
 const margin = 16 * density;
 const radius = 10 * density;
 const fontSize = 18 * density;
-
+// Draw a button background.
 sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
 sys.canvas.drawRoundRect(margin, margin, 220 * density, 56 * density, radius, radius);
+// Draw the button label.
 sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-sys.canvas.drawText(&#x27;Start&#x27;, margin + 18 * density, margin + 36 * density, fontSize);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Read the display density for physical-size-aware UI.
+sys.canvas.drawText(&#x27;Start&#x27;, margin + 18 * density, margin + 36 * density, fontSize);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Read the display density once per frame.
 const density = sys.window.getDisplayDensity();
-// Scale the margin by density.
+// Scale the authored sizes by density.
 const margin = 16 * density;
-// Scale the corner radius by density.
 const radius = 10 * density;
-// Scale the font size by density.
 const fontSize = 18 * density;
-
-// Draw a density-aware button background.
+// Draw a button background.
+sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
 sys.canvas.drawRoundRect(margin, margin, 220 * density, 56 * density, radius, radius);
-// Draw density-aware button text.
+// Draw the button label.
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
 sys.canvas.drawText(&#x27;Start&#x27;, margin + 18 * density, margin + 36 * density, fontSize);</code></pre></div></div>
-<p>For game worlds and simulations, it is often better to keep your own logical coordinate system and scale once at the edge. Both styles work; the important thing is to choose deliberately.</p>
+<p>Games and simulations often do better with their own logical coordinate system, scaled once with <code>sys.canvas.scale</code> to fit the window.</p>
 <h2 id="reading-pixels" class="has-anchor">Reading pixels <a class="heading-anchor" href="#reading-pixels" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.canvas.readPixels()</code> reads the current canvas into CPU memory as <code>{ width, height, pixels }</code> in JavaScript.</p>
+<p><code>sys.canvas.readPixels()</code> copies the canvas into memory and returns <code>{ width, height, pixels }</code>, where <code>pixels</code> is an <code>ArrayBuffer</code> of premultiplied RGBA bytes, row by row from the top.</p>
 <div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Clear the canvas to a known color before the readback.
 sys.canvas.clear(&#x27;#ffffff&#x27;);
-// Select a red fill color.
-sys.canvas.setFillColor(&#x27;#ff0000&#x27;);
 // Draw a small red square into the top-left corner.
+sys.canvas.setFillColor(&#x27;#ff0000&#x27;);
 sys.canvas.drawRect(0, 0, 20, 20);
 
-// Read the current canvas pixels back to CPU memory.
+// Read the current canvas pixels back into memory.
 const shot = sys.canvas.readPixels();
-// Wrap the returned ArrayBuffer so individual bytes are easy to inspect.
+// Wrap the ArrayBuffer to read individual bytes.
 const bytes = new Uint8Array(shot.pixels);
-// Log the image dimensions and byte count.
-console.log(shot.width, shot.height, bytes.length);</code></pre></div></div>
-<p>Readback is powerful for screenshots, tools, tests, and one-off analysis. It is not a good per-frame habit in performance-sensitive rendering because it forces synchronization between GPU and CPU.</p>
+// Log the image size and the first pixel: 255 0 0 255 (opaque red).
+console.log(shot.width, shot.height, bytes[0], bytes[1], bytes[2], bytes[3]);</code></pre></div></div>
+<p>Readback waits for the GPU to finish all pending drawing. It suits screenshots, tests, and one-off analysis; avoid it in every frame of an animation.</p>
+<h2 id="building-interfaces" class="has-anchor">Building interfaces <a class="heading-anchor" href="#building-interfaces" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The calls on this page are enough for games, visualizations, and simple tools. For application interfaces, the budo-ui toolkit builds on them: buttons, fields, lists, menus, dialogs, and navigation that animate, follow the system settings, and work with the keyboard and screen readers. See <a href="building-interfaces.html">Building interfaces</a>.</p>
             </article>
 
             <nav class="doc-pager">
                 <a href="project-model.html" class="prev"><small>← Previous</small><span>Project Model</span></a>
-                <a href="rendering-and-shaders.html" class="next"><small>Next →</small><span>Rendering and Shaders</span></a>
+                <a href="building-interfaces.html" class="next"><small>Next →</small><span>Building Interfaces</span></a>
             </nav>
         </main>
     </div>
@@ -415,11 +649,15 @@ console.log(shot.width, shot.height, bytes.length);</code></pre></div></div>
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html" class="current">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,9 +63,9 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="data-files-and-network" class="has-anchor">Data, Files, and Network <a class="heading-anchor" href="#data-files-and-network" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Budo gives apps practical I/O without asking them to become platform specialists. You can persist data with SQLite, read bundled files, fetch HTTP resources, and exchange UDP datagrams. The APIs are small, but they have real policy boundaries so projects remain portable and packageable.</p>
+<p>This page covers the four ways a Budo app reaches beyond its own code: SQLite for structured data, <code>sys.files</code> for bundled and saved files, <code>fetch</code> for HTTP, and <code>sys.net.udp</code> for datagrams. Each one works the same way on desktop, web, and Android, within limits that keep your app portable: file paths stay inside two known folders, and network access is off until <code>app.json</code> allows it.</p>
 <h2 id="sqlite-persistence" class="has-anchor">SQLite persistence <a class="heading-anchor" href="#sqlite-persistence" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.db</code> opens SQLite databases stored as <code>.db</code> files in the project directory. Database names are sanitized and may contain only letters, numbers, underscores, and hyphens.</p>
+<p><code>sys.db.open(name)</code> opens a SQLite database, creating <code>name.db</code> if it does not exist yet. On desktop the file lives in the project directory; on web it persists in browser storage. Names may contain only letters, digits, underscores, and hyphens.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
 sys.db.execute(db, `
   CREATE TABLE IF NOT EXISTS notes (
@@ -71,10 +76,10 @@ sys.db.execute(db, `
 `);
 sys.canvas.clear(&#x27;#f8fafc&#x27;);
 sys.canvas.setFillColor(&#x27;#111318&#x27;);
-sys.canvas.drawText(&#x27;notes.db is ready&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Open or create a SQLite database named notes.db.
+sys.canvas.drawText(&#x27;notes.db is ready&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Open notes.db, creating it on first use.
 const db = sys.db.open(&#x27;notes&#x27;);
 
-// Create the table once if it does not already exist.
+// Create the table once; later runs leave it untouched.
 sys.db.execute(db, `
   CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY,
@@ -82,20 +87,23 @@ sys.db.execute(db, `
     done INTEGER NOT NULL DEFAULT 0
   )
 `);</code></pre></div></div>
-<p>Use <code>run</code> for parameterized statements that change data.</p>
+<p><code>execute(db, sql)</code> runs a statement with no parameters and no results, which suits schema changes. For statements that change data, use <code>run(db, sql, ...params)</code>: each <code>?</code> in the SQL takes the next parameter, so values never need to be pasted into the SQL string. <code>run</code> returns the number of changed rows, and <code>lastInsertId(db)</code> returns the id of the row just inserted.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
 sys.db.execute(db, &#x27;DROP TABLE IF EXISTS notes&#x27;);
 sys.db.execute(db, &#x27;CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0)&#x27;);
 sys.db.run(db, &#x27;INSERT INTO notes (title) VALUES (?)&#x27;, &#x27;Sketch the menu&#x27;);
-sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, 1);
+const id = sys.db.lastInsertId(db);
+sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, id);
 const rows = sys.db.query(db, &#x27;SELECT title, done FROM notes&#x27;);
 sys.canvas.clear(&#x27;#101116&#x27;);
 sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-sys.canvas.drawText(rows[0].title + &#x27; done=&#x27; + rows[0].done, 32, 72, 20);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Insert a new note using a parameter instead of string concatenation.
+sys.canvas.drawText(rows[0].title + &#x27; done=&#x27; + rows[0].done, 32, 72, 20);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Insert a note; the ? placeholder receives the title safely.
 sys.db.run(db, &#x27;INSERT INTO notes (title) VALUES (?)&#x27;, &#x27;Sketch the menu&#x27;);
-// Update the note with id 1 and store true as SQLite integer 1.
-sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, 1);</code></pre></div></div>
-<p>Use <code>query</code> for results. Rows come back as JavaScript objects.</p>
+// Read the id SQLite assigned to the new row.
+const id = sys.db.lastInsertId(db);
+// Mark it done; true is stored as the integer 1.
+sys.db.run(db, &#x27;UPDATE notes SET done = ? WHERE id = ?&#x27;, true, id);</code></pre></div></div>
+<p><code>query(db, sql, ...params)</code> returns the matching rows as an array of objects keyed by column name.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
 sys.db.execute(db, &#x27;DROP TABLE IF EXISTS notes&#x27;);
 sys.db.execute(db, &#x27;CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0)&#x27;);
@@ -106,151 +114,176 @@ sys.canvas.clear(&#x27;#f8fafc&#x27;);
 sys.canvas.setFillColor(&#x27;#111318&#x27;);
 for (let i = 0; i &lt; rows.length; i++) {
   sys.canvas.drawText(rows[i].id + &#x27;: &#x27; + rows[i].title, 32, 48 + i * 28, 18);
-}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Query rows as JavaScript objects.
+}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Fetch every note, newest first.
 const rows = sys.db.query(db, &#x27;SELECT id, title, done FROM notes ORDER BY id DESC&#x27;);
-// Iterate through every returned row.
+// Each row is an object with one property per selected column.
 for (const row of rows) {
-  // Log a compact representation for development.
   console.log(row.id + &#x27;: &#x27; + row.title);
 }</code></pre></div></div>
-<p>Close database handles when a long-lived tool no longer needs them.</p>
+<p>Close a handle with <code>sys.db.close(db)</code> when the app no longer needs that database.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const db = sys.db.open(&#x27;notes&#x27;);
 sys.db.close(db);
 sys.canvas.clear(&#x27;#101116&#x27;);
 sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-sys.canvas.drawText(&#x27;Database handle closed&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Close the database handle when the app no longer needs it.
+sys.canvas.drawText(&#x27;Database handle closed&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Release the database handle.
 sys.db.close(db);</code></pre></div></div>
-<p>SQLite errors throw in JavaScript and Lua when the call violates the contract or the statement fails. <code>sys.db.getError()</code> returns the last wrapper error string.</p>
+<p>A failing statement throws, in JavaScript and in Lua. The exception carries the SQLite message, and <code>sys.db.getError()</code> returns the last one.</p>
 <h2 id="files" class="has-anchor">Files <a class="heading-anchor" href="#files" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.files</code> exposes one virtual root containing two folders: <code>assets/</code> maps to immutable files bundled with the application, while <code>files/</code> maps to persistent, sandboxed host storage. Only paths under <code>files/</code> can be written. <code>sys.assets</code> is a read-only convenience wrapper over the <code>assets/</code> mount.</p>
-<p>On desktop, assets resolve from the project directory and files resolve from <code>--file-root</code>, which defaults to the project directory. On Android, assets resolve from the extracted bundle and files default to the app-specific external-files directory. Broad external storage requires an explicit <code>filesystem</code> policy in <code>app.json</code>.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
-  &quot;filesystem&quot;: true
-}</code></pre></div></div>
-<p>Paths passed to <code>sys.files</code> must start with <code>assets/</code> or <code>files/</code>. Calling <code>sys.files.list()</code> without a path returns those two virtual folders. Paths passed to <code>sys.assets</code> are relative to the bundle root and do not include <code>assets/</code>; <code>sys.assets.list()</code> lists that bundle root. Absolute paths and <code>..</code> traversal are rejected by both APIs.</p>
+<p><code>sys.files</code> sees one virtual root with two folders:</p>
+<ul><li><code>assets/</code> holds the files bundled with your app. It is read-only.</li><li><code>files/</code> is the app's own persistent storage. It is the only place an app can write.</li></ul>
+<p>Every <code>sys.files</code> path starts with one of those two folders. Absolute paths and <code>..</code> are rejected, so an app can never wander outside them.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a bundled text file.
-const text = sys.files.readText(&#x27;assets/levels/intro.json&#x27;);
-// Equivalent convenience form; paths are relative to the assets root.
-const sameText = sys.assets.readText(&#x27;levels/intro.json&#x27;);
+const level = sys.files.readText(&#x27;assets/levels/intro.json&#x27;);
 // Read a bundled binary file as an ArrayBuffer.
 const bytes = sys.files.readBinary(&#x27;assets/images/title.png&#x27;);
 
-// Check for a persistent settings file before reading it.
+// Save settings into persistent storage; parent folders are created.
+sys.files.writeText(&#x27;files/settings.json&#x27;, JSON.stringify({ volume: 0.8 }));
+
+// Check that the file exists before reading it back.
 if (sys.files.exists(&#x27;files/settings.json&#x27;)) {
-  // Print the file size in bytes.
+  // size() reports the length in bytes.
   console.log(sys.files.size(&#x27;files/settings.json&#x27;) + &#x27; bytes&#x27;);
-}
-
-sys.files.writeText(&#x27;files/settings.json&#x27;, JSON.stringify({ volume: 0.8 }));</code></pre></div></div>
-<p>Listings return entries with a name, type, and size for files.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// List entries in a bundled folder.
+}</code></pre></div></div>
+<p><code>writeBinary(path, data)</code> saves an <code>ArrayBuffer</code> or typed array, replacing any existing file, and <code>appendBinary(path, data)</code> adds to the end of one. Both, like <code>writeText</code>, return the saved path. Lua has <code>writeText</code> and <code>writeBinary</code>; <code>appendBinary</code> is JavaScript only.</p>
+<p><code>list(path)</code> returns the entries of a folder, each with a <code>name</code>, a <code>type</code> (<code>&quot;file&quot;</code> or <code>&quot;directory&quot;</code>), and a <code>size</code> for files. Hidden files are left out. <code>list()</code> with no argument returns the two root folders. <code>exists(path)</code> is true only for regular files; use <code>isDirectory(path)</code> for folders.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// List the bundled levels folder.
 for (const entry of sys.files.list(&#x27;assets/levels&#x27;)) {
-  // Each entry reports its type and name.
+  // Print each entry&#x27;s type and name.
   console.log(entry.type + &#x27;: &#x27; + entry.name);
+}</code></pre></div></div>
+<p><code>sys.assets</code> is a read-only shortcut for the <code>assets/</code> folder. It offers <code>list</code>, <code>readText</code>, <code>readBinary</code>, <code>exists</code>, <code>isDirectory</code>, and <code>size</code>, with paths written without the <code>assets/</code> prefix.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// These two calls read the same bundled file.
+const a = sys.files.readText(&#x27;assets/levels/intro.json&#x27;);
+const b = sys.assets.readText(&#x27;levels/intro.json&#x27;);</code></pre></div></div>
+<h3 id="where-the-folders-live" class="has-anchor">Where the folders live <a class="heading-anchor" href="#where-the-folders-live" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>On desktop, both folders resolve to the project directory, and <code>budo run --file-root &lt;path&gt;</code> moves <code>files/</code> elsewhere. On web, <code>assets/</code> holds the files preloaded with the page, and <code>files/</code> persists in browser storage (IndexedDB); each write also triggers a browser download. On Android, <code>assets/</code> reads the app bundle, and <code>files/</code> is the app's own external-files directory.</p>
+<p>On Android, an app that needs broad shared storage can set <code>&quot;filesystem&quot;: true</code> in <code>app.json</code>. The packager then requests the all-files storage permission, and <code>files/</code> points at shared storage once the user grants it. Most apps do not need this: the pickers below reach user files without it.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;filesystem&quot;: true
+}</code></pre></div></div>
+<h3 id="large-files-a-block-at-a-time" class="has-anchor">Large files, a block at a time <a class="heading-anchor" href="#large-files-a-block-at-a-time" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>readText</code> and <code>readBinary</code> load a whole file into memory. For a video, a sound library, a long log, or a model, open the file with <code>sys.files.openRead(path)</code> and read it a block at a time instead.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Open the file for block reads; null means it could not be opened.
+const file = sys.files.openRead(&#x27;files/big.log&#x27;);
+if (file === null) throw new Error(sys.files.getError());
+
+// Count the bytes, 64 KiB at a time.
+let total = 0;
+for (;;) {
+  // read() returns an ArrayBuffer: empty at the end, null on a read error.
+  const block = sys.files.read(file, 65536);
+  if (block === null) throw new Error(sys.files.getError());
+  if (block.byteLength === 0) break;
+  total += block.byteLength;
 }
 
-// Equivalent convenience form.
-const sameEntries = sys.assets.list(&#x27;levels&#x27;);</code></pre></div></div>
-<p>Hidden files are excluded from listings. <code>exists()</code> checks regular files; use <code>isDirectory()</code> when you care about folders.</p>
-<p><code>sys.assets</code> exposes no write methods. It shares the same underlying context and error state as <code>sys.files</code>, so either <code>getError()</code> method returns the last file error. Missing or unavailable files return a falsy result and set that error; invalid paths and attempts to write outside the <code>files/</code> mount are programmer errors.</p>
-<h2 id="system-text-file-picker" class="has-anchor">System text-file picker <a class="heading-anchor" href="#system-text-file-picker" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript apps can import a user-selected text file from outside the virtual mounts without requesting broad filesystem access:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const launched = sys.files.pickText((file, error) =&gt; {
-  if (file) console.log(file.name + &#x27;: &#x27; + file.text.length + &#x27; bytes&#x27;);
-  else if (error) console.log(error);
-}, &#x27;.json&#x27;);</code></pre></div></div>
-<p>The picker is a native dialog on desktop, an <code>&lt;input type=&quot;file&quot;&gt;</code> on web, and Android's Storage Access Framework on Android, which includes Downloads, SD cards, and document/cloud providers. The optional extension filters compatible platform pickers and is always enforced against the returned display name. It returns <code>false</code> if unavailable or another picker is active. The callback receives <code>{name,text}</code> or an error; selected files are capped at 8 MiB.</p>
-<p>To export text to a location selected by the user, use the system Save As flow:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.files.saveText(&#x27;backup.json&#x27;, JSON.stringify(data), (error) =&gt; {
+// getReadInfo() reports { size, position } in bytes.
+console.log(total, sys.files.getReadInfo(file));
+// Jump back to the start to read the file again.
+sys.files.seek(file, 0);
+// Release the handle.
+sys.files.closeRead(file);</code></pre></div></div>
+<p><code>read(handle, maxBytes)</code> returns at most <code>maxBytes</code>, 64 KiB by default and 16 MiB at most. <code>seek(handle, byteOffset)</code> moves the next read and returns <code>false</code> for an offset outside the file. Up to 32 files can be open for block reads at once; close each one with <code>closeRead</code>. Block reads are available in JavaScript only.</p>
+<h2 id="letting-the-user-pick-a-file" class="has-anchor">Letting the user pick a file <a class="heading-anchor" href="#letting-the-user-pick-a-file" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.files.pickText(callback, extension)</code> lets the user choose a text file from anywhere they like: their documents, Downloads, an SD card, or a cloud provider. Because the user picks the file, no storage permission is needed.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Ask the user for a .json file.
+const opened = sys.files.pickText((file, error) =&gt; {
+  // On success, file is { name, text }.
+  if (file) console.log(file.name + &#x27;: &#x27; + file.text.length + &#x27; characters&#x27;);
+  // On cancel or failure, error explains why.
+  else console.log(error);
+}, &#x27;.json&#x27;);
+
+// false means no picker is available or one is already open.
+if (!opened) console.log(&#x27;No file picker available&#x27;);</code></pre></div></div>
+<p>The picker is a native dialog on desktop, a file input on web, and the system document picker on Android. The optional extension filters the picker where the platform supports it and is always checked against the chosen file's name. Files are limited to 8 MiB.</p>
+<p><code>sys.files.saveText(name, text, callback)</code> is the matching Save As: the user chooses where the text goes, and the callback receives <code>null</code> on success or an error message.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Offer to save a backup wherever the user chooses.
+sys.files.saveText(&#x27;backup.json&#x27;, JSON.stringify({ volume: 0.8 }), (error) =&gt; {
+  // error is null when the file was saved.
   if (error) console.log(error);
 });</code></pre></div></div>
-<p>On Android this uses <code>ACTION_CREATE_DOCUMENT</code>, so the user can choose Downloads, an SD card, or a document/cloud provider instead of the app-only <code>Android/data</code> directory. Picker and Save As access are based on explicit user consent and do not require or open <code>&quot;filesystem&quot;: true</code> all-files settings. These APIs are currently JS-only.</p>
-<p>On web, the physical <code>files/</code> mount persists through IDBFS and successful writes also trigger browser downloads. The <code>assets/</code> mount and <code>sys.assets</code> read the preloaded application files.</p>
+<p><code>pickText</code> and <code>saveText</code> are available in JavaScript only.</p>
 <h2 id="http-fetch" class="has-anchor">HTTP fetch <a class="heading-anchor" href="#http-fetch" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The global <code>fetch</code> function and <code>sys.net.fetch</code> use the same network policy. By default, HTTP access is disabled. Declare allowed domains in <code>app.json</code>.</p>
+<p>Network access is off until <code>app.json</code> lists the domains the app may reach. A listed domain also covers its subdomains.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
   &quot;network&quot;: [&quot;api.example.com&quot;, &quot;cdn.example.com&quot;]
 }</code></pre></div></div>
-<p>Use <code>&quot;*&quot;</code> for unrestricted network access during a prototype, then narrow it before release.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load scores asynchronously from an allowed domain.
+<p><code>&quot;network&quot;: &quot;*&quot;</code> allows every domain. It is convenient while prototyping; narrow it to real domains before you ship.</p>
+<p>JavaScript gets the familiar global <code>fetch</code>, also available as <code>sys.net.fetch</code>. It returns a promise of a response.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load scores from an allowed domain.
 async function loadScores() {
-  // Make the HTTP request using the runtime fetch implementation.
+  // Send the request; the promise rejects on network or policy errors.
   const response = await fetch(&#x27;https://api.example.com/scores&#x27;);
-  // Treat non-2xx responses as app-level failures.
+  // Treat any non-2xx status as a failure.
   if (!response.ok) {
-    // Include the status code so logs are useful.
     throw new Error(&#x27;HTTP &#x27; + response.status);
   }
-  // Parse and return the JSON response body.
-  return response.json();
+  // Parse the body as JSON.
+  return await response.json();
 }</code></pre></div></div>
-<p>Request options support method, headers, and a string or <code>ArrayBuffer</code> body.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Send a JSON event to an allowed domain.
+<p>The options object accepts <code>method</code>, <code>headers</code>, and a <code>body</code> given as a string or an <code>ArrayBuffer</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Post a JSON event to an allowed domain.
 const response = await fetch(&#x27;https://api.example.com/events&#x27;, {
   // Choose the HTTP method.
   method: &#x27;POST&#x27;,
-  // Tell the server that the request body is JSON.
+  // Declare the body format.
   headers: { &#x27;Content-Type&#x27;: &#x27;application/json&#x27; },
-  // Serialize the event object into the request body.
+  // Serialize the payload.
   body: JSON.stringify({ name: &#x27;start&#x27; })
 });</code></pre></div></div>
-<p>The JavaScript response object follows the familiar browser shape: <code>ok</code>, <code>status</code>, <code>statusText</code>, <code>url</code>, <code>redirected</code>, <code>type</code>, <code>bodyUsed</code>, <code>headers</code>, and body readers for <code>text</code>, <code>json</code>, and <code>arrayBuffer</code>.</p>
-<p>Lua uses a callback form because Lua does not have JavaScript promises in the runtime.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Fetch data from an allowed domain.
+<p>The response has the browser shape: <code>ok</code>, <code>status</code>, <code>statusText</code>, <code>url</code>, <code>redirected</code>, <code>type</code>, <code>bodyUsed</code>, <code>headers</code>, and the body readers <code>text()</code>, <code>json()</code>, and <code>arrayBuffer()</code>. As in browsers, the body can be read only once. On web, requests also follow the browser's CORS rules.</p>
+<p><code>response.headers</code> matches names case-insensitively and offers <code>get</code>, <code>has</code>, <code>forEach</code>, <code>entries</code>, <code>keys</code>, and <code>values</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read one header; the name is case-insensitive.
+const type = response.headers.get(&#x27;Content-Type&#x27;);
+// Check for a header before using it.
+if (response.headers.has(&#x27;ETag&#x27;)) {
+  console.log(&#x27;ETag: &#x27; + response.headers.get(&#x27;ETag&#x27;));
+}
+// Visit every header.
+response.headers.forEach((value, name) =&gt; {
+  console.log(name + &#x27;: &#x27; + value);
+});</code></pre></div></div>
+<p>In Lua, <code>fetch</code> takes a callback, called with the response table or with an error message. The global <code>json_parse</code> turns a JSON string into a Lua table.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.lua</span></div><div class="code-body"><pre><code class="language-lua">-- Fetch scores from an allowed domain.
 fetch(&#x27;https://api.example.com/scores&#x27;, function(response, error)
-  -- Handle transport or policy errors first.
+  -- error is set for network and policy failures.
   if error then
-    -- Log the error and stop this callback.
     console.log(&#x27;Network error: &#x27; .. error)
     return
   end
-  -- Parse the JSON response body into a Lua table.
+  -- Parse the JSON body into a Lua table.
   local data = json_parse(response.body)
-  -- Log the HTTP status for debugging.
+  -- Log the HTTP status.
   console.log(&#x27;Status: &#x27; .. response.status)
 end)</code></pre></div></div>
-<h2 id="headers" class="has-anchor">Headers <a class="heading-anchor" href="#headers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript responses expose a small <code>Headers</code> object.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read a response header case-insensitively.
-const type = response.headers.get(&#x27;Content-Type&#x27;);
-// Check for a cache validator before logging it.
-if (response.headers.has(&#x27;ETag&#x27;)) {
-  // Print the ETag value.
-  console.log(&#x27;Cached resource: &#x27; + response.headers.get(&#x27;ETag&#x27;));
-}
-
-// Iterate through all returned headers.
-response.headers.forEach((value, name) =&gt; {
-  // Log each header as name and value.
-  console.log(name + &#x27;: &#x27; + value);
-});</code></pre></div></div>
-<p>Header names are matched case-insensitively. Body readers can only be called once, mirroring browser Fetch behavior.</p>
+<p>Lua also accepts an options table before the callback: <code>fetch(url, options, callback)</code>. The response table holds <code>status</code>, <code>statusText</code>, <code>ok</code>, <code>url</code>, <code>redirected</code>, <code>headers</code>, <code>body</code>, and <code>bodyLen</code>.</p>
 <h2 id="udp-sockets" class="has-anchor">UDP sockets <a class="heading-anchor" href="#udp-sockets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.net.udp</code> exposes non-blocking datagram sockets on desktop and Android. The current web target does not expose raw UDP because browsers do not provide it.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Bind to port 0 so the operating system chooses an available port.
+<p><code>sys.net.udp</code> sends and receives datagrams on desktop and Android. Browsers offer no raw UDP, so it is unavailable on web; check <code>sys.capabilities.udp.available</code> before using it.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Bind to port 0 to let the system choose a free port.
 const socket = sys.net.udp.bind(0);
-// Read the selected local port.
-const port = sys.net.udp.getPort(socket);
-// Log the port so another process can connect.
-console.log(&#x27;Listening on &#x27; + port);
+// bind() returns -1 when the port cannot be opened.
+if (socket &lt; 0) throw new Error(&#x27;UDP bind failed&#x27;);
+// Read the port that was chosen.
+console.log(&#x27;Listening on &#x27; + sys.net.udp.getPort(socket));
 
-// Register the callback that receives incoming datagrams.
+// Handle incoming datagrams.
 sys.net.udp.onMessage(socket, (message) =&gt; {
-  // Log the sender address.
+  // message.host and message.port identify the sender.
   console.log(&#x27;From &#x27; + message.host + &#x27;:&#x27; + message.port);
-  // Log the number of received bytes.
+  // message.data is an array of byte values.
   console.log(&#x27;Bytes: &#x27; + message.data.length);
 });
 
-// Send two bytes to a local UDP endpoint.
+// Send the bytes of &quot;Hi&quot; to a local endpoint.
 sys.net.udp.send(socket, &#x27;127.0.0.1&#x27;, 5000, [0x48, 0x69]);</code></pre></div></div>
-<p>Callbacks are polled once per frame. Each socket stores one message callback; setting another replaces the previous one.</p>
-<p>Close sockets when you are finished.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Release the UDP socket when communication is finished.
+<p><code>send</code> takes the payload as an array or typed array of byte values and returns <code>true</code> once the datagram is sent. Incoming datagrams are delivered once per frame. Each socket has one message callback: setting another replaces it, and <code>null</code> removes it. Close the socket when you are done.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Release the socket.
 sys.net.udp.close(socket);</code></pre></div></div>
-<p>RTP-MIDI sessions are built on the UDP wrapper and are exposed through <code>sys.midi</code>, not <code>sys.net.udp</code>.</p>
-<h2 id="error-style" class="has-anchor">Error style <a class="heading-anchor" href="#error-style" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Budo bindings follow a consistent rule. Programmer errors throw or raise: wrong argument counts, invalid types, unsafe paths, invalid SQL, and contract violations. Transient runtime failures return a falsy value where that is more useful: missing devices, absent files, unavailable features, exhausted slots, and refused network operations. Namespaces that can fail expose <code>getError()</code> for the last human-readable message.</p>
+<p>Network MIDI sessions run over UDP but have their own API in <code>sys.midi</code>; see <a href="audio-midi.html">Audio and MIDI</a>.</p>
+<h2 id="how-errors-are-reported" class="has-anchor">How errors are reported <a class="heading-anchor" href="#how-errors-are-reported" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>All Budo APIs follow one rule. Mistakes in your code throw: a wrong argument, an unsafe path, invalid SQL. Conditions that a user or a device can cause return a plain value instead: a missing file returns <code>null</code>, a busy port returns <code>-1</code>, a missing feature returns <code>false</code>. Namespaces that can fail this way offer <code>getError()</code> with a readable message.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const text = sys.files.readText(&#x27;files/missing.txt&#x27;);
 sys.canvas.clear(&#x27;#f8fafc&#x27;);
 sys.canvas.setFillColor(&#x27;#111318&#x27;);
@@ -258,17 +291,17 @@ if (text === null) {
   sys.canvas.drawText(sys.files.getError() || &#x27;missing.txt is not readable&#x27;, 32, 72, 18);
 }"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Try to read a file that may not exist.
 const text = sys.files.readText(&#x27;files/missing.txt&#x27;);
-// The files API returns null for missing readable content.
+// A missing file returns null rather than throwing.
 if (text === null) {
-  // Read the namespace&#x27;s last error message for a user-facing detail.
+  // getError() explains what went wrong.
   console.log(sys.files.getError());
 }</code></pre></div></div>
-<p>Use exceptions for mistakes you should fix during development. Use return values and capability checks for conditions a user or platform can reasonably create.</p>
+<p>Fix what throws during development; handle what returns <code>null</code>, <code>false</code>, or <code>-1</code> in your app.</p>
             </article>
 
             <nav class="doc-pager">
                 <a href="input-time-state.html" class="prev"><small>← Previous</small><span>Input, Time, and State</span></a>
-                <a href="media-devices-ai.html" class="next"><small>Next →</small><span>Audio, MIDI, Sensors, and AI</span></a>
+                <a href="audio-midi.html" class="next"><small>Next →</small><span>Audio and MIDI</span></a>
             </nav>
         </main>
     </div>
@@ -381,11 +414,15 @@ if (text === null) {
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

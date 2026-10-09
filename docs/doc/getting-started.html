@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html" class="current">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,95 +63,101 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="getting-started" class="has-anchor">Getting Started <a class="heading-anchor" href="#getting-started" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>This guide walks you creating a very small Budo app that displays a moving circle that reacts to mouse and touch gestures.</p>
-<p>After you are done with it, the <a href="project-model.html">next sections</a> of the documentation will explain each aspect of Budo in a deeper way. You can also look at the demos code.</p>
-<h2 id="app-creation" class="has-anchor">App creation <a class="heading-anchor" href="#app-creation" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Create a directory with a <code>main.js</code> file.</p>
-<p>You can also simply call <code>budo init DIRECTORY</code> to initiate a standard Budo project.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">mkdir hello-budo
-touch hello-budo/main.js</code></pre></div></div>
-<p>Put this in <code>hello-budo/main.js</code>:</p>
-<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">sys.canvas.clear(&#x27;#ffffff&#x27;);
-sys.canvas.setFillColor(&#x27;#111111&#x27;);
-sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 40, 80, 32);</code></pre></div></div>
-<p>Run your application:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo run hello-budo</code></pre></div></div>
-<p>That is a complete Budo app. Budo opens a window, loads <code>main.js</code>, and gives your code the global <code>sys</code> object.</p>
-<h2 id="draw-every-frame" class="has-anchor">Draw every frame <a class="heading-anchor" href="#draw-every-frame" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The first file draws once. Most apps draw in a frame callback so they can update over time.</p>
-<p>Replace <code>main.js</code> with this:</p>
+<p>In this tutorial you build a small app: a circle that orbits the center of the window and follows your mouse or finger while you hold it down. Along the way you meet the frame loop, canvas drawing, window size, and pointer input, which are the core of every Budo app.</p>
+<p>You need the <code>budo</code> command; see <a href="installation.html">Installation</a>. You can also follow along without installing anything by pressing <strong>run</strong> on the code samples.</p>
+<h2 id="create-the-project" class="has-anchor">Create the project <a class="heading-anchor" href="#create-the-project" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Ask <code>budo</code> to create a new project folder:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create my-budo-app/ with a starter app in it.
+budo init my-budo-app</code></pre></div></div>
+<p>The command asks a few questions to fill in <code>app.json</code>: app name, author, version, description, orientation, and network policy. Press Enter to accept each default; you can edit the file later.</p>
+<p>The new folder contains these files:</p>
+<ul><li><code>main.js</code> is your app's code. Budo starts here.</li><li><code>app.json</code> holds the app's name, version, and permissions.</li><li><code>budo.d.ts</code> and <code>jsconfig.json</code> give your editor completion and type hints for the <code>sys</code> API.</li><li><code>budo-llm.md</code> is the full API reference, handy to give to an AI coding assistant.</li></ul>
+<p>Open <code>main.js</code>. It looks like this:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">/// &lt;reference path=&quot;./budo.d.ts&quot; /&gt;
+
+// Called once per displayed frame, with the time in milliseconds.
+function frame(timestamp) {
+  // Fill the whole canvas with a dark background.
+  sys.canvas.clear(&quot;#222831&quot;);
+  // Draw light text at x=24, y=48, with a 28 px font size.
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  sys.canvas.drawText(&quot;Hello, Budo!&quot;, 24, 48, 28);
+  // Ask Budo to call frame again on the next frame.
+  sys.animation.requestFrame(frame);
+}
+
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>Everything Budo offers lives on the global <code>sys</code> object. <code>requestFrame</code> registers <code>frame</code>, and Budo calls it for every displayed frame: each time, it clears the canvas and draws the text. Ending the function with <code>requestFrame</code> keeps the loop explicit, and is where an app that has nothing to animate would call <code>sys.animation.waitForInput</code> instead (see <a href="input-time-state.html">Input, time, and state</a>). The first line points your editor at <code>budo.d.ts</code>; Budo itself ignores it.</p>
+<h2 id="run-it" class="has-anchor">Run it <a class="heading-anchor" href="#run-it" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Run the project:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Open the app in a desktop window, and restart it whenever you save a file.
+budo run my-budo-app --watch</code></pre></div></div>
+<p>A window opens with "Hello, Budo!" in it. Keep it open: with <code>--watch</code>, Budo restarts the app each time you save a change in the project, so you see every step of this tutorial right away.</p>
+<h2 id="draw-a-circle" class="has-anchor">Draw a circle <a class="heading-anchor" href="#draw-a-circle" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Add a circle at the center of the window. <code>sys.window.getWidth()</code> and <code>sys.window.getHeight()</code> return the current size of the drawing area. Read them on every frame, because the user can resize the window.</p>
 <div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  // Read the current size of the drawing area.
   const width = sys.window.getWidth();
   const height = sys.window.getHeight();
 
-  sys.canvas.clear(&#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
-  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+  // Clear the canvas and draw the title.
+  sys.canvas.clear(&quot;#222831&quot;);
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  sys.canvas.drawText(&quot;Hello, Budo!&quot;, 24, 48, 28);
 
-  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  // Draw a purple circle of radius 40 at the center.
+  sys.canvas.setFillColor(&quot;#7c6ff7&quot;);
   sys.canvas.drawCircle(width * 0.5, height * 0.5, 40);
 
+  // Keep the frame loop going.
   sys.animation.requestFrame(frame);
 }
 
+// Start the frame loop.
 sys.animation.requestFrame(frame);</code></pre></div></div>
-<p><code>sys.animation.requestFrame(frame)</code> asks Budo to call <code>frame</code> on the next display tick. The callback receives a timestamp in milliseconds.</p>
-<h2 id="animate-something" class="has-anchor">Animate something <a class="heading-anchor" href="#animate-something" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Use the frame timestamp to move the circle.</p>
-<p>Change the circle code inside <code>frame</code> to this:</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
+<p><code>setFillColor</code> sets the color of everything you fill afterwards, until you change it again. That is why the text and the circle each set their own color right before they are drawn.</p>
+<h2 id="animate-it" class="has-anchor">Animate it <a class="heading-anchor" href="#animate-it" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The <code>timestamp</code> argument tells you how much time has passed, in milliseconds. Use it to move the circle along an orbit:</p>
+<div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  // Read the current size of the drawing area.
   const width = sys.window.getWidth();
   const height = sys.window.getHeight();
 
-  sys.canvas.clear(&#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
-  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+  // Clear the canvas and draw the title.
+  sys.canvas.clear(&quot;#222831&quot;);
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  sys.canvas.drawText(&quot;Hello, Budo!&quot;, 24, 48, 28);
 
+  // Turn the time into seconds, then into a point on a circle of radius 90.
   const seconds = timestamp / 1000;
   const x = width * 0.5 + Math.cos(seconds) * 90;
   const y = height * 0.5 + Math.sin(seconds) * 90;
 
-  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-  sys.canvas.drawCircle(x, y, 32);
+  // Draw the circle at its position for this frame.
+  sys.canvas.setFillColor(&quot;#7c6ff7&quot;);
+  sys.canvas.drawCircle(x, y, 40);
 
+  // Keep the frame loop going.
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">const seconds = timestamp / 1000;
-const x = width * 0.5 + Math.cos(seconds) * 90;
-const y = height * 0.5 + Math.sin(seconds) * 90;
-
-sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-sys.canvas.drawCircle(x, y, 32);</code></pre></div></div>
-<p>Now the circle orbits around the center of the window. The whole file should still be easy to scan: read the window size, clear, draw text, compute a position, draw a circle, request the next frame.</p>
-<h2 id="add-pointer-input" class="has-anchor">Add pointer input <a class="heading-anchor" href="#add-pointer-input" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Read input once near the start of the frame.</p>
-<p>After <code>width</code> and <code>height</code>, add this:</p>
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>The circle now completes one orbit about every six seconds. Because the position comes from the time and not from a frame count, the speed stays the same on fast and slow displays.</p>
+<h2 id="follow-the-pointer" class="has-anchor">Follow the pointer <a class="heading-anchor" href="#follow-the-pointer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.input.get()</code> returns the input state for the current frame: pointer, mouse, keyboard, typed text, and timing. Read it once, near the start of the frame. Add this line after <code>width</code> and <code>height</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read this frame&#x27;s input state.
+const input = sys.input.get();</code></pre></div></div>
+<p>Then replace the two lines that compute <code>x</code> and <code>y</code>:</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
   const width = sys.window.getWidth();
   const height = sys.window.getHeight();
   const input = sys.input.get();
 
-  sys.canvas.clear(&#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
-  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
-
-  const seconds = timestamp / 1000;
-  const x = width * 0.5 + Math.cos(seconds) * 90;
-  const y = height * 0.5 + Math.sin(seconds) * 90;
-
-  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-  sys.canvas.drawCircle(x, y, 32);
-
-  sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">const input = sys.input.get();</code></pre></div></div>
-<p>Then replace the <code>x</code> and <code>y</code> lines with this:</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame(timestamp) {
-  const width = sys.window.getWidth();
-  const height = sys.window.getHeight();
-  const input = sys.input.get();
+  sys.canvas.clear(&quot;#222831&quot;);
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  sys.canvas.drawText(&quot;Hello, Budo!&quot;, 24, 48, 28);
 
   const seconds = timestamp / 1000;
   let x = width * 0.5 + Math.cos(seconds) * 90;
@@ -157,91 +168,116 @@ sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle
     y = input.pointer.y;
   }
 
-  sys.canvas.clear(&#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
-  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
-
-  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-  sys.canvas.drawCircle(x, y, 32);
+  sys.canvas.setFillColor(&quot;#7c6ff7&quot;);
+  sys.canvas.drawCircle(x, y, 40);
 
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">let x = width * 0.5 + Math.cos(seconds) * 90;
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Start from the orbit position; let allows the values to change below.
+let x = width * 0.5 + Math.cos(seconds) * 90;
 let y = height * 0.5 + Math.sin(seconds) * 90;
 
+// While the mouse button or a finger is down, use the pointer position.
 if (input.pointer.down) {
   x = input.pointer.x;
   y = input.pointer.y;
 }</code></pre></div></div>
-<p>When the mouse button or primary touch is down, the circle follows the pointer. Otherwise it keeps orbiting.</p>
-<p>Here is the full version so far:</p>
+<p><code>input.pointer</code> is the primary pointer: the mouse on desktop, the first finger on a touch screen. Its <code>down</code> field is <code>true</code> while the button or finger is held, and <code>x</code> and <code>y</code> give its position in canvas coordinates. Hold the mouse button and the circle follows the pointer; release it and the circle returns to its orbit.</p>
+<p>Here is the complete <code>main.js</code>:</p>
 <div class="code-block" data-budo-entry="main.js"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  // Read the drawing area size and this frame&#x27;s input.
   const width = sys.window.getWidth();
   const height = sys.window.getHeight();
   const input = sys.input.get();
 
+  // Clear the canvas and draw the title.
+  sys.canvas.clear(&quot;#222831&quot;);
+  sys.canvas.setFillColor(&quot;#eeeeee&quot;);
+  sys.canvas.drawText(&quot;Hello, Budo!&quot;, 24, 48, 28);
+
+  // Compute the orbit position from the time.
   const seconds = timestamp / 1000;
   let x = width * 0.5 + Math.cos(seconds) * 90;
   let y = height * 0.5 + Math.sin(seconds) * 90;
 
+  // While the pointer is down, follow it instead.
   if (input.pointer.down) {
     x = input.pointer.x;
     y = input.pointer.y;
   }
 
-  sys.canvas.clear(&#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#f7f2e8&#x27;);
-  sys.canvas.drawText(&#x27;Hello, Budo!&#x27;, 32, 56, 28);
+  // Draw the circle.
+  sys.canvas.setFillColor(&quot;#7c6ff7&quot;);
+  sys.canvas.drawCircle(x, y, 40);
 
-  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-  sys.canvas.drawCircle(x, y, 32);
-
+  // Keep the frame loop going.
   sys.animation.requestFrame(frame);
 }
 
+// Start the frame loop.
 sys.animation.requestFrame(frame);</code></pre></div></div>
-<h2 id="add-app-metadata" class="has-anchor">Add app metadata <a class="heading-anchor" href="#add-app-metadata" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>An <code>app.json</code> file is optional, but it gives the app a name and stores platform settings in one place.</p>
-<p>Create <code>hello-budo/app.json</code>:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
-  &quot;name&quot;: &quot;Hello Budo&quot;,
-  &quot;author&quot;: &quot;Your Name&quot;,
-  &quot;version&quot;: &quot;1.0.0&quot;
+<h2 id="split-the-code-into-modules" class="has-anchor">Split the code into modules <a class="heading-anchor" href="#split-the-code-into-modules" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>As an app grows, move code into separate files. JavaScript apps can use ES modules: <code>export</code> from one file, <code>import</code> into another.</p>
+<p>Create <code>color.js</code> next to <code>main.js</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">color.js</span></div><div class="code-body"><pre><code class="language-javascript">// Return a color whose red channel pulses over time, as a &quot;#RRGGBB&quot; string.
+export function pulseColor(seconds) {
+  // Swing the red level between 80 and 240, twice per orbit cycle.
+  const red = Math.round(160 + Math.sin(seconds * 2) * 80);
+  // Format it as two hex digits and add fixed green and blue values.
+  return &quot;#&quot; + red.toString(16).padStart(2, &quot;0&quot;) + &quot;78ff&quot;;
 }</code></pre></div></div>
-<p>Budo uses this metadata for app identity. Android packaging also reads fields such as package name, orientation, icon, permissions, signing, and store listing data.</p>
-<h2 id="use-the-starter-command" class="has-anchor">Use the starter command <a class="heading-anchor" href="#use-the-starter-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>For a real project, you may prefer Budo to write the starter files for you.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">budo init my-app</code></pre></div></div>
-<p>This creates a project with <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, <code>budo.d.ts</code>, and a local API reference snapshot. The generated <code>budo.d.ts</code> file gives editors autocomplete for the <code>sys</code> APIs.</p>
-<h2 id="split-code-when-it-grows" class="has-anchor">Split code when it grows <a class="heading-anchor" href="#split-code-when-it-grows" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript entrypoints may use ES modules. Keep the first app in one file, then split helpers when the file starts to feel crowded.</p>
-<p>Create <code>color.js</code>:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">color.js</span></div><div class="code-body"><pre><code class="language-javascript">export function pulseColor(seconds) {
-  const value = Math.floor(160 + Math.sin(seconds * 2) * 80);
-  return (0xff &lt;&lt; 24) | (value &lt;&lt; 16) | (120 &lt;&lt; 8) | 255;
-}</code></pre></div></div>
-<p>Import it from <code>main.js</code>:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">import { pulseColor } from &#x27;./color.js&#x27;;
+<p>Import it at the top of <code>main.js</code>, then use it in place of the fixed circle color:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load pulseColor from color.js, in the same folder.
+import { pulseColor } from &quot;./color.js&quot;;
 
-// Later, inside frame:
+// Inside frame, before drawing the circle:
 sys.canvas.setFillColor(pulseColor(seconds));</code></pre></div></div>
-<p>Relative imports resolve from the importing file. Bare file names resolve from the project root. Paths must stay inside the project directory.</p>
-<h2 id="try-typescript-later" class="has-anchor">Try TypeScript later <a class="heading-anchor" href="#try-typescript-later" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Budo can load <code>main.ts</code> too. It strips lightweight TypeScript syntax before running the file through QuickJS.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.ts</span></div><div class="code-body"><pre><code class="language-typescript">let radius: number = 32;
+<p>A path that starts with <code>./</code> or <code>../</code> is resolved from the importing file. A plain name such as <code>&quot;color.js&quot;</code> is resolved from the project root. Imports must stay inside the project folder.</p>
+<h2 id="use-typescript" class="has-anchor">Use TypeScript <a class="heading-anchor" href="#use-typescript" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo runs <code>main.ts</code> directly, with no build step. Rename <code>main.js</code> to <code>main.ts</code> and add type annotations where they help:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.ts</span></div><div class="code-body"><pre><code class="language-typescript">// A typed variable.
+let radius: number = 40;
 
+// A typed function: Budo removes the annotations before running it.
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }</code></pre></div></div>
-<p>This is useful for editor help, but it is not a full TypeScript build step. Budo does not type-check, bundle modules, or apply TypeScript-only runtime transforms.</p>
-<h2 id="what-to-read-next" class="has-anchor">What to read next <a class="heading-anchor" href="#what-to-read-next" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>You have used the core loop: draw with <code>sys.canvas</code>, read dimensions from <code>sys.window</code>, read pointer input from <code>sys.input</code>, and schedule frames with <code>sys.animation</code>.</p>
-<p><a href="drawing-and-layout.html">Drawing and layout</a> covers shapes, text, fonts, SVGs, paths, and transforms. <a href="project-model.html">Project model</a> explains entrypoints, assets, metadata, and capabilities. <a href="packaging-and-deployment.html">Packaging and deployment</a> shows how this same folder becomes a web export or Android package.</p>
+<p>Budo removes the type syntax and runs the result as JavaScript. It does not type-check your code, and it does not support <code>enum</code>, <code>namespace</code>, decorators, or <code>satisfies</code>. Use your editor or <code>tsc</code> for type checking. <a href="project-model.html#typescript-support">Project model</a> has the details.</p>
+<h2 id="try-a-quick-sketch" class="has-anchor">Try a quick sketch <a class="heading-anchor" href="#try-a-quick-sketch" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For an experiment that does not need a project folder, run a single <code>.js</code>, <code>.ts</code>, <code>.lua</code>, <code>.wat</code>, or <code>.wasm</code> file:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run sketch.js as a temporary one-file app.
+budo run sketch.js</code></pre></div></div>
+<p>You can also pipe code into <code>budo run --from-input js</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Send a small program to budo on standard input.
+cat &lt;&lt;&#x27;EOF&#x27; | budo run --from-input js
+// Draw a pulsing circle in the middle of the window.
+function frame(timestamp) {
+  const radius = 32 + Math.sin(timestamp / 300) * 12;
+  sys.canvas.clear(&quot;#0e0e12&quot;);
+  sys.canvas.setFillColor(&quot;#7c6ff7&quot;);
+  sys.canvas.drawCircle(sys.window.getWidth() * 0.5, sys.window.getHeight() * 0.5, radius);
+  sys.animation.requestFrame(frame);
+}
+sys.animation.requestFrame(frame);
+EOF</code></pre></div></div>
+<p>A single-file app has no <code>app.json</code> and no other project files, so use a project folder as soon as you need assets or permissions.</p>
+<h2 id="start-from-widgets" class="has-anchor">Start from widgets <a class="heading-anchor" href="#start-from-widgets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For an app made of controls, such as forms, settings, or tools, start from the UI template:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a project that includes the budo-ui widget toolkit.
+budo init my-ui-app --template ui
+
+# Run it.
+budo run my-ui-app</code></pre></div></div>
+<p>The template adds the budo-ui toolkit under <code>ui/</code> and a starter <code>main.js</code> with a text field, a theme switch, a toggle, a slider, and a button. The widgets work with the keyboard and screen readers and follow the system dark mode. <a href="building-interfaces.html">Building interfaces</a> explains how to use them.</p>
+<h2 id="next-steps" class="has-anchor">Next steps <a class="heading-anchor" href="#next-steps" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>You have used the core loop of a Budo app: schedule frames with <code>sys.animation</code>, read the size from <code>sys.window</code>, read input from <code>sys.input</code>, and draw with <code>sys.canvas</code>.</p>
+<p>From here:</p>
+<ul><li><a href="project-model.html">Project model</a> explains entrypoints, <code>app.json</code>, file paths, and capabilities.</li><li><a href="drawing-and-layout.html">Drawing and layout</a> covers shapes, text, fonts, SVG, paths, and transforms.</li><li><a href="packaging-and-deployment.html">Packaging and deployment</a> turns this same folder into a web export or an Android package.</li></ul>
             </article>
 
             <nav class="doc-pager">
-                <a href="index.html" class="prev"><small>← Previous</small><span>Documentation</span></a>
+                <a href="installation.html" class="prev"><small>← Previous</small><span>Installation</span></a>
                 <a href="project-model.html" class="next"><small>Next →</small><span>Project Model</span></a>
             </nav>
         </main>
@@ -355,11 +391,15 @@ function clamp(value: number, min: number, max: number): number {
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

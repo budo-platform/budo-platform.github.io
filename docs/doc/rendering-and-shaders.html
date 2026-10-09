@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html" class="current">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,16 +63,19 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="rendering-and-shaders" class="has-anchor">Rendering and Shaders <a class="heading-anchor" href="#rendering-and-shaders" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Budo combines Skia drawing with a WebGL 2 and OpenGL ES 3 style shader pipeline. You can draw normal 2D canvas content, then run fullscreen or regional shader passes that sample the canvas as <code>u_canvas</code>. You can also draw meshes, upload buffers, bind textures, create Skia-backed canvas textures, and use offscreen render targets.</p>
-<p>The goal is not to expose every native graphics API. The goal is to provide a portable rendering surface that behaves consistently on desktop, Android, and web.</p>
-<h2 id="the-frame-pipeline" class="has-anchor">The frame pipeline <a class="heading-anchor" href="#the-frame-pipeline" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Within a frame, app code issues Skia drawing commands immediately and <code>sys.gl</code> draw calls submit immediately. Fullscreen and region passes can sample the current canvas texture through the built-in <code>u_canvas</code> uniform.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
+<p><code>sys.gl</code> adds GPU shaders to the 2D canvas. With it you run fragment shaders over the whole screen or a rectangle, post-process what the canvas drew (the shader reads it as the <code>u_canvas</code> texture), render offscreen into render targets, and draw 3D meshes with vertex buffers, textures, and depth testing.</p>
+<p>The API follows the immediate model of OpenGL: every call acts when you make it. It is the same on desktop, Android, and the web, and shaders are written once in GLSL ES 3.00.</p>
+<h2 id="how-a-frame-reaches-the-screen" class="has-anchor">How a frame reaches the screen <a class="heading-anchor" href="#how-a-frame-reaches-the-screen" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Within a frame, canvas drawing and <code>sys.gl</code> calls run in the order you make them. What ends up on screen depends on the GL draws you make:</p>
+<ul><li>With no GL draw to the screen, the canvas is shown as drawn.</li><li><code>drawFullscreen</code> covers the whole screen with the shader's output. The canvas appears only through what the shader does with <code>u_canvas</code>, which holds everything drawn on the canvas so far in the frame.</li><li>Region and mesh draws to the screen go over the canvas: Budo puts the canvas on screen first, then draws them on top.</li></ul>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
   return data;
 }
 
+// Pass the fullscreen quad&#x27;s position and texture coordinate through.
 const vertex = bytes(`#version 300 es
 precision mediump float;
 in vec2 a_position;
@@ -78,6 +86,7 @@ void main() {
   gl_Position = vec4(a_position, 0.0, 1.0);
 }`);
 
+// Tint the canvas with a moving wave.
 const fragment = bytes(`#version 300 es
 precision mediump float;
 uniform sampler2D u_canvas;
@@ -90,267 +99,280 @@ void main() {
   fragColor = vec4(base.rgb * vec3(0.75 + wave * 0.35, 0.9, 1.15), base.a);
 }`);
 
-const program = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
+// Compile the program once, during setup.
+const program = sys.gl.createProgramFromBuffer(vertex, fragment);
 
-function frame(t) {
+function frame() {
+  // Draw the canvas content the shader will read.
   sys.canvas.clear(&#x27;#05060a&#x27;);
   sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
   sys.canvas.drawText(&#x27;Shader input&#x27;, 32, 64, 28);
-  sys.gl.bindScreen();
-  program.use().drawFullscreen();
+  // Replace the screen with the shader&#x27;s output.
+  sys.gl.drawFullscreen(program);
+  // Keep drawing frames while the shader animates.
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw one frame that mixes Skia canvas drawing and a shader pass.
-function frame(t) {
-  // Clear the canvas before drawing text into it.
+// Start the frame loop.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Compile the program once, during setup.
+const program = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;);
+
+function frame() {
+  // Draw the canvas content the shader will read as u_canvas.
   sys.canvas.clear(&#x27;#05060a&#x27;);
-  // Select a white fill for text.
   sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-  // Draw text that the shader will sample through u_canvas.
   sys.canvas.drawText(&#x27;Shader input&#x27;, 32, 64, 28);
 
-  // Bind the default screen framebuffer.
-  sys.gl.bindScreen();
-  // Run the shader program as a fullscreen pass.
-  program.use().drawFullscreen();
+  // Replace the screen with the shader&#x27;s output.
+  sys.gl.drawFullscreen(program);
 
-  // Request the next frame.
+  // Keep drawing frames while the shader animates.
   sys.animation.requestFrame(frame);
-}</code></pre></div></div>
-<p>The shader pass runs when <code>drawFullscreen</code> is called. Flush the canvas first when a shader needs to sample Skia content that was drawn earlier in the same frame.</p>
+}
+
+// Start the frame loop.
+sys.animation.requestFrame(frame);</code></pre></div></div>
+<p>While shader passes draw to the screen, end each frame with <code>sys.animation.requestFrame</code>, not <code>waitForInput</code>.</p>
 <h2 id="shader-programs" class="has-anchor">Shader programs <a class="heading-anchor" href="#shader-programs" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Create programs from project-relative vertex and fragment shader files.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Create a shader program from project-relative files.
-const program = sys.gl.createShaderProgram({
-  // Vertex shader path.
-  vertex: &#x27;shader.vert&#x27;,
-  // Fragment shader path.
-  fragment: &#x27;shader.frag&#x27;
-});</code></pre></div></div>
-<p>Author new shaders as GLSL ES 300. The same sources run on Android GLES 3 and WebGL 2. Desktop translates the shader source for its OpenGL core profile.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">shader.vert</span></div><div class="code-body"><pre><code class="language-glsl">// Use GLSL ES 3.00 for WebGL 2 and OpenGL ES 3 portability.
+<p><code>sys.gl.createProgram(vertexPath, fragmentPath)</code> compiles and links two shader files from the project. <code>sys.gl.createProgramFromBuffer(vertexBytes, fragmentBytes)</code> does the same from source bytes in an <code>ArrayBuffer</code> or typed array, as in the runnable examples on this page. Both return a numeric program handle and throw when compiling or linking fails. <code>sys.gl.destroyProgram(program)</code> frees one you no longer need.</p>
+<p>Every shader starts with <code>#version 300 es</code>. Budo runs the same source on WebGL 2 and OpenGL ES 3, and translates it for the desktop OpenGL core profile.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">shader.vert</span></div><div class="code-body"><pre><code class="language-glsl">// GLSL ES 3.00, the dialect Budo runs on every platform.
 #version 300 es
-// Pick a default floating-point precision for fragment-compatible varyings.
+// A default precision for the floats below.
 precision mediump float;
 
-// Receive clip-space quad positions from the built-in fullscreen layout.
+// The fullscreen quad&#x27;s clip-space corner positions.
 in vec2 a_position;
-// Receive texture coordinates for sampling the canvas.
+// The matching texture coordinates, (0, 0) at the top-left corner.
 in vec2 a_texCoord;
-// Pass texture coordinates to the fragment shader.
+// Hand the texture coordinate to the fragment shader.
 out vec2 v_uv;
 
-// Run once for every vertex.
 void main() {
   // Forward the texture coordinate unchanged.
   v_uv = a_texCoord;
-  // Emit a clip-space position for the fullscreen quad.
+  // Emit the corner position.
   gl_Position = vec4(a_position, 0.0, 1.0);
 }</code></pre></div></div>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">shader.frag</span></div><div class="code-body"><pre><code class="language-glsl">// Use GLSL ES 3.00 for WebGL 2 and OpenGL ES 3 portability.
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">shader.frag</span></div><div class="code-body"><pre><code class="language-glsl">// GLSL ES 3.00, the dialect Budo runs on every platform.
 #version 300 es
-// Choose a balanced default precision.
 precision mediump float;
 
-// Sample the current Budo canvas texture.
+// What the canvas drew this frame.
 uniform sampler2D u_canvas;
-// Read the active viewport size when needed.
-uniform vec2 u_resolution;
-// Read runtime time in seconds.
+// Seconds since the app started.
 uniform float u_time;
 
-// Receive interpolated texture coordinates from the vertex shader.
+// The interpolated texture coordinate from the vertex shader.
 in vec2 v_uv;
-// Write the final fragment color.
+// The color written for this pixel.
 out vec4 fragColor;
 
-// Run once for each pixel covered by the fullscreen pass.
 void main() {
-  // Sample the canvas at this pixel&#x27;s UV coordinate.
+  // Read the canvas at this pixel.
   vec4 base = texture(u_canvas, v_uv);
-  // Build a moving horizontal wave from UV and time.
+  // A horizontal wave that moves with time.
   float wave = 0.5 + 0.5 * sin((v_uv.x + u_time) * 20.0);
-  // Modulate the canvas color while preserving alpha.
+  // Modulate the canvas color and keep its alpha.
   fragColor = vec4(base.rgb * (0.75 + wave * 0.25), base.a);
 }</code></pre></div></div>
-<p>Built-in uniforms are provided when present: <code>u_canvas</code>, <code>u_resolution</code>, <code>u_time</code>, and for region draws <code>u_offset</code>.</p>
-<h2 id="uniforms-and-immediate-state" class="has-anchor">Uniforms and immediate state <a class="heading-anchor" href="#uniforms-and-immediate-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.gl</code> follows the familiar immediate GL model. Uniform setters update the target program now, texture binding calls bind sampler state now, <code>updateBuffer</code> calls upload with <code>glBufferSubData</code> now, and draw calls submit work now.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
+<p>Fullscreen and region passes feed the quad through <code>a_position</code> and <code>a_texCoord</code>. Budo sets these uniforms before each draw, when the shader declares them:</p>
+<ul><li><code>u_canvas</code>, a <code>sampler2D</code> on texture unit 0: the canvas, or the source of the pass.</li><li><code>u_resolution</code>, a <code>vec2</code>: the size in pixels of the area being drawn (the screen, the render target, or the region).</li><li><code>u_time</code>, a <code>float</code>: the time in seconds.</li><li><code>u_offset</code>, a <code>vec2</code>, in region draws only: the region's top-left corner in canvas pixels.</li></ul>
+<p>Do not set these yourself, since each draw overwrites them.</p>
+<p>Texture coordinates follow the canvas: <code>a_texCoord</code>, and the <code>v_uv</code> it becomes, is <code>(0, 0)</code> at the top-left corner, so <code>texture(u_canvas, v_uv)</code> reads the canvas upright, and so do canvas textures and render targets drawn by these passes. <code>gl_FragCoord</code> starts at the bottom-left, as in any GL shader; <code>vec2(gl_FragCoord.x, u_resolution.y - gl_FragCoord.y)</code> converts it to canvas orientation.</p>
+<p><code>u_canvas</code> holds premultiplied colors. To lay it over an opaque background color <code>bg</code>, write <code>vec4(canvas.rgb + bg * (1.0 - canvas.a), 1.0)</code>.</p>
+<p>GLSL compilers remove uniforms the shader never reads, and setting a removed uniform throws <code>Uniform not found</code>. Declare only the uniforms your shader uses.</p>
+<h2 id="uniforms-and-textures" class="has-anchor">Uniforms and textures <a class="heading-anchor" href="#uniforms-and-textures" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Every per-program call takes the program handle first:</p>
+<table>
+<thead><tr><th>Purpose</th><th>Functions</th></tr></thead>
+<tbody>
+<tr><td>Uniforms</td><td><code>setUniform1i</code>, <code>setUniform1f</code>, <code>setUniform2f</code>, <code>setUniform3f</code>, <code>setUniform4f</code>, <code>setUniformMatrix3</code>, <code>setUniformMatrix4</code>, and the array forms <code>setUniform1iv</code> and <code>setUniform1fv</code> to <code>setUniform4fv</code></td></tr>
+<tr><td>Samplers</td><td><code>bindTexture2D</code> (textures), <code>bindTextureCube</code> (cubemaps), <code>bindTexture</code> (render targets), <code>bindCanvasTexture</code> (canvas textures)</td></tr>
+<tr><td>Draws</td><td><code>drawFullscreen</code>, <code>drawRegion</code>, <code>drawMesh</code></td></tr>
+</tbody>
+</table>
+<p>Setters act at once: a uniform takes its new value now and keeps it for the next draws of that program. To draw the same program twice with different values, set the value before each draw.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
   return data;
 }
 
+// A quad with no texture coordinates.
 const vertex = bytes(`#version 300 es
 precision mediump float;
 in vec2 a_position;
 void main() { gl_Position = vec4(a_position, 0.0, 1.0); }`);
+// A flat color whose red channel follows u_strength.
 const fragment = bytes(`#version 300 es
 precision mediump float;
 uniform float u_strength;
 out vec4 fragColor;
 void main() { fragColor = vec4(0.15 + u_strength, 0.25, 0.75, 1.0); }`);
-const program = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
+const program = sys.gl.createProgramFromBuffer(vertex, fragment);
 
-sys.gl.bindScreen();
-program.uniform1f(&#x27;u_strength&#x27;, 0.2).drawRegion(40, 40, 160, 120);
-program.uniform1f(&#x27;u_strength&#x27;, 0.8).drawRegion(220, 40, 160, 120);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw once with a subtle strength.
-program.uniform1f(&#x27;u_strength&#x27;, 0.2).drawFullscreen();
+// The canvas shows behind the region draws.
+sys.canvas.clear(&#x27;#101116&#x27;);
+// Draw once with a subtle strength.
+sys.gl.setUniform1f(program, &#x27;u_strength&#x27;, 0.2);
+sys.gl.drawRegion(program, 40, 40, 160, 120);
+// Change the uniform and draw again.
+sys.gl.setUniform1f(program, &#x27;u_strength&#x27;, 0.8);
+sys.gl.drawRegion(program, 220, 40, 160, 120);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw once with a subtle strength.
+sys.gl.setUniform1f(program, &#x27;u_strength&#x27;, 0.2);
+sys.gl.drawRegion(program, 40, 40, 160, 120);
 
-// Change the uniform and draw again immediately.
-program.uniform1f(&#x27;u_strength&#x27;, 0.8).drawFullscreen();</code></pre></div></div>
-<p>Those two draws use different values because the uniform changes before each draw. This behavior is especially important when drawing the same program multiple times with different transforms, colors, textures, or render targets.</p>
-<p>Bind the screen or an explicit render target before drawing. The object-style API wraps the handle API, so both styles execute immediately.</p>
-<h2 id="program-object-api" class="has-anchor">Program object API <a class="heading-anchor" href="#program-object-api" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.gl.createProgram</code> returns a numeric handle. <code>sys.gl.createShaderProgram</code> returns a <code>ShaderProgram</code> object that wraps a handle and exposes chainable helpers for the most common immediate operations.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
+// Change the uniform and draw again: the second rectangle is brighter.
+sys.gl.setUniform1f(program, &#x27;u_strength&#x27;, 0.8);
+sys.gl.drawRegion(program, 220, 40, 160, 120);</code></pre></div></div>
+<p>The <code>bind*</code> calls attach a texture to a sampler uniform on a texture unit, also at once. Unit 0 belongs to <code>u_canvas</code>; use units 1 to 7 for your own textures.</p>
+<p>Programs, textures, buffers, layouts, and render targets are all plain numbers, so they fit in arrays and tables and pass through generic render code.</p>
+<h2 id="region-draws" class="has-anchor">Region draws <a class="heading-anchor" href="#region-draws" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.gl.drawRegion(program, x, y, width, height)</code> runs a shader inside a rectangle of the screen, over the canvas. Inside the shader, <code>u_resolution</code> is the region's size and <code>u_offset</code> its top-left corner, and <code>v_uv</code> goes from <code>(0, 0)</code> to <code>(1, 1)</code> across the region. A sixth argument, a render target, draws the region into that target instead.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
   return data;
 }
 
-const vertex = bytes(`#version 300 es
-precision mediump float;
-in vec2 a_position;
-void main() { gl_Position = vec4(a_position, 0.0, 1.0); }`);
-const fragment = bytes(`#version 300 es
-precision mediump float;
-uniform float u_strength;
-uniform vec2 u_mouse;
-uniform vec2 u_resolution;
-out vec4 fragColor;
-void main() {
-  vec2 p = gl_FragCoord.xy / max(u_resolution, vec2(1.0));
-  vec3 base = mix(vec3(0.08, 0.1, 0.18), vec3(0.55, 0.45, 1.0), p.x);
-  fragColor = vec4(base + u_strength * 0.2, 1.0);
-}`);
-const shader = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
-const input = sys.input.get();
-
-shader
-  .use()
-  .uniform1f(&#x27;u_strength&#x27;, 0.7)
-  .uniform2f(&#x27;u_mouse&#x27;, input.pointer.x, input.pointer.y)
-  .drawFullscreen();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create the object-style program wrapper.
-const shader = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;shader.frag&#x27;);
-
-// Set state and draw immediately through the wrapper.
-shader
-  .use()
-  .uniform1f(&#x27;u_strength&#x27;, 0.7)
-  .uniform2f(&#x27;u_mouse&#x27;, input.pointer.x, input.pointer.y)
-  .drawFullscreen();</code></pre></div></div>
-<p>The object methods are <code>use</code>, <code>uniform1i</code>, <code>uniform1f</code>, <code>uniform2f</code>, <code>uniform3f</code>, <code>uniform4f</code>, <code>uniformMatrix4</code>, <code>texture</code>, <code>canvasTexture</code>, <code>renderTargetTexture</code>, <code>drawFullscreen</code>, <code>drawRegion</code>, and <code>drawMesh</code>. Use the object form when a draw reads like a small sentence. Use the handle form when you are storing IDs in data tables, passing them through generic render code, or using lower-level calls such as array uniforms and instanced drawing.</p>
-<p>The <code>Immediate</code> variants accept either a numeric program handle or a <code>ShaderProgram</code> object. They are useful in generic render helpers that do not care which style the caller used.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
-  const data = new Uint8Array(text.length);
-  for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
-  return data;
-}
-
-const vertex = bytes(`#version 300 es
-precision mediump float;
-in vec2 a_position;
-void main() { gl_Position = vec4(a_position, 0.0, 1.0); }`);
-const fragment = bytes(`#version 300 es
-precision mediump float;
-uniform vec2 u_resolution;
-out vec4 fragColor;
-void main() {
-  vec2 p = gl_FragCoord.xy / max(u_resolution, vec2(1.0));
-  fragColor = vec4(p.x, 0.25, 0.85 - p.y * 0.35, 1.0);
-}`);
-const shader = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
-
-function drawPass(shaderOrHandle, target) {
-  sys.gl.drawFullscreenImmediate(shaderOrHandle);
-  sys.gl.drawRegionImmediate(shaderOrHandle, 32, 32, 320, 180, target);
-}
-
-drawPass(shader);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw with a handle or an object through the same helper.
-function drawPass(shaderOrHandle, target) {
-  // Submit a fullscreen pass immediately.
-  sys.gl.drawFullscreenImmediate(shaderOrHandle);
-  // Submit a region pass immediately into an optional render target.
-  sys.gl.drawRegionImmediate(shaderOrHandle, 0, 0, 320, 180, target);
-}</code></pre></div></div>
-<p>For mesh helpers, <code>sys.gl.drawMeshImmediate(shaderOrHandle, layout, options)</code> mirrors <code>sys.gl.drawMesh(handle, layout, options)</code> while accepting either program representation.</p>
-<h2 id="render-targets" class="has-anchor">Render targets <a class="heading-anchor" href="#render-targets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Render targets are offscreen textures that shader passes can draw into and later sample.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
-  const data = new Uint8Array(text.length);
-  for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
-  return data;
-}
-
+// Pass the region&#x27;s texture coordinate through.
 const vertex = bytes(`#version 300 es
 precision mediump float;
 in vec2 a_position;
 in vec2 a_texCoord;
 out vec2 v_uv;
 void main() { v_uv = a_texCoord; gl_Position = vec4(a_position, 0.0, 1.0); }`);
+// A gradient across the region, glowing where the pointer is.
+const fragment = bytes(`#version 300 es
+precision mediump float;
+uniform vec2 u_pointer;
+uniform vec2 u_offset;
+uniform vec2 u_resolution;
+in vec2 v_uv;
+out vec4 fragColor;
+void main() {
+  vec2 pixel = u_offset + v_uv * u_resolution;
+  float glow = 1.0 - smoothstep(0.0, 90.0, distance(pixel, u_pointer));
+  fragColor = vec4(vec3(v_uv.x, v_uv.y, 0.8) + glow * 0.5, 1.0);
+}`);
+const program = sys.gl.createProgramFromBuffer(vertex, fragment);
+
+function frame() {
+  const input = sys.input.get();
+  // The canvas shows around the region.
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#f8fafc&#x27;);
+  sys.canvas.drawText(&#x27;Move the pointer over the region&#x27;, 32, 250, 18);
+  // Send the pointer position, in canvas pixels, to the shader.
+  sys.gl.setUniform2f(program, &#x27;u_pointer&#x27;, input.pointer.x, input.pointer.y);
+  // Draw the shader inside a 320 by 180 rectangle.
+  sys.gl.drawRegion(program, 32, 32, 320, 180);
+  sys.animation.requestFrame(frame);
+}
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame() {
+  const input = sys.input.get();
+  // Draw the canvas first; the region goes over it.
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  // Send the pointer position, in canvas pixels, to the shader.
+  sys.gl.setUniform2f(program, &#x27;u_pointer&#x27;, input.pointer.x, input.pointer.y);
+  // Draw the shader inside a 320 by 180 rectangle.
+  sys.gl.drawRegion(program, 32, 32, 320, 180);
+  // Keep animating.
+  sys.animation.requestFrame(frame);
+}</code></pre></div></div>
+<p>In the fragment shader, <code>u_offset + v_uv * u_resolution</code> gives the pixel's canvas position, ready to compare with the pointer.</p>
+<h2 id="render-targets" class="has-anchor">Render targets <a class="heading-anchor" href="#render-targets" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A render target is an offscreen texture that passes draw into and later passes read. Use targets to chain effects: draw a scene, blur it, then composite the result.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
+  const data = new Uint8Array(text.length);
+  for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
+  return data;
+}
+
+// One vertex shader for every pass.
+const vertex = bytes(`#version 300 es
+precision mediump float;
+in vec2 a_position;
+in vec2 a_texCoord;
+out vec2 v_uv;
+void main() { v_uv = a_texCoord; gl_Position = vec4(a_position, 0.0, 1.0); }`);
+// Pass 1: a color ramp.
 const sceneFrag = bytes(`#version 300 es
 precision mediump float;
 in vec2 v_uv;
 out vec4 fragColor;
 void main() { fragColor = vec4(v_uv, 0.75, 1.0); }`);
-const blurFrag = bytes(`#version 300 es
+// Pass 2: read the scene and tint it.
+const tintFrag = bytes(`#version 300 es
 precision mediump float;
 uniform sampler2D u_input;
 in vec2 v_uv;
 out vec4 fragColor;
 void main() { fragColor = texture(u_input, v_uv) * vec4(1.0, 0.85, 1.0, 1.0); }`);
+// Pass 3: show the result on screen.
 const finalFrag = bytes(`#version 300 es
 precision mediump float;
-uniform sampler2D u_blur;
+uniform sampler2D u_result;
 in vec2 v_uv;
 out vec4 fragColor;
-void main() { fragColor = texture(u_blur, v_uv); }`);
+void main() { fragColor = texture(u_result, v_uv); }`);
 
 const sceneProgram = sys.gl.createProgramFromBuffer(vertex, sceneFrag);
-const blurProgram = sys.gl.createProgramFromBuffer(vertex, blurFrag);
+const tintProgram = sys.gl.createProgramFromBuffer(vertex, tintFrag);
 const finalProgram = sys.gl.createProgramFromBuffer(vertex, finalFrag);
 const scene = sys.gl.createRenderTarget(512, 512);
-const blur = sys.gl.createRenderTarget(512, 512);
+const tinted = sys.gl.createRenderTarget(512, 512);
 
-sys.gl.drawRegion(sceneProgram, 0, 0, 512, 512, scene);
-sys.gl.bindTexture(blurProgram, &#x27;u_input&#x27;, scene, 1);
-sys.gl.drawRegion(blurProgram, 0, 0, 512, 512, blur);
-sys.gl.bindTexture(finalProgram, &#x27;u_blur&#x27;, blur, 1);
-sys.gl.drawFullscreen(finalProgram);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create an offscreen target for the first pass.
+function frame() {
+  sys.gl.drawRegion(sceneProgram, 0, 0, 512, 512, scene);
+  sys.gl.bindTexture(tintProgram, &#x27;u_input&#x27;, scene, 1);
+  sys.gl.drawRegion(tintProgram, 0, 0, 512, 512, tinted);
+  sys.gl.bindTexture(finalProgram, &#x27;u_result&#x27;, tinted, 1);
+  sys.gl.drawFullscreen(finalProgram);
+  sys.animation.requestFrame(frame);
+}
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create the targets once, during setup.
 const scene = sys.gl.createRenderTarget(512, 512);
-// Create an offscreen target for the blur pass.
-const blur = sys.gl.createRenderTarget(512, 512);
+const tinted = sys.gl.createRenderTarget(512, 512);
 
-// Draw the scene shader into the scene target.
-sys.gl.drawRegion(sceneProgram, 0, 0, 512, 512, scene);
-// Bind the scene texture so the blur shader can sample it.
-sys.gl.bindTexture(blurProgram, &#x27;u_input&#x27;, scene, 1);
-// Draw the blur shader into the blur target.
-sys.gl.drawRegion(blurProgram, 0, 0, 512, 512, blur);
-// Bind the blurred target for the final composite.
-sys.gl.bindTexture(finalProgram, &#x27;u_blur&#x27;, blur, 1);
-// Draw the final composite to the screen.
-sys.gl.drawFullscreen(finalProgram);</code></pre></div></div>
-<p>Pass <code>true</code> as the third argument to <code>createRenderTarget</code> when a target needs a depth buffer for 3D rendering.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Request a render target with a depth buffer for 3D drawing.
+function frame() {
+  // Pass 1: draw the scene shader into the scene target.
+  sys.gl.drawRegion(sceneProgram, 0, 0, 512, 512, scene);
+  // Pass 2: read the scene target and draw the tinted result into another target.
+  sys.gl.bindTexture(tintProgram, &#x27;u_input&#x27;, scene, 1);
+  sys.gl.drawRegion(tintProgram, 0, 0, 512, 512, tinted);
+  // Pass 3: read the tinted target and cover the screen with it.
+  sys.gl.bindTexture(finalProgram, &#x27;u_result&#x27;, tinted, 1);
+  sys.gl.drawFullscreen(finalProgram);
+  // Keep drawing frames while passes run.
+  sys.animation.requestFrame(frame);
+}</code></pre></div></div>
+<p>Read a target with <code>sys.gl.bindTexture(program, name, target, unit)</code>. Do not let a pass read the target it draws into; effects that feed back on themselves, such as trails, alternate between two targets.</p>
+<p>A target keeps its pixels from one frame to the next, and there is no separate clear call. A fullscreen pass, or a region pass that covers the whole target, overwrites every pixel; to clear a target, draw such a pass with a shader that outputs the clear color.</p>
+<p>When the window size changes, resize targets with <code>sys.gl.resizeRenderTarget(target, width, height)</code> rather than creating new ones. <code>sys.gl.destroyRenderTarget(target)</code> frees a target you no longer need.</p>
+<h3 id="depth-and-3d-scenes" class="has-anchor">Depth and 3D scenes <a class="heading-anchor" href="#depth-and-3d-scenes" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>Pass <code>true</code> as the third argument to give a target a depth buffer, for 3D rendering:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A render target with a depth buffer.
 const target = sys.gl.createRenderTarget(width, height, true);</code></pre></div></div>
-<p>Resize targets when the viewport changes, and destroy them when a long-running tool no longer needs them.</p>
-<p>You can also bind targets explicitly and draw with program objects:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Bind an offscreen target before drawing 3D content into it.
-sys.gl.bindRenderTarget(scene);
-// Draw indexed or array mesh data with depth testing enabled.
-sceneProgram.drawMesh(layout, { mode: &#x27;triangles&#x27;, count: indexCount, depthTest: true });
+<p>The depth buffer serves depth testing only; shaders cannot sample it. The first depth-tested mesh draw into the target in each frame clears its depth, as on the screen, so all the mesh draws of a frame occlude one another. You can draw a whole 3D scene into the target, then post-process it:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Send the following mesh draws to the offscreen target.
+sys.gl.bindRenderTarget(target);
+// Draw the scene with depth testing.
+sys.gl.drawMesh(sceneProgram, layout, { mode: &#x27;triangles&#x27;, count: indexCount, depthTest: true });
 
-// Return to the default screen framebuffer.
+// Return to the screen.
 sys.gl.bindScreen();
-// Sample the scene target in the final fullscreen pass.
-finalProgram.renderTargetTexture(&#x27;u_scene&#x27;, scene, 1).drawFullscreen();</code></pre></div></div>
+// Read the scene in the final fullscreen pass.
+sys.gl.bindTexture(finalProgram, &#x27;u_scene&#x27;, target, 1);
+sys.gl.drawFullscreen(finalProgram);</code></pre></div></div>
 <h2 id="canvas-textures" class="has-anchor">Canvas textures <a class="heading-anchor" href="#canvas-textures" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.graphics.createCanvasTexture(width, height)</code> creates an offscreen Skia canvas backed by a GL texture and framebuffer. Draw into its <code>canvas</code>, flush it, then bind it to a shader sampler.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
+<p>A canvas texture is an offscreen Skia canvas backed by a GPU texture. Draw 2D content into it, such as labels, badges, panels, or a glyph atlas, then read it from a shader. <code>sys.graphics.createCanvasTexture(width, height)</code> creates one, available in JavaScript; draw through its <code>canvas</code> property and bind it with <code>sys.gl.bindCanvasTexture</code>.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
   return data;
@@ -369,71 +391,82 @@ in vec2 v_uv;
 out vec4 fragColor;
 void main() {
   vec4 ui = texture(u_ui, v_uv);
-  fragColor = mix(vec4(0.05, 0.06, 0.1, 1.0), ui, ui.a);
+  // Canvas textures are premultiplied: add the background behind them.
+  fragColor = vec4(ui.rgb + vec3(0.05, 0.06, 0.1) * (1.0 - ui.a), 1.0);
 }`);
 const ui = sys.graphics.createCanvasTexture(512, 256);
-const post = sys.gl.createShaderProgramFromBuffer({ vertex, fragment });
+const post = sys.gl.createProgramFromBuffer(vertex, fragment);
 
-ui.canvas.clear(&#x27;transparent&#x27;);
+// Clear to transparent, then draw light text.
+ui.canvas.clear(&#x27;#00000000&#x27;);
+ui.canvas.setFillColor(&#x27;#f8fafc&#x27;);
 ui.canvas.drawText(&#x27;Budo&#x27;, 32, 96, 42);
 
-sys.gl.bindScreen();
-post.canvasTexture(&#x27;u_ui&#x27;, ui, 1).drawFullscreen();"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a 512 by 256 Skia surface backed by a GL texture.
-const ui = sys.graphics.createCanvasTexture(512, 256);
-// Create a shader program that will sample that texture.
-const post = sys.gl.createShaderProgram(&#x27;shader.vert&#x27;, &#x27;post.frag&#x27;);
-
-// Clear the offscreen canvas to transparent.
-ui.canvas.clear(&#x27;transparent&#x27;);
-// Draw text into the offscreen canvas.
-ui.canvas.drawText(&#x27;Budo&#x27;, 32, 96, 42);
-// Flush drawing so the backing GL texture is current.
-ui.flush();
-
-// Bind the screen before the final pass.
-sys.gl.bindScreen();
-// Bind the canvas texture to u_ui and draw the fullscreen pass.
-post.canvasTexture(&#x27;u_ui&#x27;, ui, 1).drawFullscreen();</code></pre></div></div>
-<p>The high-level <code>canvasTexture</code> helper flushes before binding. Calling <code>flush()</code> yourself keeps synchronization explicit and works the same way across desktop, Android, and web.</p>
-<p>The nested <code>surface.canvas</code> object is intentionally smaller than the main canvas. It supports <code>clear</code>, <code>flush</code>, <code>drawRect</code>, <code>drawCircle</code>, and <code>drawText</code>. Use it for labels, badges, UI panels, dynamic glyph atlases, and other 2D content that should become a texture. For transforms, paths, SVGs, filters, and full paint control, draw to the main canvas or build a larger texture workflow explicitly.</p>
-<p>Canvas texture handles expose <code>id</code>, <code>width</code>, <code>height</code>, <code>texture</code>, <code>target</code>, <code>canvas</code>, <code>flush</code>, <code>resize</code>, and <code>destroy</code>. The <code>texture</code> field is the backing GL texture ID, and <code>target</code> is the backing framebuffer ID.</p>
-<h2 id="region-draws" class="has-anchor">Region draws <a class="heading-anchor" href="#region-draws" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>drawRegion</code> runs a shader within a rectangular viewport. The region can draw to the screen or into a render target.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
-  const data = new Uint8Array(text.length);
-  for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
-  return data;
+function frame() {
+  sys.gl.bindCanvasTexture(post, &#x27;u_ui&#x27;, ui, 1);
+  sys.gl.drawFullscreen(post);
+  sys.animation.requestFrame(frame);
 }
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// A 512 by 256 offscreen canvas backed by a GPU texture.
+const ui = sys.graphics.createCanvasTexture(512, 256);
+// A program whose fragment shader reads the u_ui sampler.
+const post = sys.gl.createProgram(&#x27;shader.vert&#x27;, &#x27;post.frag&#x27;);
 
-const vertex = bytes(`#version 300 es
-precision mediump float;
-in vec2 a_position;
-void main() { gl_Position = vec4(a_position, 0.0, 1.0); }`);
-const fragment = bytes(`#version 300 es
-precision mediump float;
-uniform vec2 u_mouse;
-uniform vec2 u_resolution;
-out vec4 fragColor;
-void main() {
-  vec2 p = gl_FragCoord.xy / max(u_resolution, vec2(1.0));
-  fragColor = vec4(p.x, p.y, 0.9, 1.0);
-}`);
-const program = sys.gl.createProgramFromBuffer(vertex, fragment);
-const input = sys.input.get();
-sys.gl.setUniform2f(program, &#x27;u_mouse&#x27;, input.pointer.x, input.pointer.y);
-sys.gl.drawRegion(program, 32, 32, 320, 180);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Send the current pointer position to the shader.
-sys.gl.setUniform2f(program, &#x27;u_mouse&#x27;, input.pointer.x, input.pointer.y);
-// Draw the shader only inside the given rectangle.
-sys.gl.drawRegion(program, 32, 32, 320, 180);</code></pre></div></div>
-<p>Inside a region shader, <code>u_resolution</code> is the region size rather than the full window. <code>u_offset</code> is the top-left position of the region in canvas coordinates.</p>
+// Clear to transparent, then draw light text.
+ui.canvas.clear(&#x27;#00000000&#x27;);
+ui.canvas.setFillColor(&#x27;#f8fafc&#x27;);
+ui.canvas.drawText(&#x27;Budo&#x27;, 32, 96, 42);
+
+function frame() {
+  // Bind the texture to u_ui on unit 1; this finishes its pending drawing first.
+  sys.gl.bindCanvasTexture(post, &#x27;u_ui&#x27;, ui, 1);
+  // Cover the screen with the shader&#x27;s output.
+  sys.gl.drawFullscreen(post);
+  // Keep drawing frames while passes run.
+  sys.animation.requestFrame(frame);
+}</code></pre></div></div>
+<p>Because binding finishes the texture's pending drawing, the shader always reads everything drawn into it so far. Its colors are premultiplied, like <code>u_canvas</code>.</p>
+<p>The texture's <code>canvas</code> offers a subset of <code>sys.canvas</code>: <code>clear</code>, the shapes (<code>drawRect</code>, <code>drawRoundRect</code>, <code>drawCircle</code>, <code>drawOval</code>, <code>drawLine</code>, <code>drawPoint</code>, <code>drawArc</code>), text (<code>drawText</code>, <code>measureText</code>, <code>measureTextRect</code>, <code>setFont</code>, <code>drawParagraph</code>, <code>measureParagraph</code>), the paint setters, gradients, blend modes, image and color filters, and <code>readPixels</code>. It has no transforms, clips, layers, paths, SVGs, or rich text; draw those on the main canvas.</p>
+<p>The handle also has <code>width</code>, <code>height</code>, <code>resize(width, height)</code>, and <code>destroy()</code>.</p>
+<h2 id="textures" class="has-anchor">Textures <a class="heading-anchor" href="#textures" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Load an image file, PNG or JPEG, as a 2D texture and bind it to a sampler:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Decode a project image and upload it as a texture.
+const albedo = sys.gl.loadTexture2D(&#x27;assets/floor.png&#x27;);
+// Bind it to the sampler u_albedo on unit 1.
+sys.gl.bindTexture2D(program, &#x27;u_albedo&#x27;, albedo, 1);</code></pre></div></div>
+<p><code>sys.gl.loadTexture2DFromBuffer(bytes)</code> decodes image bytes you already hold, such as a download:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Download an image, then decode and upload its bytes.
+fetch(url).then(response =&gt; {
+  photo = sys.gl.loadTexture2DFromBuffer(response.arrayBuffer());
+});</code></pre></div></div>
+<p>For pixels you compute, <code>sys.gl.createTexture2D(width, height, format, pixels)</code> creates a texture in one of three formats: <code>&#x27;rgba8&#x27;</code> (4 bytes per pixel), <code>&#x27;rgb8&#x27;</code> (3 bytes), or <code>&#x27;r8&#x27;</code>, a single channel that shaders read as red. <code>pixels</code> is optional; <code>sys.gl.updateTexture2D(texture, x, y, width, height, pixels)</code> replaces a rectangle later, and <code>sys.gl.destroyTexture(texture)</code> frees it.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A 256 by 1 lookup table: one byte per pixel, read as .r in the shader.
+const ramp = new Uint8Array(256);
+for (let i = 0; i &lt; 256; i++) ramp[i] = i;
+const lut = sys.gl.createTexture2D(256, 1, &#x27;r8&#x27;, ramp);</code></pre></div></div>
+<p>Cubemaps load from six images, in the order +X, -X, +Y, -Y, +Z, -Z, and bind with <code>bindTextureCube</code>:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load six project images into a cubemap.
+const sky = sys.gl.loadTextureCube([
+  // X axis faces, positive then negative.
+  &#x27;sky/+x.png&#x27;, &#x27;sky/-x.png&#x27;,
+  // Y axis faces, positive then negative.
+  &#x27;sky/+y.png&#x27;, &#x27;sky/-y.png&#x27;,
+  // Z axis faces, positive then negative.
+  &#x27;sky/+z.png&#x27;, &#x27;sky/-z.png&#x27;,
+]);
+// Bind it to the samplerCube u_env on unit 2.
+sys.gl.bindTextureCube(program, &#x27;u_env&#x27;, sky, 2);</code></pre></div></div>
+<p><code>sys.gl.loadTextureCubeFromBuffer([px, nx, py, ny, pz, nz])</code> does the same from six image buffers.</p>
 <h2 id="mesh-drawing" class="has-anchor">Mesh drawing <a class="heading-anchor" href="#mesh-drawing" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Budo's GL surface includes a compact 3D pipeline: vertex buffers, index buffers, vertex layouts, textures, matrix uniforms, and instanced drawing.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
+<p>For 3D, describe geometry with vertex buffers and a vertex layout, then draw it with <code>drawMesh</code>.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Convert shader source to the bytes createProgramFromBuffer expects.
+function bytes(text) {
   const data = new Uint8Array(text.length);
   for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
   return data;
 }
 
+// a_position is bound to attribute location 0.
 const vertex = bytes(`#version 300 es
 precision mediump float;
 in vec3 a_position;
@@ -443,14 +476,23 @@ precision mediump float;
 out vec4 fragColor;
 void main() { fragColor = vec4(0.49, 0.44, 0.97, 1.0); }`);
 const program = sys.gl.createProgramFromBuffer(vertex, fragment);
+// Three vertices, three floats each.
 const vbo = sys.gl.createBuffer(&#x27;vertex&#x27;, new Float32Array([
   -0.5, -0.5, 0.0,
    0.5, -0.5, 0.0,
    0.0,  0.5, 0.0
 ]));
+// Location 0 reads 3 floats per vertex, 12 bytes apart.
 const layout = sys.gl.createVertexLayout();
 sys.gl.setAttribute(layout, 0, vbo, 3, &#x27;float&#x27;, false, 12, 0);
-sys.gl.drawMesh(program, layout, { mode: &#x27;triangles&#x27;, first: 0, count: 3 });"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a vertex buffer with three 3D positions.
+
+function frame() {
+  // The canvas is the background of the mesh.
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.gl.drawMesh(program, layout, { mode: &#x27;triangles&#x27;, first: 0, count: 3 });
+  sys.animation.requestFrame(frame);
+}
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Create a vertex buffer with three 3D positions.
 const vbo = sys.gl.createBuffer(&#x27;vertex&#x27;, new Float32Array([
   // Bottom-left vertex.
   -0.5, -0.5, 0.0,
@@ -460,9 +502,9 @@ const vbo = sys.gl.createBuffer(&#x27;vertex&#x27;, new Float32Array([
    0.0,  0.5, 0.0
 ]));
 
-// Create a vertex layout that describes how buffers feed attributes.
+// A vertex layout describes how buffers feed the shader&#x27;s attributes.
 const layout = sys.gl.createVertexLayout();
-// Bind attribute location 0 to three float values per vertex.
+// Location 0 reads 3 floats per vertex, not normalized, 12 bytes apart, from offset 0.
 sys.gl.setAttribute(layout, 0, vbo, 3, &#x27;float&#x27;, false, 12, 0);
 
 // Draw the three vertices as one triangle.
@@ -474,101 +516,42 @@ sys.gl.drawMesh(program, layout, {
   // Draw three vertices.
   count: 3
 });</code></pre></div></div>
-<p>Common mesh attribute locations are position at <code>0</code>, UV at <code>1</code>, normal at <code>2</code>, color at <code>3</code>, and tangent at <code>4</code>.</p>
-<h2 id="textures" class="has-anchor">Textures <a class="heading-anchor" href="#textures" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The texture API can load images from project files or create raw 2D textures.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Decode a project-relative image and upload it as a texture.
-const albedo = sys.gl.loadTexture2D(&#x27;assets/floor.png&#x27;);
-const fetchedAlbedo = sys.gl.loadTexture2DFromBuffer(await (await fetch(url)).arrayBuffer());
-// Bind the texture to the shader sampler u_albedo on unit 1.
-sys.gl.bindTexture2D(program, &#x27;u_albedo&#x27;, albedo, 1);</code></pre></div></div>
-<p>Unit <code>0</code> is reserved for the canvas sampler used by fullscreen and region passes. Use units <code>1</code> through <code>7</code> for your own textures and render target bindings.</p>
-<p>Cubemaps are loaded from six image paths, or from six image buffers with <code>loadTextureCubeFromBuffer</code>:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Load six project-relative images into a cubemap.
-const sky = sys.gl.loadTextureCube([
-  // X axis faces, positive then negative.
-  &#x27;sky/+x.png&#x27;, &#x27;sky/-x.png&#x27;,
-  // Y axis faces, positive then negative.
-  &#x27;sky/+y.png&#x27;, &#x27;sky/-y.png&#x27;,
-  // Z axis faces, positive then negative.
-  &#x27;sky/+z.png&#x27;, &#x27;sky/-z.png&#x27;
-]);
-
-const skyFromBytes = sys.gl.loadTextureCubeFromBuffer([px, nx, py, ny, pz, nz]);</code></pre></div></div>
-<h2 id="buffer-updates" class="has-anchor">Buffer updates <a class="heading-anchor" href="#buffer-updates" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>updateBuffer</code> uploads immediately. This lets you update one dynamic buffer several times in the same frame and have each following draw receive the right data.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function bytes(text) {
-  const data = new Uint8Array(text.length);
-  for (let i = 0; i &lt; text.length; i++) data[i] = text.charCodeAt(i);
-  return data;
-}
-
-const vertex = bytes(`#version 300 es
-precision mediump float;
-in vec3 a_position;
-void main() { gl_Position = vec4(a_position, 1.0); }`);
-const fragment = bytes(`#version 300 es
-precision mediump float;
-out vec4 fragColor;
-void main() { fragColor = vec4(0.18, 0.78, 0.70, 1.0); }`);
-const program = sys.gl.createProgramFromBuffer(vertex, fragment);
-const vertices = new Float32Array(9);
-const vbo = sys.gl.createBuffer(&#x27;vertex&#x27;, vertices, &#x27;dynamic&#x27;);
-const layout = sys.gl.createVertexLayout();
-sys.gl.setAttribute(layout, 0, vbo, 3, &#x27;float&#x27;, false, 12, 0);
-const firstOptions = { mode: &#x27;triangles&#x27;, first: 0, count: 3 };
-const secondOptions = { mode: &#x27;triangles&#x27;, first: 0, count: 3 };
-
-function buildVertices(out, shape) {
-  const offset = shape === &#x27;second&#x27; ? 0.35 : -0.35;
-  out.set([offset - 0.25, -0.4, 0, offset + 0.25, -0.4, 0, offset, 0.35, 0]);
-}
-
-buildVertices(vertices, &#x27;first&#x27;);
-sys.gl.updateBuffer(vbo, vertices, 0);
-sys.gl.drawMesh(program, layout, firstOptions);
-
-buildVertices(vertices, &#x27;second&#x27;);
-sys.gl.updateBuffer(vbo, vertices, 0);
-sys.gl.drawMesh(program, layout, secondOptions);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Fill the reusable vertex array for the first shape.
-buildVertices(vertices, firstShape);
-// Upload the new vertex data immediately.
-sys.gl.updateBuffer(vbo, vertices, 0);
-// Draw using the first shape&#x27;s data.
-sys.gl.drawMesh(program, layout, firstOptions);
-
-// Refill the same array for the second shape.
-buildVertices(vertices, secondShape);
-// Upload the replacement data before the second draw.
-sys.gl.updateBuffer(vbo, vertices, 0);
-// Draw using the second shape&#x27;s data.
-sys.gl.drawMesh(program, layout, secondOptions);</code></pre></div></div>
-<p>Full buffer creation and reupload operations are immediate too, and usually happen during initialization or asset rebuilds rather than per draw.</p>
-<h2 id="error-handling" class="has-anchor">Error handling <a class="heading-anchor" href="#error-handling" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Shader creation and invalid JavaScript calls raise exceptions. <code>sys.gl.getLastError()</code> returns the last OpenGL or shader-related error string and clears it when appropriate.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.canvas.clear(&#x27;#101116&#x27;);
+<p>Budo binds attributes with these names to fixed locations, so a shader can use them without <code>layout(location = N)</code>: <code>a_position</code> at 0, <code>a_texCoord</code> or <code>a_uv</code> at 1, <code>a_normal</code> at 2, <code>a_color</code> at 3, and <code>a_tangent</code> at 4. For other names, use <code>layout(location = N)</code> in the shader, or ask with <code>sys.gl.getAttribLocation(program, name)</code>.</p>
+<p><code>createBuffer(kind, data, usage)</code> takes <code>&#x27;vertex&#x27;</code> or <code>&#x27;index&#x27;</code>, a typed array, and a usage hint: <code>&#x27;static&#x27;</code> (the default), <code>&#x27;dynamic&#x27;</code>, or <code>&#x27;stream&#x27;</code>. <code>updateBuffer(buffer, data, byteOffset)</code> rewrites part of a buffer, for geometry that changes. <code>setAttribute(layout, location, buffer, size, type, normalized, stride, offset, divisor)</code> accepts the types <code>&#x27;float&#x27;</code>, <code>&#x27;byte&#x27;</code>, <code>&#x27;ubyte&#x27;</code>, <code>&#x27;short&#x27;</code>, <code>&#x27;ushort&#x27;</code>, <code>&#x27;int&#x27;</code>, and <code>&#x27;uint&#x27;</code>; a <code>divisor</code> of 1 advances the attribute once per instance. To draw indexed geometry, attach an index buffer with <code>setIndexBuffer(layout, buffer, &#x27;u16&#x27;)</code> (or <code>&#x27;u32&#x27;</code>), and <code>count</code> then counts indices.</p>
+<p><code>drawMesh</code> options:</p>
+<ul><li><code>mode</code>: <code>&#x27;triangles&#x27;</code> (the default), <code>&#x27;triangle_strip&#x27;</code>, <code>&#x27;triangle_fan&#x27;</code>, <code>&#x27;lines&#x27;</code>, <code>&#x27;line_strip&#x27;</code>, or <code>&#x27;points&#x27;</code>.</li><li><code>first</code> and <code>count</code>: the range of vertices, or indices, to draw.</li><li><code>depthTest</code> and <code>depthWrite</code>: both <code>true</code> by default.</li><li><code>cull</code>: <code>&#x27;none&#x27;</code> (the default), <code>&#x27;back&#x27;</code>, or <code>&#x27;front&#x27;</code>.</li><li><code>blend</code>: <code>&#x27;alpha&#x27;</code> (the default), <code>&#x27;add&#x27;</code>, or <code>&#x27;none&#x27;</code>.</li><li><code>instanceCount</code>: the number of instances to draw, 1 by default.</li><li><code>target</code>: a render target; by default, the one bound with <code>bindRenderTarget</code>, otherwise the screen. <code>-1</code> forces the screen.</li></ul>
+<p>The first mesh draw to the screen in a frame puts the canvas on screen and clears the depth buffer, so the canvas is the background of your 3D scene. For 2D content over 3D, such as a HUD, draw the scene into a depth render target and composite it with the canvas in a fullscreen pass.</p>
+<p>For the matrix math of 3D (perspective, look-at, rotations), <code>sys.math</code> works in place on <code>Float32Array</code> storage; see the <a href="api-reference.html">API reference</a>.</p>
+<h2 id="passes-over-other-sources" class="has-anchor">Passes over other sources <a class="heading-anchor" href="#passes-over-other-sources" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The plain draw calls cover most needs. Three variants give finer control over where a pass reads and writes:</p>
+<ul><li><code>sys.gl.drawFullscreenImmediate(program, source)</code> runs a fullscreen pass that reads <code>source</code>, a texture handle or a canvas texture, as <code>u_canvas</code>, and draws into the currently bound framebuffer.</li><li><code>sys.gl.drawRegionImmediate(program, x, y, width, height, target)</code> takes the same arguments as <code>drawRegion</code>. Like it, it draws over the canvas when it targets the screen.</li><li><code>sys.gl.drawMeshImmediate(program, layout, options)</code> takes the same arguments as <code>drawMesh</code>.</li></ul>
+<h2 id="errors" class="has-anchor">Errors <a class="heading-anchor" href="#errors" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Every <code>sys.gl</code> call that fails throws an error whose message explains why: a shader that does not compile (with the compiler's message), a missing file, an unknown uniform, or an invalid handle. <code>sys.gl.getLastError()</code> returns the last error message, or an empty string.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="// Show the result on the canvas.
+sys.canvas.clear(&#x27;#101116&#x27;);
 sys.canvas.setFillColor(&#x27;#f8fafc&#x27;);
 try {
+  // These files do not exist, so this throws.
   const program = sys.gl.createProgram(&#x27;missing.vert&#x27;, &#x27;missing.frag&#x27;);
   sys.canvas.drawText(&#x27;Created program &#x27; + program, 32, 64, 20);
 } catch (error) {
+  // Report the failure instead of stopping the app.
   sys.canvas.drawText(&#x27;Could not create shader&#x27;, 32, 64, 22);
-}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Catch shader creation failures so the app can report them cleanly.
-try {
-  // Attempt to compile and link a shader program from two files.
+  sys.canvas.drawParagraph(String(error), 32, 84, 480, 16);
+}"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">try {
+  // Compile and link a program from two files.
   const program = sys.gl.createProgram(&#x27;missing.vert&#x27;, &#x27;missing.frag&#x27;);
 } catch (error) {
   // Print the compiler or file-loading error.
   console.log(&#x27;Could not create shader: &#x27; + error);
 }</code></pre></div></div>
-<p>For shader-heavy tools, surface creation errors in your own UI. A missing uniform is often a typo; a failed program compile is usually easier to diagnose if you print the compiler log early.</p>
-<h2 id="practical-performance-notes" class="has-anchor">Practical performance notes <a class="heading-anchor" href="#practical-performance-notes" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Create programs, render targets, vertex layouts, and textures during setup rather than inside every frame. Reuse typed arrays for dynamic geometry. Avoid <code>readPixels</code> as a per-frame effect. Prefer a few clear passes over elaborate state churn.</p>
-<p>Most importantly, keep your render graph explicit in code. Budo's shader pipeline is small enough that a well-named sequence of draw calls is often clearer than building a general abstraction too early.</p>
+<p>In shader-heavy tools, show these messages in your own interface so a typo in a shader is visible at once.</p>
+<h2 id="performance" class="has-anchor">Performance <a class="heading-anchor" href="#performance" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Create programs, render targets, vertex layouts, buffers, and textures during setup, not in every frame, and resize targets instead of recreating them. Reuse typed arrays for geometry that changes, uploaded with <code>updateBuffer</code>. Keep <code>readPixels</code> out of the frame loop. A few clear passes in a well-named sequence of draw calls are easier to follow, and often faster, than a general render abstraction built too early.</p>
             </article>
 
             <nav class="doc-pager">
-                <a href="drawing-and-layout.html" class="prev"><small>← Previous</small><span>Drawing and Layout</span></a>
+                <a href="building-interfaces.html" class="prev"><small>← Previous</small><span>Building Interfaces</span></a>
                 <a href="input-time-state.html" class="next"><small>Next →</small><span>Input, Time, and State</span></a>
             </nav>
         </main>
@@ -682,11 +665,15 @@ try {
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

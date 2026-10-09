@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Sensors and Device — Budo Documentation</title>
+    <meta name="description" content="Use the accelerometer and compass, keep the screen awake, and use the clipboard, haptics, cursors, and system preferences">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html" class="current">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="sensors-and-device" class="has-anchor">Sensors and device <a class="heading-anchor" href="#sensors-and-device" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>This page covers the parts of Budo that talk to the device itself: motion sensors with <code>sys.sensors</code>, and the screen, clipboard, haptics, system preferences, and mouse cursor with <code>sys.device</code>. Every call is safe on every platform: where a feature is missing, it returns <code>false</code> or <code>null</code> instead of failing, so your app can adapt.</p>
+<h2 id="sensors" class="has-anchor">Sensors <a class="heading-anchor" href="#sensors" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.sensors</code> reads the accelerometer and the compass. They are available on Android, and on the web where the browser supports device motion and orientation events, which mostly means phones and tablets. Desktop builds have no sensors and report them as unavailable.</p>
+<p>Check what the device has, start the sensors, then read the latest values in your frame function.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="if (sys.sensors.isAvailable()) {
+  sys.sensors.start();
+}
+
+function frame() {
+  const accel = sys.sensors.getAccel();
+  const compass = sys.sensors.getCompass();
+  sys.canvas.clear(&#x27;#f8fafc&#x27;);
+  sys.canvas.setFillColor(&#x27;#111318&#x27;);
+  if (accel) {
+    sys.canvas.drawText(&#x27;accel x=&#x27; + accel.x.toFixed(2) + &#x27; y=&#x27; + accel.y.toFixed(2) + &#x27; z=&#x27; + accel.z.toFixed(2), 32, 56, 18);
+  } else {
+    sys.canvas.drawText(&#x27;No accelerometer reading&#x27;, 32, 56, 18);
+  }
+  if (compass) {
+    sys.canvas.drawText(&#x27;heading=&#x27; + compass.heading.toFixed(1), 32, 88, 18);
+  } else {
+    sys.canvas.drawText(&#x27;No compass reading&#x27;, 32, 88, 18);
+  }
+  sys.animation.requestFrame(frame);
+}
+
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Start the sensors where the device has any.
+if (sys.sensors.isAvailable()) {
+  sys.sensors.start();
+}
+
+function frame() {
+  // The latest accelerometer reading, or null.
+  const accel = sys.sensors.getAccel();
+  if (accel) {
+    // Tilt, from the acceleration along the screen&#x27;s axes.
+    state.tiltX = accel.x;
+    state.tiltY = accel.y;
+  }
+
+  // The latest compass reading, or null.
+  const compass = sys.sensors.getCompass();
+  if (compass) {
+    // Degrees clockwise from north.
+    state.heading = compass.heading;
+  }
+
+  draw();
+  sys.animation.requestFrame(frame);
+}</code></pre></div></div>
+<p><code>isAvailable()</code> is <code>true</code> when the device has either sensor; <code>hasAccelerometer()</code> and <code>hasCompass()</code> check each one. <code>start()</code> returns <code>true</code> once the sensors are running, <code>isActive()</code> tells whether they are, and <code>stop()</code> turns them off. Stop them when your app no longer needs them, to save battery.</p>
+<p><code>getAccel()</code> returns <code>{ x, y, z }</code>, the acceleration along each axis in m/s², gravity included, so a device at rest reads about 9.8 m/s² in total. <code>getCompass()</code> returns <code>{ x, y, z, heading }</code>: the magnetic field in µT, and the <code>heading</code> in degrees, where 0 is north and 90 is east. Both return <code>null</code> while the sensors are stopped and until the first reading arrives, so always check the result.</p>
+<p>On the web, iPhones and iPads ask the user for permission to use motion sensors, and the browser only shows that request after a tap. When <code>start()</code> is called before any tap, readings begin after the user's next tap or click.</p>
+<p>You can also check <code>sys.capabilities.sensors.available</code> before showing a sensor-driven feature. <code>examples/sound-instrument</code> bends the pitch of its voices when the device is tilted, where the device has an accelerometer.</p>
+<h2 id="keeping-the-screen-awake" class="has-anchor">Keeping the screen awake <a class="heading-anchor" href="#keeping-the-screen-awake" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Timers, instruments, kiosks, games during play, and monitoring tools should keep the screen on while they are in use.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="sys.device.keepScreenOn(true);
+sys.canvas.clear(&#x27;#101116&#x27;);
+sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+sys.canvas.drawText(&#x27;Wake lock requested&#x27;, 32, 72, 22);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Keep the display awake while the experience needs it.
+sys.device.keepScreenOn(true);</code></pre></div></div>
+<p>Call <code>keepScreenOn(false)</code> when the app returns to a state that does not need it, such as a menu. The call returns <code>false</code> when the platform cannot apply the change. On desktop it disables the screensaver, on Android it keeps the app's window on, and on the web it uses the Screen Wake Lock API where the browser allows it.</p>
+<h2 id="clipboard" class="has-anchor">Clipboard <a class="heading-anchor" href="#clipboard" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.device.setClipboardText(text)</code> copies text, and <code>sys.device.getClipboardText()</code> reads it, or returns <code>null</code> when the clipboard holds no text.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Copy some text.
+sys.device.setClipboardText(&#x27;Budo&#x27;);
+// Read the clipboard&#x27;s text, or null.
+const pasted = sys.device.getClipboardText();</code></pre></div></div>
+<p>Browsers only expose the clipboard asynchronously. On the web, <code>getClipboardText()</code> returns the last text copied, cut, or pasted on the page, and starts reading the system clipboard so that text copied in other apps arrives on a later call; the browser may ask the user once. Copying may also require a recent tap or key press. Text fields rarely need these calls on the web and on Android, where the platform's editor pastes by itself (see <a href="input-time-state.html#text-editing-sessions">Text editing sessions</a>).</p>
+<h2 id="haptics" class="has-anchor">Haptics <a class="heading-anchor" href="#haptics" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.device.haptic(kind)</code> plays a short vibration: <code>&#x27;light&#x27;</code> (the default), <code>&#x27;medium&#x27;</code>, <code>&#x27;heavy&#x27;</code>, <code>&#x27;selection&#x27;</code> (a value changed), <code>&#x27;success&#x27;</code>, <code>&#x27;warning&#x27;</code>, or <code>&#x27;error&#x27;</code>. It returns <code>false</code> where the device cannot vibrate, as on desktop computers, so you can call it everywhere. An unknown kind throws a <code>RangeError</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// A switch was flipped: a light tick.
+sys.device.haptic(&#x27;selection&#x27;);</code></pre></div></div>
+<h2 id="system-preferences" class="has-anchor">System preferences <a class="heading-anchor" href="#system-preferences" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.device.getPreferences()</code> returns the choices the user made in the system settings.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Read the user&#x27;s preferences.
+const { darkMode, reducedMotion, highContrast, fontScale, safeArea, keyboardInset } = sys.device.getPreferences();</code></pre></div></div>
+<ul><li><code>darkMode</code>: the system uses a dark appearance.</li><li><code>reducedMotion</code>: the user asked for less motion. Skip or shorten animations.</li><li><code>highContrast</code>: the user asked for more contrast.</li><li><code>fontScale</code>: the user's text size multiplier, 1 by default. Multiply your font sizes by it.</li><li><code>safeArea</code>: <code>{ top, right, bottom, left }</code>, in physical pixels, the edges to keep clear of notches, rounded corners, and system bars.</li><li><code>keyboardInset</code>: the height, in physical pixels from the bottom, covered by the on-screen keyboard; 0 when it is hidden, and on desktop. Keep the focused text field above it (budo-ui lays its interface out above it for you).</li></ul>
+<p>The call is cheap enough to make every frame, and the values follow the settings while the app runs. They come from the system settings on macOS and Windows, from GNOME settings on Linux, from media queries, CSS safe areas, and the visual viewport on the web, and from the system configuration and window insets on Android.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="function frame() {
+  const p = sys.device.getPreferences();
+  sys.canvas.clear(p.darkMode ? &#x27;#101116&#x27; : &#x27;#f8fafc&#x27;);
+  sys.canvas.setFillColor(p.darkMode ? &#x27;#f8fafc&#x27; : &#x27;#101116&#x27;);
+  const size = 20 * p.fontScale;
+  sys.canvas.drawText(&#x27;Dark mode: &#x27; + p.darkMode, 24, 40, size);
+  sys.canvas.drawText(&#x27;Reduced motion: &#x27; + p.reducedMotion, 24, 40 + size * 1.5, size);
+  sys.canvas.drawText(&#x27;Text scale: &#x27; + p.fontScale.toFixed(2), 24, 40 + size * 3, size);
+  sys.animation.waitForInput(frame, 1000);
+}
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame() {
+  // Read the preferences each frame: they follow the settings live.
+  const p = sys.device.getPreferences();
+  // Follow the system&#x27;s appearance.
+  sys.canvas.clear(p.darkMode ? &#x27;#101116&#x27; : &#x27;#f8fafc&#x27;);
+  sys.canvas.setFillColor(p.darkMode ? &#x27;#f8fafc&#x27; : &#x27;#101116&#x27;);
+  // Scale text with the user&#x27;s text size.
+  sys.canvas.drawText(&#x27;Dark mode: &#x27; + p.darkMode, 24, 40, 20 * p.fontScale);
+  // Check again within a second, or on the next input.
+  sys.animation.waitForInput(frame, 1000);
+}</code></pre></div></div>
+<h2 id="mouse-cursor" class="has-anchor">Mouse cursor <a class="heading-anchor" href="#mouse-cursor" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.device.setCursor(name)</code> changes the mouse cursor, using CSS cursor names: <code>&#x27;default&#x27;</code>, <code>&#x27;text&#x27;</code>, <code>&#x27;pointer&#x27;</code>, <code>&#x27;grab&#x27;</code>, <code>&#x27;grabbing&#x27;</code>, <code>&#x27;move&#x27;</code>, <code>&#x27;ew-resize&#x27;</code>, <code>&#x27;ns-resize&#x27;</code>, <code>&#x27;nwse-resize&#x27;</code>, <code>&#x27;nesw-resize&#x27;</code>, <code>&#x27;not-allowed&#x27;</code>, <code>&#x27;wait&#x27;</code>, <code>&#x27;crosshair&#x27;</code>, or <code>&#x27;none&#x27;</code>. Set it every frame from what is under the pointer. It returns <code>false</code> where there is no mouse cursor, and throws a <code>RangeError</code> on an unknown name.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// An I-beam over a text field, the arrow elsewhere.
+sys.device.setCursor(overField ? &#x27;text&#x27; : &#x27;default&#x27;);</code></pre></div></div>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="audio-midi.html" class="prev"><small>← Previous</small><span>Audio and MIDI</span></a>
+                <a href="ai-inference.html" class="next"><small>Next →</small><span>AI Inference</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

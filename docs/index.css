@@ -1075,6 +1075,7 @@ section {
 }
 
 .contact-form input,
+.contact-form select,
 .contact-form textarea {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -1088,6 +1089,7 @@ section {
 }
 
 .contact-form input:focus,
+.contact-form select:focus,
 .contact-form textarea:focus {
     border-color: var(--color-primary);
 }
@@ -1099,6 +1101,37 @@ section {
 
 .contact-form .btn {
     align-self: flex-start;
+}
+
+.contact-form .btn:disabled {
+    opacity: .6;
+    cursor: progress;
+}
+
+/* The spam trap: out of sight, out of the tab order. */
+.contact-form .contact-trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+/* On the section's colored background: a light box, its edge tells the result. */
+.contact-status {
+    margin: 0;
+    padding: .7rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-left: 6px solid var(--color-primary);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: .95rem;
+    text-align: left;
+}
+
+.contact-status[data-kind="error"] {
+    border-left-color: var(--color-error);
 }
 
 /* ── FOOTER ───────────────────────────────────────── */

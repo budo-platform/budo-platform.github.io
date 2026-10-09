@@ -87,8 +87,8 @@
 
     <script>
         // Communication with parent playground page
-        var pendingCode = null;
-        var pendingEntryName = 'main.js';
+        var pendingFiles = null;
+        var mountFailed = false;
         var runtimeLoaded = false;
         var runtimeVersion = new URLSearchParams(window.location.search).get('v') || '';
         var runtimeErrorLines = [];
@@ -96,13 +96,6 @@
         function runtimeAsset(path) {
             if (!runtimeVersion) return path;
             return path + '?v=' + encodeURIComponent(runtimeVersion);
-        }
-
-        function normalizeEntryName(value) {
-            if (value === 'main.ts' || value === 'main.lua' || value === 'main.js') {
-                return value;
-            }
-            return 'main.js';
         }
 
         function sendToParent(type, data) {
@@ -121,15 +114,25 @@
         // Set up Module before budo.js loads
         var Module = {
             preRun: [function () {
-                if (pendingCode) {
+                if (pendingFiles) {
                     try {
-                        var appJson = new TextEncoder().encode(JSON.stringify({ network: "*" }));
-                        Module.FS_createDataFile('/', 'app.json', appJson, true, true, true);
-                        var data = new TextEncoder().encode(pendingCode);
-                        Module.FS_createDataFile('/', pendingEntryName, data, true, true, true);
-                        sendToParent('log', '[playground] Code injected into runtime VFS');
+                        for (var file of pendingFiles) {
+                            if (typeof file.path !== 'string' || file.path.startsWith('/') || file.path.includes('\\') || file.path.split('/').some(function (part) {
+                                return !part || part === '.' || part === '..';
+                            }) || !(file.data instanceof ArrayBuffer)) throw new Error('Invalid project file');
+                            var parts = file.path.split('/');
+                            var name = parts.pop();
+                            var dir = '';
+                            for (var part of parts) {
+                                dir += '/' + part;
+                                if (!FS.analyzePath(dir).exists) FS.mkdir(dir);
+                            }
+                            Module.FS_createDataFile(dir || '/', name, new Uint8Array(file.data), true, true, true);
+                        }
+                        sendToParent('log', '[playground] Project files mounted in runtime VFS');
                     } catch (e) {
-                        showError('Failed to inject code: ' + e.message);
+                        mountFailed = true;
+                        showError('Failed to mount project: ' + e.message);
                     }
                 }
             }],
@@ -139,6 +142,7 @@
             },
             onRuntimeInitialized: function () {
                 runtimeLoaded = true;
+                if (mountFailed) return;
                 var el = document.getElementById('loading');
                 if (el) el.style.display = 'none';
                 sendToParent('ready', null);
@@ -165,8 +169,7 @@
             if (!event.data || event.data.source !== 'budo-playground') return;
 
             if (event.data.type === 'run') {
-                pendingCode = event.data.code;
-                pendingEntryName = normalizeEntryName(event.data.entryName);
+                pendingFiles = event.data.files;
 
                 // Load budo.js dynamically (only once per iframe lifetime)
                 if (!document.getElementById('budo-script')) {

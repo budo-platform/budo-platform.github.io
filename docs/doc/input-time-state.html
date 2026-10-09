@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html" class="current">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,9 +63,9 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="input-time-and-state" class="has-anchor">Input, Time, and State <a class="heading-anchor" href="#input-time-and-state" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>Interactive Budo apps usually have three moving parts: a small state object, a frame callback, and a translation layer from platform input into app actions. Keeping those parts separate makes code easier to port from desktop to Android and web.</p>
-<h2 id="animation-callbacks" class="has-anchor">Animation callbacks <a class="heading-anchor" href="#animation-callbacks" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript and Lua apps render by registering a callback with <code>sys.animation.requestFrame</code>. Budo stores one active animation callback. To keep animating, request the next frame before the callback returns.</p>
+<p>A Budo app runs as a frame loop: once per frame, your callback reads the input, updates the app's state, and draws it. This page covers each part of that loop, from scheduling frames and timers to pointers, keys, text editing, and focus, and ends with ways to organize the state itself.</p>
+<h2 id="the-frame-loop" class="has-anchor">The frame loop <a class="heading-anchor" href="#the-frame-loop" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Register your frame function with <code>sys.animation.requestFrame</code>. Budo calls it with a timestamp in milliseconds.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="let x = 60;
 
 function update(timestamp) {
@@ -79,21 +84,22 @@ function frame(timestamp) {
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Budo calls this function when it is time to render a frame.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Budo calls this function for every frame.
 function frame(timestamp) {
-  // Advance app state before drawing it.
+  // Advance the app&#x27;s state.
   update(timestamp);
-  // Draw the current state to the canvas.
+  // Draw the current state.
   draw();
-  // Request another frame so animation continues.
+  // Schedule the next frame.
   sys.animation.requestFrame(frame);
 }
 
-// Start the frame loop once the entrypoint has loaded.
+// Start the loop once the entrypoint has loaded.
 sys.animation.requestFrame(frame);</code></pre></div></div>
-<p>The timestamp is in milliseconds. It is normal to convert it to seconds for simulation code.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="let previous = 0;
-let x = 40;
+<p>Budo keeps a single frame callback: registering another one replaces it, and <code>sys.animation.cancelFrame(handle)</code> removes it. End every frame with <code>requestFrame(frame)</code>, or with <code>waitForInput(frame)</code> when nothing moves (see below), so that each frame states how the next one should run. If the callback throws, the error is logged and the callback stays registered, so the same error repeats on every frame until you fix it.</p>
+<h3 id="elapsed-time" class="has-anchor">Elapsed time <a class="heading-anchor" href="#elapsed-time" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>For movement that runs at the same speed whatever the frame rate, multiply speeds by the time elapsed since the previous frame. You can compute it from the timestamp, or read <code>deltaTime</code> from the input snapshot, which is already in seconds.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="let x = 40;
 
 function update(dt) {
   x += dt * 120;
@@ -108,33 +114,52 @@ function draw() {
   sys.canvas.drawCircle(x, 100, 24);
 }
 
-function frame(timestamp) {
-  const dt = previous === 0 ? 0 : (timestamp - previous) / 1000;
-  previous = timestamp;
+function frame() {
+  const dt = sys.input.get().deltaTime;
   update(dt);
   draw();
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Store the previous timestamp so each frame can compute elapsed time.
-let previous = 0;
-
-// Convert Budo&#x27;s millisecond timestamp into a seconds-based delta.
-function frame(timestamp) {
-  // The first frame has no previous timestamp, so use a zero delta.
-  const dt = previous === 0 ? 0 : (timestamp - previous) / 1000;
-  // Save this timestamp for the next frame.
-  previous = timestamp;
-  // Update simulation state with frame-rate-independent time.
-  update(dt);
-  // Render the updated state.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame() {
+  // Seconds since the previous frame.
+  const dt = sys.input.get().deltaTime;
+  // Move 120 pixels per second, whatever the frame rate.
+  state.x += dt * 120;
+  // Draw, then schedule the next frame.
   draw();
-  // Keep the loop alive.
   sys.animation.requestFrame(frame);
 }</code></pre></div></div>
-<p><code>sys.animation.cancelFrame(handle)</code> clears the stored callback. The current handle value is <code>1</code>, so treat it as a cancellation token rather than as a persistent per-callback identity.</p>
-<h2 id="timers-in-javascript" class="has-anchor">Timers in JavaScript <a class="heading-anchor" href="#timers-in-javascript" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>JavaScript apps also get <code>sys.timer</code>. Timers are checked once per frame, so they are frame-resolution timers rather than real-time threads.</p>
+<p>Mind the units: the frame timestamp and <code>sys.timer</code> delays are in milliseconds, while <code>input.deltaTime</code> and <code>input.totalTime</code> are in seconds.</p>
+<h3 id="drawing-only-when-needed" class="has-anchor">Drawing only when needed <a class="heading-anchor" href="#drawing-only-when-needed" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>Interfaces and tools are still most of the time. For those frames, end with <code>sys.animation.waitForInput(frame, timeoutMs)</code> instead of <code>requestFrame</code>: the callback runs again on the next input event, when the canvas is resized, or after <code>timeoutMs</code> if you pass one. Until then the last frame stays on screen and Budo saves power: desktop builds sleep until an event arrives, Android stops rendering, and the web skips drawing. JavaScript timers still fire on time.</p>
+<div class="code-block" data-budo-entry="main.js" data-budo-code="let clicks = 0;
+let flash = 0;
+function frame(timestamp) {
+  const input = sys.input.get();
+  if (input.pointer.pressed) { clicks++; flash = 1; }
+  flash = Math.max(0, flash - 0.05);
+  sys.canvas.clear(&#x27;#101116&#x27;);
+  sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
+  sys.canvas.drawCircle(120, 90, 30 + flash * 20);
+  sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
+  sys.canvas.drawText(&#x27;Clicks: &#x27; + clicks, 200, 98, 22);
+  if (flash &gt; 0) sys.animation.requestFrame(frame);   // animating: every frame
+  else sys.animation.waitForInput(frame);             // idle: only on input
+}
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame(timestamp) {
+  const input = sys.input.get();
+  // A press starts a short flash animation.
+  if (input.pointer.pressed) flash = 1;
+  flash = Math.max(0, flash - 0.05);
+  draw();
+  // Animating: draw every frame. Idle: wait for the next input.
+  if (flash &gt; 0) sys.animation.requestFrame(frame);
+  else sys.animation.waitForInput(frame);
+}</code></pre></div></div>
+<p>Pass a timeout for changes that happen on their own, such as a blinking caret or a message that should disappear: <code>waitForInput(frame, 500)</code>. Apps that draw with <code>sys.gl</code> passes after the canvas (post effects) must keep calling <code>requestFrame</code> while those passes run, because only the canvas image is kept between frames. WebAssembly modules call <code>animation_wait_for_input(timeoutMs)</code> from <code>frame</code> to skip the following calls in the same way. With <code>examples/budo-ui</code>, call <code>ui.nextFrame(frame)</code>, which waits for input whenever nothing moves.</p>
+<h2 id="timers" class="has-anchor">Timers <a class="heading-anchor" href="#timers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>JavaScript apps also have <code>sys.timer</code>, for callbacks after a delay or at an interval. Lua apps schedule work from the frame loop instead.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const state = { blink: false, message: &#x27;waiting&#x27; };
 
 sys.timer.once(1000, () =&gt; {
@@ -154,23 +179,21 @@ function frame() {
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Run this callback once after roughly one second of frame time.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Run a callback once, after about one second.
 sys.timer.once(1000, () =&gt; {
-  // Timers are useful for UI events and lightweight scheduling.
-  console.log(&#x27;One second later&#x27;);
+  state.message = &#x27;One second later&#x27;;
 });
 
-// Toggle a state field every quarter second.
+// Toggle a field every quarter second; keep the ID to cancel it.
 const pulse = sys.timer.every(250, () =&gt; {
-  // Timer callbacks run between frames, so state changes are visible next draw.
   state.blink = !state.blink;
 });
 
-// Cancel the repeating timer when the app no longer needs it.
-sys.timer.clear(pulse);</code></pre></div></div>
-<p>Use timers for UI delays, repeated polling inside the app, and small choreographed events. Use the frame timestamp for physics and animation.</p>
-<h2 id="input-snapshots" class="has-anchor">Input snapshots <a class="heading-anchor" href="#input-snapshots" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>sys.input.get()</code> returns the current input state. It includes the primary pointer, all active pointers, mouse button edges, keyboard modifiers, committed text, frame timing, and focus.</p>
+// Cancel the repeating timer after 2.5 seconds.
+sys.timer.once(2500, () =&gt; sys.timer.clear(pulse));</code></pre></div></div>
+<p><code>once(delayMs, callback)</code> and <code>every(intervalMs, callback)</code> return a timer ID for <code>sys.timer.clear(id)</code>. Timers are checked between frames, so their precision is about one frame, and changes they make show on the next draw. A delay of 0 or less runs on the next frame. Use timers for interface delays, polling, and small choreographed events, and use frame time for physics and animation.</p>
+<h2 id="pointers" class="has-anchor">Pointers <a class="heading-anchor" href="#pointers" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.input.get()</code> returns a snapshot of the input for the current frame: the primary pointer, all active pointers, the mouse, keyboard modifiers, committed text, frame timing, and focus. Read it once near the start of the frame and pass it to the code that needs it.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const state = { anchorX: 120, anchorY: 90, dragX: 120, dragY: 90 };
 
 function frame() {
@@ -195,25 +218,22 @@ function frame() {
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Read input once near the start of the frame.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Read the input once, near the start of the frame.
 const input = sys.input.get();
 
-// Capture a drag origin when the primary pointer is newly pressed.
+// The pointer went down this frame: remember where the drag starts.
 if (input.pointer.pressed) {
-  // Store the pointer&#x27;s x coordinate in app state.
   state.anchorX = input.pointer.x;
-  // Store the pointer&#x27;s y coordinate in app state.
   state.anchorY = input.pointer.y;
 }
 
-// Continue updating drag position while the primary pointer is held.
+// The pointer is held: follow it.
 if (input.pointer.down) {
-  // Track the latest pointer x coordinate.
   state.dragX = input.pointer.x;
-  // Track the latest pointer y coordinate.
   state.dragY = input.pointer.y;
 }</code></pre></div></div>
-<p>The primary pointer is the mouse on desktop and the primary active contact on touch devices. For multi-touch gestures, read <code>input.pointers</code>.</p>
+<p><code>input.pointer</code> is the mouse on desktop and the primary touch on touch screens. It has <code>x</code> and <code>y</code> in canvas pixels, the movement since the previous frame in <code>dx</code> and <code>dy</code>, <code>down</code> while it is held, <code>pressed</code> on the frame it went down, and a <code>type</code> of <code>&#x27;mouse&#x27;</code> or <code>&#x27;touch&#x27;</code>. <code>input.mouse</code> adds the <code>left</code>, <code>middle</code>, and <code>right</code> buttons, <code>leftPressed</code> and <code>rightPressed</code> edges, and the scroll wheel in <code>wheelX</code> and <code>wheelY</code>.</p>
+<p>For multi-touch gestures, read <code>input.pointers</code>. On touch devices it holds every active contact, each with its own <code>id</code>; on desktop it holds the mouse while the left button is down.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function frame() {
   const input = sys.input.get();
   sys.canvas.clear(&#x27;#101116&#x27;);
@@ -228,55 +248,19 @@ if (input.pointer.down) {
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw feedback for every active touch contact.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Draw a circle under every active contact.
 for (const pointer of input.pointers) {
-  // Each pointer contains x and y coordinates in canvas space.
   sys.canvas.drawCircle(pointer.x, pointer.y, 18);
 }</code></pre></div></div>
-<p>On desktop, <code>pointers</code> contains the mouse while the left button is down. On touch devices, it contains every active touch contact.</p>
-<h2 id="keyboard-input" class="has-anchor">Keyboard input <a class="heading-anchor" href="#keyboard-input" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Use <code>sys.input.get().text</code> for simple user-entered text. It contains layout-aware text committed since the previous frame, so AZERTY, QWERTY, Shift, dead keys, and platform character mapping are handled by the host.</p>
-<p>Editors should start a text session. A session activates SDL text editing on desktop, a hidden browser textarea on web, and Android's <code>InputConnection</code> plus soft keyboard. Synchronize the complete value, UTF-16 selection, and physical-pixel caret rectangle each frame:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.input.startTextInput({
-  text: editorValue,
-  selectionStart: caret,
-  selectionEnd: caret,
-  multiline: false,
-});
-
-function frame() {
-  const input = sys.input.get();
-  // Apply the platform&#x27;s authoritative edit before synchronizing this frame.
-  if (input.textEdit) {
-    editorValue = input.textEdit.text;
-    caret = input.textEdit.selectionEnd;
-  }
-  // input.composition persists while preedit is active. Draw its text at the
-  // caret, commonly underlined, and use selectionEnd for the preedit caret.
-  sys.input.updateTextInput({
-    text: editorValue,
-    selectionStart: caret,
-    selectionEnd: caret,
-    caret: { x: caretX, y: caretY, width: 1, height: lineHeight },
-  });
-  sys.animation.requestFrame(frame);
-}</code></pre></div></div>
-<p>Call <code>sys.input.stopTextInput()</code> when focus leaves. <code>textEdit</code> is a full authoritative replacement, which covers commit, selection replacement, deletion, paste, autocorrection, and mobile keyboard edits. Always apply it before calling <code>updateTextInput</code>; sending the previous model value back first can overwrite a platform edit. <code>composition</code> contains <code>{active, changed, text, selectionStart, selectionEnd}</code> and persists across frames; only <code>changed</code> is per-frame. Selection offsets are UTF-16 code units. Candidate-window caret coordinates use the same physical pixels as canvas drawing.</p>
-<p>On Android, starting a session focuses the native <code>InputConnection</code> and shows the soft keyboard. Back and single-line Done/Return finish any composing span and publish the final full <code>textEdit</code> before the keyboard closes. The Android bridge rejects queued pre-commit frame snapshots until the app echoes the new model value, so finishing composition cannot revert the field.</p>
-<p>See <code>examples/gui-framework</code> for a retained input control that implements focus, blinking caret, navigation, full replacement edits, underlined IME preedit text, and candidate positioning.</p>
-<p>Keyboard queries use SDL scancode values and remain layout-independent. <code>isKeyDown</code> reports a held physical key. <code>isKeyPressed</code> reports a per-frame physical-key edge. Use them for movement, arrows, function keys, and shortcuts rather than translating letter scancodes into text.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">const input = sys.input.get();
-if (input.text) editorValue += input.text;
-if (sys.input.isKeyPressed(42)) editorValue = editorValue.slice(0, -1); // Backspace</code></pre></div></div>
+<h2 id="keys" class="has-anchor">Keys <a class="heading-anchor" href="#keys" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>sys.input.isKeyDown(scancode)</code> reports whether a key is held, and <code>sys.input.isKeyPressed(scancode)</code> whether it went down this frame. Both take SDL scancodes, which name a key by its physical position, whatever the keyboard layout. Use them for keys chosen for their position, such as WASD or the arrows, and for keys like Space, Return, and the function keys. Common scancodes are A 4, Return 40, Backspace 42, Tab 43, Space 44, Right 79, Left 80, Down 81, and Up 82. <code>input.keyboard</code> holds the <code>shift</code>, <code>ctrl</code>, <code>alt</code>, and <code>meta</code> modifiers.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const SDL_SCANCODE_SPACE = 44;
 const SDL_SCANCODE_LEFT = 80;
 const SDL_SCANCODE_RIGHT = 79;
 const state = { paused: false, x: 160 };
-let previous = 0;
 
-function frame(timestamp) {
-  const dt = previous === 0 ? 0 : (timestamp - previous) / 1000;
-  previous = timestamp;
+function frame() {
+  const dt = sys.input.get().deltaTime;
 
   if (sys.input.isKeyPressed(SDL_SCANCODE_SPACE)) {
     state.paused = !state.paused;
@@ -290,39 +274,77 @@ function frame(timestamp) {
 
   sys.canvas.clear(&#x27;#f8fafc&#x27;);
   sys.canvas.setFillColor(&#x27;#111318&#x27;);
-  sys.canvas.drawText(state.paused ? &#x27;Paused&#x27; : &#x27;Arrow keys move&#x27;, 32, 48, 20);
+  sys.canvas.drawText(state.paused ? &#x27;Paused&#x27; : &#x27;Arrow keys move, Space pauses&#x27;, 32, 48, 20);
   sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
   sys.canvas.drawCircle(state.x, 100, 24);
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// SDL scancode for the Space key.
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// SDL scancodes for Space and the arrow keys.
 const SDL_SCANCODE_SPACE = 44;
-// SDL scancode for the Left Arrow key.
 const SDL_SCANCODE_LEFT = 80;
-// SDL scancode for the Right Arrow key.
 const SDL_SCANCODE_RIGHT = 79;
 
-// Toggle pause only on the frame where Space is pressed.
+// Toggle pause on the frame Space goes down.
 if (sys.input.isKeyPressed(SDL_SCANCODE_SPACE)) {
-  // Store pause state in your app model.
   state.paused = !state.paused;
 }
 
-// Move left while the Left Arrow key remains held.
+// Move while an arrow key is held, at 240 pixels per second.
 if (sys.input.isKeyDown(SDL_SCANCODE_LEFT)) {
-  // Multiply by dt so movement speed is frame-rate independent.
   state.x -= 240 * dt;
 }
-
-// Move right while the Right Arrow key remains held.
 if (sys.input.isKeyDown(SDL_SCANCODE_RIGHT)) {
-  // Use the same speed as the left movement path.
   state.x += 240 * dt;
 }</code></pre></div></div>
-<p>For text-entry-heavy applications, build a small input component that owns key repeat, selection, and editing behavior. Budo gives low-level input state; it does not impose a UI toolkit.</p>
-<h2 id="focus-and-pause-behavior" class="has-anchor">Focus and pause behavior <a class="heading-anchor" href="#focus-and-pause-behavior" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>The input snapshot exposes <code>focused</code>. Use it to pause interactions that should not continue when the window loses focus.</p>
+<p><code>isKeyPressed</code> reports only the first frame of a press. For a key that repeats while held, such as Backspace in an editor, combine <code>isKeyDown</code> with your own timing.</p>
+<h3 id="letter-shortcuts" class="has-anchor">Letter shortcuts <a class="heading-anchor" href="#letter-shortcuts" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>For a shortcut named after a letter, such as M for a map, match <code>input.text</code> instead of a scancode. A scancode names a key's position on a QWERTY keyboard, so on an AZERTY keyboard the M scancode is the key to the right of N. <code>input.text</code> holds the characters the user typed, as the keyboard layout produced them.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// The M key, wherever the layout puts it (and not while a text field is focused).
+const input = sys.input.get();
+if (!input.textInputActive &amp;&amp; input.text.toLowerCase().includes(&#x27;m&#x27;)) showMap = !showMap;</code></pre></div></div>
+<h2 id="text-input" class="has-anchor">Text input <a class="heading-anchor" href="#text-input" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>input.text</code> contains the text committed since the previous frame. The platform has already applied the keyboard layout, Shift, dead keys, and character mapping, so append it as it comes. Keys that edit rather than type, such as Backspace, are read with scancodes.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">const input = sys.input.get();
+// Append what the user typed.
+if (input.text) editorValue += input.text;
+// Backspace (scancode 42) removes the last character.
+if (sys.input.isKeyPressed(42)) editorValue = editorValue.slice(0, -1);</code></pre></div></div>
+<h3 id="text-editing-sessions" class="has-anchor">Text editing sessions <a class="heading-anchor" href="#text-editing-sessions" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>A real text field needs more: the soft keyboard on phones, input methods that compose characters (IMEs), autocorrection, and paste. Start a text editing session when the field gains focus. Budo then uses SDL text editing on desktop, a hidden browser editing element on the web, and Android's <code>InputConnection</code> with the soft keyboard. Each frame, apply the platform's edit, then send the field's value, its selection, and the caret's rectangle back with <code>updateTextInput</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// The field gained focus: start a session with its current value.
+sys.input.startTextInput({
+  text: editorValue,
+  selectionStart: caret,
+  selectionEnd: caret,
+  multiline: false,
+});
+
+function frame() {
+  const input = sys.input.get();
+  // Apply the platform&#x27;s edit first: it replaces the whole value.
+  if (input.textEdit) {
+    editorValue = input.textEdit.text;
+    caret = input.textEdit.selectionEnd;
+  }
+  // While input.composition.active, draw input.composition.text at the
+  // caret (usually underlined): it is not part of the value yet.
+  // Then send the value, the selection, and the caret&#x27;s rectangle back.
+  sys.input.updateTextInput({
+    text: editorValue,
+    selectionStart: caret,
+    selectionEnd: caret,
+    caret: { x: caretX, y: caretY, width: 1, height: lineHeight },
+  });
+  sys.animation.requestFrame(frame);
+}</code></pre></div></div>
+<p>Call <code>sys.input.stopTextInput()</code> when the field loses focus.</p>
+<p><code>input.textEdit</code> is a complete replacement of the value and selection. It covers typing, deletion, selection replacement, paste, autocorrection, and soft keyboard edits, so always apply it before calling <code>updateTextInput</code>: sending the old value back first would overwrite the platform's edit. <code>input.composition</code> holds <code>{ active, changed, text, selectionStart, selectionEnd }</code> for the text an input method is composing; it persists across frames, and only <code>changed</code> is per frame. Selection offsets count UTF-16 code units, and the caret rectangle is in the same physical pixels as canvas drawing, so the platform can place its candidate window next to it.</p>
+<p>On the web and on Android, the platform edits the field itself: paste, selection, and editing shortcuts already arrive as <code>textEdit</code>, and <code>input.nativeTextEditing</code> is <code>true</code>. On desktop it is <code>false</code>, so an editor implements its own shortcuts, using <code>sys.device.setClipboardText</code> and <code>sys.device.getClipboardText</code> for copy, cut, and paste (see <a href="sensors.html#clipboard">Clipboard</a>).</p>
+<p>On Android, starting a session shows the soft keyboard. Back and Done (or Return in a single-line field) finish any composition and deliver the final <code>textEdit</code> before the keyboard closes.</p>
+<p><code>examples/budo-ui</code> (<code>lib/widgets/text.js</code>) has a complete text field: focus, a blinking caret, navigation, selection, clipboard shortcuts, full replacement edits, underlined composition text, and candidate window placement.</p>
+<h2 id="focus" class="has-anchor">Focus <a class="heading-anchor" href="#focus" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>The input snapshot's <code>focused</code> is <code>false</code> while the app's window does not have focus. Use it to pause what should not continue in the background.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function drawPausedOverlay() {
   sys.canvas.clear(&#x27;#101116&#x27;);
   sys.canvas.setFillColor(&#x27;#f8fafc&#x27;);
@@ -344,21 +366,25 @@ function frame() {
   sys.animation.requestFrame(frame);
 }
 
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Read focus from the same snapshot as pointer and timing state.
-const input = sys.input.get();
+sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">function frame() {
+  const input = sys.input.get();
 
-// Stop interactive updates while the app is not focused.
-if (!input.focused) {
-  // Draw a calm paused state instead of advancing the simulation.
-  drawPausedOverlay();
-  // Keep rendering so the overlay remains responsive when focus returns.
+  // Without focus: show a paused state instead of advancing the game.
+  if (!input.focused) {
+    drawPausedOverlay();
+    // Keep the loop running so the app resumes when focus returns.
+    sys.animation.requestFrame(frame);
+    return;
+  }
+
+  // With focus: update and draw as usual.
+  update(input);
+  draw();
   sys.animation.requestFrame(frame);
-  // Leave the current frame early.
-  return;
 }</code></pre></div></div>
-<p>For games, this small guard prevents accidental movement when the app regains focus. For creative tools, you might still render but stop interpreting pointer drags until focus returns.</p>
-<h2 id="state-shape" class="has-anchor">State shape <a class="heading-anchor" href="#state-shape" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Budo does not prescribe state management. A plain object is often the best start.</p>
+<p>In a game, this guard keeps the simulation still while the player is in another window. A creative tool might keep drawing but ignore pointer drags until focus returns.</p>
+<h2 id="organizing-state" class="has-anchor">Organizing state <a class="heading-anchor" href="#organizing-state" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Budo does not prescribe a way to manage state. A plain object is a good start.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="const state = {
   mode: &#x27;idle&#x27;,
   x: 120,
@@ -372,82 +398,40 @@ sys.canvas.clear(&#x27;#f8fafc&#x27;);
 sys.canvas.setFillColor(&#x27;#111318&#x27;);
 sys.canvas.drawText(&#x27;mode: &#x27; + state.mode, 32, 48, 20);
 sys.canvas.setFillColor(&#x27;#7c6ff7&#x27;);
-sys.canvas.drawCircle(state.x, state.y, 24);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Keep app state in one plain object while the project is small.
+sys.canvas.drawCircle(state.x, state.y, 24);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// All of the app&#x27;s state in one plain object.
 const state = {
-  // Use a string mode for high-level interaction state.
+  // The current interaction mode.
   mode: &#x27;idle&#x27;,
-  // Store the current x position of the active object.
+  // Position of the active object, in pixels.
   x: 120,
-  // Store the current y position of the active object.
   y: 120,
-  // Store horizontal velocity in pixels per second.
+  // Velocity, in pixels per second.
   velocityX: 0,
-  // Store vertical velocity in pixels per second.
   velocityY: 0,
-  // Use -1 when nothing is selected.
+  // -1 when nothing is selected.
   selectedId: -1
 };</code></pre></div></div>
-<p>As the app grows, split behavior by responsibility rather than by framework convention. A common shape is <code>state.js</code>, <code>input.js</code>, <code>draw.js</code>, and <code>main.js</code>, with <code>main.js</code> staying short enough to reveal the frame flow.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Import the shared state object.
+<p>As the app grows, split it by responsibility. A common shape is <code>state.js</code>, <code>input.js</code>, <code>draw.js</code>, and a short <code>main.js</code> that shows the frame's flow at a glance.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// The shared state.
 import { state } from &#x27;./state.js&#x27;;
-// Import the input-to-state translation layer.
+// Turns input into state changes.
 import { updateFromInput } from &#x27;./input.js&#x27;;
-// Import the drawing layer.
+// Draws the state.
 import { drawScene } from &#x27;./draw.js&#x27;;
 
-// Keep the frame function short enough to show the app flow.
 function frame(timestamp) {
-  // Read input once and pass the snapshot down.
+  // Read the input once and pass it down.
   const input = sys.input.get();
-  // Mutate state from input and time.
+  // Update the state from input and time.
   updateFromInput(state, input, timestamp);
-  // Draw the state after it has been updated.
+  // Draw the updated state.
   drawScene(state);
-  // Continue rendering.
+  // Schedule the next frame.
   sys.animation.requestFrame(frame);
 }</code></pre></div></div>
-<p>Keep runtime handles in state only when their lifecycle is clear. Shader programs, paths, fonts, SVG handles, audio buffers, database handles, and neural model IDs all represent resources managed by the runtime.</p>
-<h2 id="touch-friendly-interaction" class="has-anchor">Touch-friendly interaction <a class="heading-anchor" href="#touch-friendly-interaction" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>When designing an app that may ship to Android or web, avoid relying solely on hover, right-click, or dense keyboard shortcuts. Budo exposes the primitives, but the ergonomic layer is yours.</p>
-<p>A useful pattern is to define app actions first, then map pointer and keyboard input into those actions.</p>
-<div class="code-block" data-budo-entry="main.js" data-budo-code="function collectActions(input) {
-  return {
-    confirm: input.pointer.pressed || sys.input.isKeyPressed(44),
-    cancel: sys.input.isKeyPressed(41),
-    x: input.pointer.x,
-    y: input.pointer.y
-  };
-}
-
-function frame() {
-  const input = sys.input.get();
-  const actions = collectActions(input);
-  sys.canvas.clear(actions.confirm ? &#x27;#2dd4bf&#x27; : &#x27;#101116&#x27;);
-  sys.canvas.setFillColor(&#x27;#ffffff&#x27;);
-  sys.canvas.drawText(actions.confirm ? &#x27;confirm&#x27; : &#x27;press or tap&#x27;, 32, 72, 22);
-  sys.canvas.drawCircle(actions.x, actions.y, 12);
-  sys.animation.requestFrame(frame);
-}
-
-sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span><button class="code-run-button" type="button">run</button></div><div class="code-body"><pre><code class="language-javascript">// Convert platform-specific input into app-level actions.
-function collectActions(input) {
-  // Return a small object that the rest of the app can understand.
-  return {
-    // Confirm with either the primary pointer or the Space key.
-    confirm: input.pointer.pressed || sys.input.isKeyPressed(44),
-    // Cancel with the Escape key.
-    cancel: sys.input.isKeyPressed(41),
-    // Carry the pointer x coordinate for controls that need a position.
-    x: input.pointer.x,
-    // Carry the pointer y coordinate for controls that need a position.
-    y: input.pointer.y
-  };
-}</code></pre></div></div>
-<p>The drawing code then reflects the same action model on every platform.</p>
-<h2 id="long-work-and-responsiveness" class="has-anchor">Long work and responsiveness <a class="heading-anchor" href="#long-work-and-responsiveness" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Frame callbacks should not block on long computations. A blocking loop prevents input polling, network completion callbacks, audio responsiveness, and rendering.</p>
-<p>For expensive work you control, break it into chunks and advance it over several frames. For network and file operations, use the runtime APIs as intended. For model inference, consider when a synchronous run is acceptable and when the app should visually communicate that it is working.</p>
-<p>The runtime is small by design, which means your app structure matters. Clear frame code is one of the best performance tools you have.</p>
+<p>Shader programs, paths, fonts, SVG images, audio buffers, databases, and neural models are runtime resources identified by handles. Keep a handle in your state for as long as you use the resource, and release it when you are done.</p>
+<h2 id="long-work" class="has-anchor">Long work <a class="heading-anchor" href="#long-work" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Everything in a frame runs before the next frame can start, so a long computation freezes input, network callbacks, audio streams, and drawing. Split expensive work you control into chunks and advance it a little each frame, showing progress as it goes. File and network APIs that take callbacks or return promises already keep the loop running. For model inference, decide whether a synchronous run is short enough, and if not, show the user that the app is working.</p>
             </article>
 
             <nav class="doc-pager">
@@ -565,11 +549,15 @@ function collectActions(input) {
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {

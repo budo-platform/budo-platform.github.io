@@ -40,14 +40,19 @@
             <div class="doc-sidebar-inner">
                 <div class="doc-sidebar-title">Documentation</div>
                 <ul class="doc-nav">
-                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
                     <li><a href="getting-started.html">Getting Started</a></li>
                     <li><a href="project-model.html">Project Model</a></li>
                     <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
                     <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
                     <li><a href="input-time-state.html">Input, Time, and State</a></li>
                     <li><a href="data-files-network.html">Data, Files, and Network</a></li>
-                    <li><a href="media-devices-ai.html">Audio, MIDI, Sensors, and AI</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html" class="current">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
@@ -58,75 +63,91 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="packaging-and-deployment" class="has-anchor">Packaging and Deployment <a class="heading-anchor" href="#packaging-and-deployment" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>A Budo app starts as a folder, but the same folder can be run locally, exported to a static web build, or packaged as an Android APK or AAB. The packaging tools read the same entrypoints, project-relative assets, and <code>app.json</code> metadata used by the runtime.</p>
-<h2 id="local-desktop-runs" class="has-anchor">Local desktop runs <a class="heading-anchor" href="#local-desktop-runs" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Use <code>run</code> while developing.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run one of the bundled examples on desktop.
-budo run examples/demo
-# Run your app with an explicit window size and title.
-budo run my-app --width 1280 --height 720 --title &quot;My App&quot;</code></pre></div></div>
-<p>The implicit shorthand also works:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Use the shorthand form when you only want to run a project.
-budo my-app</code></pre></div></div>
-<p>Useful <code>run</code> options include <code>--fullscreen</code>, <code>--no-vsync</code>, and <code>--file-root &lt;path&gt;</code>. <code>--file-root</code> changes the <code>sys.files</code> virtual <code>files/</code> mount on desktop without changing its <code>assets/</code> mount, the <code>sys.assets</code> convenience wrapper, or project-relative loaders such as shaders and fonts.</p>
-<h2 id="project-bootstrap" class="has-anchor">Project bootstrap <a class="heading-anchor" href="#project-bootstrap" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p><code>init</code> writes a starter project into the target directory.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project with metadata and editor helper files.
+<p>A Budo app is a folder, and the same folder ships everywhere. You develop it with <code>budo run</code>, export it as a static website with <code>budo web-export</code>, and package it for Android with <code>budo android-apk</code> and <code>budo android-aab</code>. Every target reads the same entry file, the same project-relative assets, and the same <code>app.json</code>.</p>
+<p>This page walks that path in order: run on desktop, export to web, build an Android debug APK, then build Android releases.</p>
+<h2 id="step-1-run-on-desktop" class="has-anchor">Step 1: Run on desktop <a class="heading-anchor" href="#step-1-run-on-desktop" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>If you are starting from scratch, <code>budo init</code> writes a starter project: <code>main.js</code>, an <code>app.json</code> (it asks a few questions; press Enter to accept the defaults), and the editor files <code>jsconfig.json</code>, <code>budo.d.ts</code>, and <code>budo-llm.md</code> that give you autocompletion and an API reference.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project in my-app/.
 budo init my-app</code></pre></div></div>
-<p>It creates <code>main.js</code>, <code>app.json</code>, <code>jsconfig.json</code>, a copy of the developer API reference, and TypeScript declarations. This is the quickest way to get editor autocompletion for the runtime globals.</p>
-<h2 id="web-export" class="has-anchor">Web export <a class="heading-anchor" href="#web-export" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>An option to run your application is to package it for the Web. In this case, the <code>web-export</code> command will export your application as a static html/css/js content that you can integrate in any Web page. And the <code>web-serve</code> command launches a small HTTP server to serve your application from your computer.</p>
-<p>The web target packages a self-contained static folder with the Emscripten runtime and your project assets.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export a self-contained static web folder.
+<p>Run the folder while you develop. <code>budo my-app</code> is shorthand for <code>budo run my-app</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Run the app in a desktop window.
+budo run my-app
+# Restart the app whenever a project file changes.
+budo run my-app --watch
+# Choose the window size and title.
+budo run my-app --width 1280 --height 720 --title &quot;My App&quot;</code></pre></div></div>
+<p><code>run</code> also accepts <code>--fullscreen</code>, <code>--no-vsync</code>, and <code>--file-root &lt;path&gt;</code>, which moves the writable <code>files/</code> folder of <code>sys.files</code> to another directory. Run <code>budo help</code> for the full list.</p>
+<h2 id="step-2-export-to-web" class="has-anchor">Step 2: Export to web <a class="heading-anchor" href="#step-2-export-to-web" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>budo web-export</code> turns the app into a self-contained static folder: an <code>index.html</code>, the Budo web runtime, and your project files. Upload that folder to any static host, or embed it in an existing site.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export to dist/web (the default).
+budo web-export my-app
+# Export to a folder of your choice.
 budo web-export my-app -o dist/my-app-web</code></pre></div></div>
-<p>To serve locally:</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Serves your application as a local website 
-budo web-serve DIRECTORY</code></pre></div></div>
-<p>Web builds use QuickJS and Lua compiled through Emscripten. Raw UDP and RTP-MIDI are unavailable on web because browsers do not expose UDP sockets.</p>
-<h2 id="android-packaging" class="has-anchor">Android packaging <a class="heading-anchor" href="#android-packaging" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<blockquote><p><strong>Budo Pro:</strong> Android APK/AAB packaging is a paid feature. Public builds keep these commands visible, but require the private Android feature pack under <code>private/android</code> before packaging is enabled.</p></blockquote>
-<p>To package your application for Android, you can use the <code>android-apk</code> command. It will produce an <code>.apk</code> file that you can upload on your device with <code>adb</code>. The <code>andoid-aab</code> command produces a signed Android <code>.aab</code> file that is directly usable in the Google Console.</p>
-<p>Android packaging is driven by the desktop <code>budo</code> binary.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build a debug APK for local testing.
-budo android-apk my-app
-# Build a release APK.
-budo android-apk my-app --release
-# Build a release Android App Bundle for store delivery.
-budo android-aab my-app --release</code></pre></div></div>
-<p>Use <code>--install</code> with <code>android-apk</code> to install the produced APK on connected adb devices.</p>
-<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build and install the APK on connected adb devices.
-budo android-apk my-app --install</code></pre></div></div>
-<p>The packager applies identity and release metadata, bundles the selected app's runtime assets, and writes the final APK/AAB to <code>dist/</code> by default. Temporary paths and generated files are implementation details, not stable API.</p>
-<h2 id="android-metadata" class="has-anchor">Android metadata <a class="heading-anchor" href="#android-metadata" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<blockquote><p><strong>Budo Pro:</strong> These metadata fields are consumed by the paid Android packaging feature.</p></blockquote>
-<p>The same <code>app.json</code> used by your app can carry Android release details.</p>
+<p>To try the web build on your machine, <code>budo web-serve</code> exports the app and serves it at <code>http://localhost:8080</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Serve the app locally.
+budo web-serve my-app
+# Listen on another port, reachable from other devices on the network.
+budo web-serve my-app --listen 0.0.0.0:8084</code></pre></div></div>
+<p>Always open a web build over HTTP. Browsers apply stricter security rules to pages opened from <code>file://</code>, and the app may fail to load.</p>
+<p>The web target runs JavaScript, TypeScript, and Lua apps. A few features are not available in browsers: WebAssembly apps, UDP sockets, network MIDI, and AI inference. HTTP requests also follow the browser's CORS rules, so the server you call must allow your site's origin.</p>
+<h2 id="step-3-build-an-android-debug-apk" class="has-anchor">Step 3: Build an Android debug APK <a class="heading-anchor" href="#step-3-build-an-android-debug-apk" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<blockquote><p><strong>Budo Pro:</strong> Android packaging is a Budo Pro feature. During Budo's public launch, the released Budo binaries include it for free; a later release will make it a paid feature. Budo built from source without the private Android feature pack keeps the commands, which then report that packaging is unavailable.</p></blockquote>
+<p>Android packaging needs a Budo build that includes it (the released binaries do), a Java JDK, and the Android SDK and NDK. Budo looks for the SDK in <code>ANDROID_HOME</code>, then <code>ANDROID_SDK_ROOT</code>, then the usual install locations, and uses <code>JAVA_HOME</code> when it is set. On the first Android build, Budo downloads its Android support files and caches them for the next builds.</p>
+<p>Before the first build, give the app an identity in <code>app.json</code>. Every field is optional, but the package name is how Android tells apps apart, so set it before you install the app anywhere.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
   &quot;name&quot;: &quot;Pulse Orbit&quot;,
   &quot;package_name&quot;: &quot;com.example.pulseorbit&quot;,
-  &quot;version_name&quot;: &quot;1.0.0&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
   &quot;version_code&quot;: 1,
-  &quot;orientation&quot;: &quot;portrait&quot;,
-  &quot;fullscreen&quot;: true,
-  &quot;icon&quot;: &quot;icon.png&quot;,
-  &quot;network&quot;: [&quot;api.example.com&quot;],
-  &quot;filesystem&quot;: false,
-  &quot;permissions&quot;: [&quot;INTERNET&quot;]
+  &quot;icon&quot;: &quot;icon.svg&quot;,
+  &quot;orientation&quot;: &quot;portrait&quot;
 }</code></pre></div></div>
-<p>Fields are optional, but release packages should set a stable package identifier and version code. Icons may be PNG or SVG depending on the packaging path and available tooling.</p>
-<p>The packager skips packaging metadata that should not become runtime assets, including store listing folders, icon source files used for generation, and keystore files.</p>
-<h2 id="signing-and-release-builds" class="has-anchor">Signing and release builds <a class="heading-anchor" href="#signing-and-release-builds" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Debug builds use the normal Android debug signing flow. Release builds need release signing configuration. Keep signing material outside the runtime asset set and outside source control.</p>
-<p>The Android packaging helpers can read signing-related metadata from <code>app.json</code>. For Play Store delivery, prefer <code>android-aab --release</code> once you have verified the APK locally.</p>
-<h2 id="store-listing-scaffolding" class="has-anchor">Store listing scaffolding <a class="heading-anchor" href="#store-listing-scaffolding" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Apps can include store listing metadata and media beside their project files. The packager can prepare Play Store listing scaffolding while keeping that material out of the runtime asset bundle.</p>
-<p>This is useful for examples such as games that ship with screenshots, feature images, privacy pages, and localized descriptions.</p>
-<h2 id="build-prerequisites" class="has-anchor">Build prerequisites <a class="heading-anchor" href="#build-prerequisites" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Desktop builds require CMake, a C and C++ compiler, SDL2, Skia, and platform libraries such as FreeType, Fontconfig, OpenSSL, and ALSA where applicable. CMake fetches QuickJS, Lua, Wasmtime, SQLite, and several pinned dependencies during configuration.</p>
-<p>Android builds require the private Budo Pro feature pack, the Android SDK and NDK, Android-ready native dependencies prepared by the Pro setup flow, and a rebuilt desktop Budo binary. ONNX Runtime Android support is prepared separately when neural inference is enabled for Android.</p>
-<p>Web builds require an activated Emscripten SDK and the Skia-WASM setup used by the <code>web/</code> CMake project.</p>
-<h2 id="release-checklist" class="has-anchor">Release checklist <a class="heading-anchor" href="#release-checklist" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>Before shipping, run the app on every target you claim to support. Check capability branches, asset paths, network policy, file policy, shader compilation, display density, touch ergonomics, audio start behavior, and package metadata.</p>
-<p>For Android, test both debug and release artifacts. For web, serve the exported folder over HTTP rather than opening it directly from the filesystem; browser security rules are different under <code>file://</code>.</p>
+<p>Then build a debug APK. With <code>--install</code>, Budo also installs it on every device connected through <code>adb</code>.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build a debug APK into dist/.
+budo android-apk my-app
+# Build it and install it on the connected devices.
+budo android-apk my-app --install</code></pre></div></div>
+<p>Android packages JavaScript, TypeScript, Lua, and native C apps; WebAssembly apps cannot be packaged. On Android, the system Back button quits the app; your app does not receive it as a key.</p>
+<h3 id="android-settings-in-appjson" class="has-anchor">Android settings in app.json <a class="heading-anchor" href="#android-settings-in-appjson" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p>The packager reads these <code>app.json</code> fields:</p>
+<ul><li><code>name</code> is the title in the launcher. <code>package_name</code> is the Android application ID, such as <code>com.example.pulseorbit</code>; when you leave it out, Budo derives one from <code>name</code>.</li><li><code>version</code> (or <code>version_name</code>) is the version users see. <code>version_code</code> is an integer that must increase with every release you publish.</li><li><code>icon</code> is a PNG or SVG file in the app folder. Budo generates every launcher icon size from it, so use a square image of at least 512 x 512 pixels.</li><li><code>orientation</code> is <code>portrait</code>, <code>landscape</code>, or <code>unspecified</code>. <code>fullscreen</code> (default <code>true</code>) runs the app in immersive mode.</li><li><code>permissions</code> lists Android permission names, without the <code>android.permission.</code> prefix. An app that records with <code>sys.audio.openInput</code> needs <code>&quot;RECORD_AUDIO&quot;</code>; see <a href="audio-midi.html">Audio and MIDI</a>.</li><li><code>network</code> adds the <code>INTERNET</code> permission for you, and <code>&quot;filesystem&quot;: true</code> adds shared-storage access; see <a href="data-files-network.html">Data, Files, and Network</a>.</li><li><code>min_sdk</code> and <code>target_sdk</code> set the Android API levels, 26 and 35 by default.</li><li><code>package_ignore</code> lists project-relative files or folders to leave out of the package.</li></ul>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;permissions&quot;: [&quot;RECORD_AUDIO&quot;],
+  &quot;package_ignore&quot;: [&quot;docs&quot;, &quot;tests&quot;]
+}</code></pre></div></div>
+<p>Everything in the app folder is bundled with the app, except entries named <code>build</code>, <code>dist</code>, <code>.budo</code>, <code>store_listing</code>, <code>keystore</code>, or <code>icon.png</code>, and anything listed in <code>package_ignore</code>.</p>
+<h2 id="step-4-build-android-releases" class="has-anchor">Step 4: Build Android releases <a class="heading-anchor" href="#step-4-build-android-releases" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>A release build is optimized, and for publishing it must be signed with your release key. Create a keystore with the standard Android tools, then point <code>app.json</code> at it. Passwords never go in <code>app.json</code>: the <code>signing</code> block names the environment variables that hold them.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">app.json</span></div><div class="code-body"><pre><code class="language-json">{
+  &quot;package_name&quot;: &quot;com.example.pulseorbit&quot;,
+  &quot;version&quot;: &quot;1.1.0&quot;,
+  &quot;version_code&quot;: 2,
+  &quot;signing&quot;: {
+    &quot;keystore_path&quot;: &quot;keystore/release.jks&quot;,
+    &quot;key_alias&quot;: &quot;upload&quot;,
+    &quot;keystore_password_env&quot;: &quot;KEYSTORE_PASSWORD&quot;,
+    &quot;key_password_env&quot;: &quot;KEY_PASSWORD&quot;
+  }
+}</code></pre></div></div>
+<p><code>keystore_path</code> is relative to the app folder, or absolute. A folder named <code>keystore</code> is never bundled into the app, but keep it out of source control as well.</p>
+<p>To publish on Google Play, build an Android App Bundle. <code>android-aab</code> builds a release by default, and it refuses to build one without the release key.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Provide the passwords for this shell session.
+export KEYSTORE_PASSWORD=&quot;your-keystore-password&quot;
+export KEY_PASSWORD=&quot;your-key-password&quot;
+# Build a signed release AAB into dist/, ready for Play Console.
+budo android-aab my-app</code></pre></div></div>
+<p>You can also build a release APK, to test the optimized build on your own devices.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Build a release APK into dist/.
+budo android-apk my-app --release</code></pre></div></div>
+<p>With a <code>signing</code> block and its passwords, the release APK is signed with your release key. Without them, Budo signs it with the Android debug key and says so in its build summary. An APK signed with the debug key is for testing only: never publish it. Each computer has its own debug key, so before installing one on a device that holds the app from another computer, uninstall the old copy.</p>
+<p>Set <code>&quot;shrink&quot;: true</code> in <code>app.json</code> to shrink release builds with R8.</p>
+<h3 id="packaging-options" class="has-anchor">Packaging options <a class="heading-anchor" href="#packaging-options" aria-label="Copy link to this section" title="Copy link">#</a></h3>
+<p><code>android-apk</code> and <code>android-aab</code> accept the same options:</p>
+<ul><li><code>--debug</code> and <code>--release</code> choose the build type. APKs default to debug, AABs to release.</li><li><code>-o &lt;dir&gt;</code> (or <code>--output &lt;dir&gt;</code>) writes the package to <code>&lt;dir&gt;</code> instead of <code>dist/</code>.</li><li><code>--install</code> installs the APK on every connected <code>adb</code> device. It works with <code>android-apk</code> only.</li><li><code>--clean</code> discards the app's previous Android build and rebuilds from scratch.</li><li><code>--no-build</code> prepares the Android project without building it.</li></ul>
+<p>Budo keeps one Android build directory per app so that rebuilds are fast. <code>budo cache android inspect</code> lists them, and <code>budo cache android clean --all</code> (or <code>clean &lt;package&gt;</code>) removes them.</p>
+<h2 id="before-you-ship" class="has-anchor">Before you ship <a class="heading-anchor" href="#before-you-ship" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Test the app on every target you plan to ship. Check that it degrades gracefully when a capability is missing, that every asset path resolves, and that <code>network</code> and <code>filesystem</code> in <code>app.json</code> grant only what the app needs. Check text and touch targets at the real display density, and remember that audio on web starts only after the user interacts with the page.</p>
+<p>For Android, install and try the release build on a real device before you upload the AAB. For web, test the exported folder over HTTP, the way your users will load it.</p>
             </article>
 
             <nav class="doc-pager">
@@ -244,11 +265,15 @@ budo android-apk my-app --install</code></pre></div></div>
                     if (event.source !== iframe.contentWindow) return;
                     if (event.data.type === 'iframe-ready' && !codeSent) {
                         codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
                         iframe.contentWindow.postMessage({
                             source: 'budo-playground',
                             type: 'run',
-                            code: code,
-                            entryName: entryName
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
                         }, '*');
                     }
                     if (event.data.type === 'error') {
