@@ -85,6 +85,7 @@ sys.db.execute(database, `
         name TEXT NOT NULL,
         payload TEXT NOT NULL,
         command_count INTEGER DEFAULT 0,
+        sort_order INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
     )
@@ -102,55 +103,7 @@ sys.db.execute(database, `
     )
 `);
 
-function ensurePresetSequencesAllowMultiple(): void {
-    const indexes = sys.db.query(database, 'PRAGMA index_list(preset_sequences)');
-    let hasUniquePresetSequenceIndex = false;
-    for (let index = 0; index < indexes.length; index++) {
-        const row = indexes[index];
-        if (Number(row.unique || row['unique'] || 0) !== 0) {
-            hasUniquePresetSequenceIndex = true;
-        }
-    }
-
-    if (hasUniquePresetSequenceIndex) {
-        sys.db.execute(database, 'DROP TABLE IF EXISTS preset_sequences_migration');
-        sys.db.execute(database, `
-            CREATE TABLE preset_sequences_migration (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                preset_id INTEGER NOT NULL,
-                payload TEXT NOT NULL,
-                event_count INTEGER DEFAULT 0,
-                duration_ms INTEGER DEFAULT 0,
-                created_at TEXT DEFAULT (datetime('now')),
-                updated_at TEXT DEFAULT (datetime('now'))
-            )
-        `);
-        sys.db.execute(database, `
-            INSERT INTO preset_sequences_migration (id, preset_id, payload, event_count, duration_ms, created_at, updated_at)
-            SELECT id, preset_id, payload, event_count, duration_ms, created_at, updated_at FROM preset_sequences ORDER BY id ASC
-        `);
-        sys.db.execute(database, 'DROP TABLE preset_sequences');
-        sys.db.execute(database, 'ALTER TABLE preset_sequences_migration RENAME TO preset_sequences');
-    }
-
-    sys.db.execute(database, 'CREATE INDEX IF NOT EXISTS idx_preset_sequences_preset_id ON preset_sequences (preset_id, id)');
-}
-
-ensurePresetSequencesAllowMultiple();
-
-function ensurePresetsHaveSortOrder(): void {
-    const columns = sys.db.query(database, 'PRAGMA table_info(presets)');
-    let hasSortOrder = false;
-    for (let index = 0; index < columns.length; index++) {
-        if (String(columns[index].name || '') === 'sort_order') hasSortOrder = true;
-    }
-    if (!hasSortOrder) {
-        sys.db.execute(database, 'ALTER TABLE presets ADD COLUMN sort_order INTEGER DEFAULT 0');
-        sys.db.execute(database, 'UPDATE presets SET sort_order = (SELECT COUNT(*) FROM presets p2 WHERE p2.song_id = presets.song_id AND p2.id <= presets.id)');
-    }
-}
-
-ensurePresetsHaveSortOrder();
+sys.db.execute(database, 'CREATE INDEX IF NOT EXISTS idx_preset_sequences_preset_id ON preset_sequences (preset_id, id)');
 
 sys.db.execute(database, `
     CREATE TABLE IF NOT EXISTS app_state (
@@ -1850,8 +1803,6 @@ function validateDatabaseExport(text: string): any {
 }
 
 function reloadImportedDatabase(): void {
-    ensurePresetSequencesAllowMultiple();
-    ensurePresetsHaveSortOrder();
     ensureDefaultSong();
     selectedSongId = Number(loadAppState('selected_song_id', '0'));
     selectedPresetId = Number(loadAppState('selected_preset_id', '0'));
