@@ -64,17 +64,30 @@
             <article class="doc-article">
                 <h1 id="installation" class="has-anchor">Installation <a class="heading-anchor" href="#installation" aria-label="Copy link to this section" title="Copy link">#</a></h1>
 <p>Budo ships as a single command-line program, <code>budo</code>. You use it to create projects, run them on your desktop, export them to the web, and package them for Android.</p>
-<h2 id="install-with-the-script" class="has-anchor">Install with the script <a class="heading-anchor" href="#install-with-the-script" aria-label="Copy link to this section" title="Copy link">#</a></h2>
-<p>On macOS and Linux, run the installer script:</p>
+<h2 id="download-the-executable" class="has-anchor">Download the executable <a class="heading-anchor" href="#download-the-executable" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>On macOS:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Download the budo binary for your system and install it in ~/.local/bin.
-curl -fsSL https://budo-platform.dev/install.sh | bash</code></pre></div></div>
-<p>The script detects your operating system and CPU (x86_64 or arm64), then installs the binary at <code>~/.local/bin/budo</code>. It does not need root and does not edit your shell profile. If <code>~/.local/bin</code> is not on your <code>PATH</code> yet, the script prints the line to add to your profile:</p>
+curl -fL -o budo https://github.com/budo-platform/budo/releases/latest/download/budo-macos-aarch64
+
+# Give it execution permission
+chmod +x budo &amp;&amp; ./budo help</code></pre></div></div>
+<p>On Linux:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Download the budo binary for your system and install it in ~/.local/bin.
+curl -fL -o budo https://github.com/budo-platform/budo/releases/latest/download/budo-linux-x86_64
+
+# Give it execution permission
+chmod +x budo &amp;&amp; ./budo help</code></pre></div></div>
+<h2 id="make-it-globally-accessible" class="has-anchor">Make it globally accessible <a class="heading-anchor" href="#make-it-globally-accessible" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>If you want to run Budo easily, you can copy it to your <code>~/.local/bin</code> directory:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash">mv budo ~/.local/bin/</code></pre></div></div>
+<p>If <code>~/.local/bin</code> is not on your <code>PATH</code> yet, add this to your profile:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Make the commands in ~/.local/bin available in new terminals.
 export PATH=&quot;$HOME/.local/bin:$PATH&quot;</code></pre></div></div>
+<p>Now, you can run <code>budo</code> from any directory!</p>
 <p>Open a new terminal and check that the command works:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Print the installed version and build details.
 budo version</code></pre></div></div>
-<p>The <a href="../index.html#download">download section</a> of the Budo website has other packages: a macOS DMG, a Linux AppImage and Flatpak, and a Windows zip.</p>
+<p>On Windows, you can download the latest <a href="https://github.com/budo-platform/budo/releases/latests/download/budo-windows-x86_64.zip">budo-windows-x86_64.zip</a>, extract it and run the <code>budo.exe</code> file from a terminal.</p>
 <h2 id="the-budo-command" class="has-anchor">The budo command <a class="heading-anchor" href="#the-budo-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>These are the commands you will use most:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project in my-app/.
