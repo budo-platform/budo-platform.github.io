@@ -1,5 +1,8 @@
 {
-  "name": "midi_dumper",
+  "name": "Midi Dumper",
   "author": "Unknown",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "screenshots": [
+    "screenshot.png"
+  ]
 }

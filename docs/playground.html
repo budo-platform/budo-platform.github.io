@@ -694,13 +694,33 @@
         <div class="toolbar-divider"></div>
 
         <select id="example-select">
-            <option value="shader_demo">Shader demo</option>
-            <option value="canvas_texture">Canvas texture</option>
-            <option value="clock_demo">Analog clock</option>
+            <!-- PLAYGROUND-DEMOS:START -->
+            <option value="09_typescript_hello">TypeScript Hello</option>
+            <option value="11_midi">MIDI</option>
+            <option value="18_llamacpp_chat">Tiny Local LLM</option>
+            <option value="3d_cube">3D Cube</option>
+            <option value="3d_mesh_cube">3D Mesh Cube</option>
+            <option value="3d_mesh_obj">3D Mesh from OBJ</option>
+            <option value="3d_textured_cube">3D Textured Cube</option>
+            <option value="audio_player">The Golden Dial</option>
+            <option value="canvas_texture">Canvas Texture</option>
+            <option value="chronometer">Chronometer</option>
+            <option value="demo">Demo</option>
+            <option value="lua_3d_cube">Lua 3D Cube</option>
+            <option value="lua_demo">Lua Demo</option>
+            <option value="module">Module</option>
+            <option value="neural">Neural Demo</option>
+            <option value="neural_staged">Neural Staged Demo</option>
             <option value="particles">Particles</option>
-            <option value="3d_cube">3D cube</option>
-            <option value="03_lua_spaceshooter">Lua space shooter</option>
-            <option value="01_drum_loop_machine">Drum loop machine</option>
+            <option value="ruler">Ruler</option>
+            <option value="shader_bloom">Shader Bloom</option>
+            <option value="shader_crt">Shader CRT</option>
+            <option value="shader_debug">Shader Debug</option>
+            <option value="shader_demo" selected>Shader Demo</option>
+            <option value="shader_plasma">Shader Plasma</option>
+            <option value="shapes_demo">Shapes Demo</option>
+            <option value="text_demo">Text Demo</option>
+            <!-- PLAYGROUND-DEMOS:END -->
         </select>
 
         <button id="btn-run" class="btn btn-run" title="Run (Ctrl+Enter)">&#9654; Run</button>
@@ -1216,7 +1236,7 @@
             fileSelect.hidden = false;
             setStatus('', 'Loading example…');
             try {
-                const base = new URL('demos/' + encodeURIComponent(name) + '/', location.href);
+                const base = new URL('demos-playground/' + encodeURIComponent(name) + '/', location.href);
                 const page = await fetch(new URL('index.html', base));
                 if (!page.ok) throw new Error('Demo index: HTTP ' + page.status);
                 const documentHtml = new DOMParser().parseFromString(await page.text(), 'text/html');
