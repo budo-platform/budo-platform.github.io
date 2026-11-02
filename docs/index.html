@@ -91,20 +91,16 @@
             </h1>
             <p class="hero-lead">
                 Budo is a small multi-platform runtime for creative coding. With it, you can build 2D/3D/audio tools,
-                games,
-                and quick prototypes. I bet you can also do something serious with it!
+                games, and quick prototypes. I bet you can also do something serious with it!
                 Your application code uses a convenient API to control
                 Graphics, Audio, Midi, Text/Mouse/Gestures input and more.
                 Multiple languages are supported: Typescript (*), Javascript, Lua and Web Assembly, use the one you
                 prefer.
                 The same code runs on Desktop, Web and Mobile.
-                Budo is LLM ready with a small 30kb instruction file to guide your agents,
-                leaving their context free for creativity.
-                The goal is to give you the best development experience and that you don't care about the underlying
-                platform details.
-                All of that outside of browser apis and constraints. It's maybe something between Processing, Raylib and
-                Dart,
-                but with a modern twist, multiple language support and multi-platform capabilities.
+                Budo is LLM ready with a small 30kb instruction file to guide your agents.
+                The goal is to give you the best development experience in a simple, powerful and pleasant environment.
+                All of that outside of browser apis and constraints. It's maybe something between Processing, DearIM and
+                React Native, with a modern twist, multiple language support and multi-platform capabilities.
             </p>
             <p class="hero-kicker">Open-source MIT core. Early-stage</p>
             <div class="hero-pills" aria-label="Budo highlights">
@@ -125,11 +121,11 @@
      ════════════════════════════════════════════════════════════════════ -->
     <section id="demos">
         <div class="section-inner section-center">
-            <p class="section-eyebrow">Demos</p>
-            <h2 class="section-title">Little experiments, real runtime</h2>
+            <p class="section-eyebrow">Web hosting</p>
+            <h2 class="section-title">A small collection of demos</h2>
             <p class="section-subtitle">
-                Here are some demos you can run on this page (you'll be able to download for Android too).
-                There is a load more small samples in the <a href="playground.html">Playground</a>.
+                Here are some demos you can run on this page (you'll be able to download the APKs for Android too).
+                And there is a load more very small examples in the <a href="playground.html">Playground</a>.
             </p>
         </div>
 
@@ -324,6 +320,9 @@ sys.animation.requestFrame(frame);</code></pre>
                     bricks used by Budo are also used in Web technologies! But keep in mind that
                     we are not using Web APIs here. There is no DOM, no CSS, no HTML, no
                     browser view wrapping in desktop mode or Android. Budo has its own execution model.
+                    For instance the `sys.animation.requestFrame` function is used to ask
+                    the next frame drawing, and reminds the browser `requestAnimationFrame` function.
+                    All the APIs in Budo are under the `sys` object.
                 </p>
 
                 <p class="section-center" style="margin-top: 1em; margin-bottom: 1em;">
@@ -365,6 +364,7 @@ sys.animation.requestFrame(frame);</code></pre>
                     <p>
                         GLSL shaders, and many other 3D primitives are available to compose with the main application
                         scene. Shader passes can be applied after UI rendering, in between or in the other way around.
+                        WebGPU support is on the roadmap for higher grade graphics and compute.
                     </p>
                 </div>
                 <div class="feature-card">
@@ -409,18 +409,16 @@ sys.animation.requestFrame(frame);</code></pre>
             </div>
             <div class="prose-stack">
                 <p>
-                    Budo ships with <code>budo-llm.md</code>, a compact markdown file that documents the API,
-                    runtime rules and common traps for coding assistants.
-                </p>
-                <p>
-                    That matters. When the API surface is small and the documentation fits in one small file, assistants
-                    are much less likely to invent APIs or imaginary engine calls, and they generate better
-                    code.
+                    Budo ships with a 74kB <code>budo-llm.md</code> file, which is a compact markdown file that
+                    documents the API,
+                    runtime rules, common traps and techniwues for coding assistants. Add it in your AI coding agent
+                    context
+                    and it will immediately know how to create Budo applications!
                 </p>
                 <p class="terminal-note">
-                    To generate the text to add in your agent/llm context when you work on a Budo application,
-                    use this command: <code>budo budo-llm.md</code>. In the case of projects generated with the
-                    <code>init</code> command, this file is already generated.
+                    This <code>budo-llm.md</code> file is automatically created when you use <code>budo init</code> to
+                    create your application.
+                    If you need to generate its content again, simply use this command: <code>budo budo-llm.md</code>.
                 </p>
             </div>
         </div>
@@ -431,7 +429,7 @@ sys.animation.requestFrame(frame);</code></pre>
      ════════════════════════════════════════════════════════════════════ -->
     <section id="open">
         <div class="section-inner section-center">
-            <p class="section-eyebrow">Open core, clear boundaries</p>
+            <p class="section-eyebrow">Open source core</p>
             <h2 class="section-title">The runtime is open source and MIT licensed.</h2>
             <p class="section-subtitle">
                 The part that runs your app is open. You can inspect it, modify it, fork it, learn from it and build on
