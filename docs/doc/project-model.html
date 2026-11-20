@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -102,7 +103,7 @@
   &quot;neural&quot;: true
 }</code></pre></div></div>
 <p>The fields are:</p>
-<ul><li><code>name</code>, <code>author</code>, <code>version</code>, and <code>date</code> identify the app. Without them, Budo uses the folder name, <code>Unknown</code>, and <code>1.0</code>, and leaves the date empty.</li><li><code>orientation</code> is <code>portrait</code>, <code>landscape</code>, or <code>unspecified</code> (the default).</li><li><code>network</code> lists the domains your app may reach with HTTP. Use <code>&quot;*&quot;</code> to allow any domain, a comma-separated string, or an array of domains. Without it, HTTP requests are refused.</li><li><code>filesystem</code> set to <code>true</code> asks for access to shared storage on Android. Your app can always read its own files and write to its private storage without it, so leave it off unless you need it.</li><li><code>neural</code> set to <code>true</code> enables ONNX inference with <code>sys.neural</code>.</li></ul>
+<ul><li><code>name</code>, <code>author</code>, <code>version</code>, and <code>date</code> identify the app. Without them, Budo uses the folder name, <code>Unknown</code>, and <code>1.0</code>, and leaves the date empty.</li><li><code>orientation</code> is <code>portrait</code>, <code>landscape</code>, or <code>unspecified</code> (the default).</li><li><code>network</code> lists the domains your app may reach with HTTP. Use <code>&quot;*&quot;</code> to allow any domain, a comma-separated string, or an array of domains. Without it, HTTP requests are refused.</li><li><code>filesystem</code> set to <code>true</code> asks for access to shared storage on Android. Your app can always read its own files and write to its private storage without it, so leave it off unless you need it.</li><li><code>neural</code> set to <code>true</code> enables ONNX inference with <code>sys.neural</code>.</li><li><code>background_audio</code> set to <code>true</code> enables Android background playback with a media notification. Start audio while the app is visible; call <code>sys.audio.stop()</code> when finished. Audio fill callbacks and JS timers continue with the screen off, but animation callbacks do not. This flag has no effect on desktop or web.</li></ul>
 <p>SQLite databases need no permission.</p>
 <p>Android packaging reads more fields from <code>app.json</code>: package identity, icons, SDK versions, Android permissions, signing, and store listing details. <a href="packaging-and-deployment.html">Packaging and deployment</a> describes them.</p>
 <h2 id="file-paths" class="has-anchor">File paths <a class="heading-anchor" href="#file-paths" aria-label="Copy link to this section" title="Copy link">#</a></h2>

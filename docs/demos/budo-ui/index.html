@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="../../budo-icon.svg">
     <link rel="stylesheet" href="../../theme-base.css">
     <link rel="stylesheet" href="../../theme-playful.css">
-    <title>Budo UI - Budo Demo</title>
+    <title>Budo UI library - Budo Demo</title>
     <style>
         body { min-height: 100vh; line-height: 1.5; }
         nav { position: sticky; top: 0; z-index: 20; background: rgba(14, 14, 18, .9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
@@ -74,43 +74,24 @@
     <main class="demo-shell">
         <aside>
             <section class="panel">
-                <h1>Budo UI</h1>
+                <h1>Budo UI library</h1>
                 <p class="subtitle"></p>
-                <div class="meta-list"><div class="meta-row"><span>name</span><strong>Budo UI</strong></div>
+                <div class="meta-list"><div class="meta-row"><span>name</span><strong>Budo UI library</strong></div>
 <div class="meta-row"><span>version</span><strong>1.0.0</strong></div></div>
             </section>
             <section class="panel">
                 <div class="panel-title">Files</div>
-                <div class="file-list" id="file-list"><button class="file-entry" type="button" data-path="app.json" style="--depth:0"><span>app.json</span><small>102 B</small></button>
-<button class="file-entry" type="button" data-path="budo-ui.js" style="--depth:0"><span>budo-ui.js</span><small>564 B</small></button>
+                <div class="file-list" id="file-list"><button class="file-entry" type="button" data-path="app.json" style="--depth:0"><span>app.json</span><small>110 B</small></button>
+<button class="file-entry" type="button" data-path="budo-ui.js" style="--depth:0"><span>budo-ui.js</span><small>99 B</small></button>
 <button class="file-entry" type="button" data-path="budo-ui.snapshots.test.mjs" style="--depth:0"><span>budo-ui.snapshots.test.mjs</span><small>6.5 KB</small></button>
-<button class="file-entry" type="button" data-path="budo-ui.test.mjs" style="--depth:0"><span>budo-ui.test.mjs</span><small>73.6 KB</small></button>
+<button class="file-entry" type="button" data-path="budo-ui.test.mjs" style="--depth:0"><span>budo-ui.test.mjs</span><small>84.9 KB</small></button>
 <button class="file-entry" type="button" data-path="crt.frag" style="--depth:0"><span>crt.frag</span><small>1.0 KB</small></button>
 <button class="file-entry" type="button" data-path="crt.vert" style="--depth:0"><span>crt.vert</span><small>192 B</small></button>
 <button class="file-entry" type="button" data-path="gallery.js" style="--depth:0"><span>gallery.js</span><small>19.5 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/color.js" style="--depth:1"><span>lib/color.js</span><small>3.7 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/core.js" style="--depth:1"><span>lib/core.js</span><small>30.2 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/focus.js" style="--depth:1"><span>lib/focus.js</span><small>6.9 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/icons.js" style="--depth:1"><span>lib/icons.js</span><small>4.5 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/layout.js" style="--depth:1"><span>lib/layout.js</span><small>3.2 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/math.js" style="--depth:1"><span>lib/math.js</span><small>1.1 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/motion.js" style="--depth:1"><span>lib/motion.js</span><small>2.4 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/platform.js" style="--depth:1"><span>lib/platform.js</span><small>5.8 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/theme.js" style="--depth:1"><span>lib/theme.js</span><small>1.6 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/basic.js" style="--depth:2"><span>lib/widgets/basic.js</span><small>13.0 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/choices.js" style="--depth:2"><span>lib/widgets/choices.js</span><small>7.2 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/containers.js" style="--depth:2"><span>lib/widgets/containers.js</span><small>22.2 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/content.js" style="--depth:2"><span>lib/widgets/content.js</span><small>5.1 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/data.js" style="--depth:2"><span>lib/widgets/data.js</span><small>17.8 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/feedback.js" style="--depth:2"><span>lib/widgets/feedback.js</span><small>3.2 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/navigation.js" style="--depth:2"><span>lib/widgets/navigation.js</span><small>7.9 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/overlays.js" style="--depth:2"><span>lib/widgets/overlays.js</span><small>18.7 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/select.js" style="--depth:2"><span>lib/widgets/select.js</span><small>5.8 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/text.js" style="--depth:2"><span>lib/widgets/text.js</span><small>15.5 KB</small></button>
-<button class="file-entry" type="button" data-path="lib/widgets/textarea.js" style="--depth:2"><span>lib/widgets/textarea.js</span><small>26.1 KB</small></button>
+<button class="file-entry" type="button" data-path="jsconfig.json" style="--depth:0"><span>jsconfig.json</span><small>287 B</small></button>
 <button class="file-entry" type="button" data-path="main.js" style="--depth:0"><span>main.js</span><small>13.7 KB</small></button>
-<button class="file-entry" type="button" data-path="README.md" style="--depth:0"><span>README.md</span><small>12.9 KB</small></button>
-<button class="file-entry" type="button" data-path="ROADMAP.md" style="--depth:0"><span>ROADMAP.md</span><small>7.9 KB</small></button>
+<button class="file-entry" type="button" data-path="README.md" style="--depth:0"><span>README.md</span><small>1.5 KB</small></button>
+<button class="file-entry" type="button" data-path="ROADMAP.md" style="--depth:0"><span>ROADMAP.md</span><small>8.0 KB</small></button>
 <button class="file-entry" type="button" data-path="screenshot.png" style="--depth:0"><span>screenshot.png</span><small>120.4 KB</small></button>
 <button class="file-entry" type="button" data-path="snapshots/choices-dark.json" style="--depth:1"><span>snapshots/choices-dark.json</span><small>4.6 KB</small></button>
 <button class="file-entry" type="button" data-path="snapshots/choices-select-open.json" style="--depth:1"><span>snapshots/choices-select-open.json</span><small>5.6 KB</small></button>
@@ -125,7 +106,29 @@
 <button class="file-entry" type="button" data-path="snapshots/overlays.json" style="--depth:1"><span>snapshots/overlays.json</span><small>2.7 KB</small></button>
 <button class="file-entry" type="button" data-path="snapshots/surfaces.json" style="--depth:1"><span>snapshots/surfaces.json</span><small>3.5 KB</small></button>
 <button class="file-entry" type="button" data-path="snapshots/text.json" style="--depth:1"><span>snapshots/text.json</span><small>2.9 KB</small></button>
-<button class="file-entry" type="button" data-path="ui-library.js" style="--depth:0"><span>ui-library.js</span><small>104 B</small></button></div>
+<button class="file-entry" type="button" data-path="ui-library.js" style="--depth:0"><span>ui-library.js</span><small>110 B</small></button>
+<button class="file-entry" type="button" data-path="ui/budo-ui.js" style="--depth:1"><span>ui/budo-ui.js</span><small>495 B</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/color.js" style="--depth:2"><span>ui/lib/color.js</span><small>3.7 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/core.js" style="--depth:2"><span>ui/lib/core.js</span><small>30.1 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/focus.js" style="--depth:2"><span>ui/lib/focus.js</span><small>6.9 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/icons.js" style="--depth:2"><span>ui/lib/icons.js</span><small>4.5 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/layout.js" style="--depth:2"><span>ui/lib/layout.js</span><small>3.2 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/math.js" style="--depth:2"><span>ui/lib/math.js</span><small>1.1 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/motion.js" style="--depth:2"><span>ui/lib/motion.js</span><small>2.4 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/platform.js" style="--depth:2"><span>ui/lib/platform.js</span><small>5.8 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/theme.js" style="--depth:2"><span>ui/lib/theme.js</span><small>1.6 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/basic.js" style="--depth:3"><span>ui/lib/widgets/basic.js</span><small>13.0 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/choices.js" style="--depth:3"><span>ui/lib/widgets/choices.js</span><small>7.2 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/containers.js" style="--depth:3"><span>ui/lib/widgets/containers.js</span><small>30.4 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/content.js" style="--depth:3"><span>ui/lib/widgets/content.js</span><small>5.1 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/data.js" style="--depth:3"><span>ui/lib/widgets/data.js</span><small>17.8 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/feedback.js" style="--depth:3"><span>ui/lib/widgets/feedback.js</span><small>3.2 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/navigation.js" style="--depth:3"><span>ui/lib/widgets/navigation.js</span><small>7.9 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/overlays.js" style="--depth:3"><span>ui/lib/widgets/overlays.js</span><small>18.7 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/select.js" style="--depth:3"><span>ui/lib/widgets/select.js</span><small>5.8 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/text.js" style="--depth:3"><span>ui/lib/widgets/text.js</span><small>15.5 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/lib/widgets/textarea.js" style="--depth:3"><span>ui/lib/widgets/textarea.js</span><small>26.1 KB</small></button>
+<button class="file-entry" type="button" data-path="ui/README.md" style="--depth:1"><span>ui/README.md</span><small>14.1 KB</small></button></div>
             </section>
             <section class="panel actions">
                 <button id="run-demo" class="btn btn-primary" type="button">RUN</button>
@@ -135,14 +138,14 @@
         </aside>
         <section class="workspace">
             <div class="workspace-bar">
-                <div class="workspace-title" id="workspace-title"><strong>Budo UI</strong></div>
+                <div class="workspace-title" id="workspace-title"><strong>Budo UI library</strong></div>
                 <a id="open-file" href="#" target="_blank" rel="noreferrer">Open file</a>
             </div>
             <div class="workspace-body" id="workspace-body"><p class="empty-state">Select a file or press RUN.</p></div>
         </section>
     </main>
 
-    <script id="demo-files" type="application/json">[{"path":"app.json","url":"app.json","size":102,"text":true,"image":false},{"path":"budo-ui.js","url":"budo-ui.js","size":564,"text":true,"image":false},{"path":"budo-ui.snapshots.test.mjs","url":"budo-ui.snapshots.test.mjs","size":6628,"text":true,"image":false},{"path":"budo-ui.test.mjs","url":"budo-ui.test.mjs","size":75335,"text":true,"image":false},{"path":"crt.frag","url":"crt.frag","size":1024,"text":true,"image":false},{"path":"crt.vert","url":"crt.vert","size":192,"text":true,"image":false},{"path":"gallery.js","url":"gallery.js","size":19985,"text":true,"image":false},{"path":"lib/color.js","url":"lib/color.js","size":3772,"text":true,"image":false},{"path":"lib/core.js","url":"lib/core.js","size":30881,"text":true,"image":false},{"path":"lib/focus.js","url":"lib/focus.js","size":7074,"text":true,"image":false},{"path":"lib/icons.js","url":"lib/icons.js","size":4581,"text":true,"image":false},{"path":"lib/layout.js","url":"lib/layout.js","size":3228,"text":true,"image":false},{"path":"lib/math.js","url":"lib/math.js","size":1138,"text":true,"image":false},{"path":"lib/motion.js","url":"lib/motion.js","size":2440,"text":true,"image":false},{"path":"lib/platform.js","url":"lib/platform.js","size":5927,"text":true,"image":false},{"path":"lib/theme.js","url":"lib/theme.js","size":1684,"text":true,"image":false},{"path":"lib/widgets/basic.js","url":"lib/widgets/basic.js","size":13287,"text":true,"image":false},{"path":"lib/widgets/choices.js","url":"lib/widgets/choices.js","size":7403,"text":true,"image":false},{"path":"lib/widgets/containers.js","url":"lib/widgets/containers.js","size":22688,"text":true,"image":false},{"path":"lib/widgets/content.js","url":"lib/widgets/content.js","size":5233,"text":true,"image":false},{"path":"lib/widgets/data.js","url":"lib/widgets/data.js","size":18227,"text":true,"image":false},{"path":"lib/widgets/feedback.js","url":"lib/widgets/feedback.js","size":3247,"text":true,"image":false},{"path":"lib/widgets/navigation.js","url":"lib/widgets/navigation.js","size":8137,"text":true,"image":false},{"path":"lib/widgets/overlays.js","url":"lib/widgets/overlays.js","size":19110,"text":true,"image":false},{"path":"lib/widgets/select.js","url":"lib/widgets/select.js","size":5914,"text":true,"image":false},{"path":"lib/widgets/text.js","url":"lib/widgets/text.js","size":15858,"text":true,"image":false},{"path":"lib/widgets/textarea.js","url":"lib/widgets/textarea.js","size":26760,"text":true,"image":false},{"path":"main.js","url":"main.js","size":14069,"text":true,"image":false},{"path":"README.md","url":"README.md","size":13228,"text":true,"image":false},{"path":"ROADMAP.md","url":"ROADMAP.md","size":8057,"text":true,"image":false},{"path":"screenshot.png","url":"screenshot.png","size":123285,"text":false,"image":true},{"path":"snapshots/choices-dark.json","url":"snapshots/choices-dark.json","size":4710,"text":true,"image":false},{"path":"snapshots/choices-select-open.json","url":"snapshots/choices-select-open.json","size":5767,"text":true,"image":false},{"path":"snapshots/choices.json","url":"snapshots/choices.json","size":4710,"text":true,"image":false},{"path":"snapshots/data.json","url":"snapshots/data.json","size":9302,"text":true,"image":false},{"path":"snapshots/feedback.json","url":"snapshots/feedback.json","size":2790,"text":true,"image":false},{"path":"snapshots/icons.json","url":"snapshots/icons.json","size":13033,"text":true,"image":false},{"path":"snapshots/inputs.json","url":"snapshots/inputs.json","size":3250,"text":true,"image":false},{"path":"snapshots/motion.json","url":"snapshots/motion.json","size":3262,"text":true,"image":false},{"path":"snapshots/overlays-dialog.json","url":"snapshots/overlays-dialog.json","size":3996,"text":true,"image":false},{"path":"snapshots/overlays-sheet.json","url":"snapshots/overlays-sheet.json","size":3734,"text":true,"image":false},{"path":"snapshots/overlays.json","url":"snapshots/overlays.json","size":2762,"text":true,"image":false},{"path":"snapshots/surfaces.json","url":"snapshots/surfaces.json","size":3573,"text":true,"image":false},{"path":"snapshots/text.json","url":"snapshots/text.json","size":2924,"text":true,"image":false},{"path":"ui-library.js","url":"ui-library.js","size":104,"text":true,"image":false}]</script>
+    <script id="demo-files" type="application/json">[{"path":"app.json","url":"app.json","size":110,"text":true,"image":false},{"path":"budo-ui.js","url":"budo-ui.js","size":99,"text":true,"image":false},{"path":"budo-ui.snapshots.test.mjs","url":"budo-ui.snapshots.test.mjs","size":6631,"text":true,"image":false},{"path":"budo-ui.test.mjs","url":"budo-ui.test.mjs","size":86984,"text":true,"image":false},{"path":"crt.frag","url":"crt.frag","size":1024,"text":true,"image":false},{"path":"crt.vert","url":"crt.vert","size":192,"text":true,"image":false},{"path":"gallery.js","url":"gallery.js","size":19986,"text":true,"image":false},{"path":"jsconfig.json","url":"jsconfig.json","size":287,"text":true,"image":false},{"path":"main.js","url":"main.js","size":14072,"text":true,"image":false},{"path":"README.md","url":"README.md","size":1501,"text":true,"image":false},{"path":"ROADMAP.md","url":"ROADMAP.md","size":8148,"text":true,"image":false},{"path":"screenshot.png","url":"screenshot.png","size":123285,"text":false,"image":true},{"path":"snapshots/choices-dark.json","url":"snapshots/choices-dark.json","size":4710,"text":true,"image":false},{"path":"snapshots/choices-select-open.json","url":"snapshots/choices-select-open.json","size":5767,"text":true,"image":false},{"path":"snapshots/choices.json","url":"snapshots/choices.json","size":4710,"text":true,"image":false},{"path":"snapshots/data.json","url":"snapshots/data.json","size":9302,"text":true,"image":false},{"path":"snapshots/feedback.json","url":"snapshots/feedback.json","size":2790,"text":true,"image":false},{"path":"snapshots/icons.json","url":"snapshots/icons.json","size":13033,"text":true,"image":false},{"path":"snapshots/inputs.json","url":"snapshots/inputs.json","size":3250,"text":true,"image":false},{"path":"snapshots/motion.json","url":"snapshots/motion.json","size":3262,"text":true,"image":false},{"path":"snapshots/overlays-dialog.json","url":"snapshots/overlays-dialog.json","size":3996,"text":true,"image":false},{"path":"snapshots/overlays-sheet.json","url":"snapshots/overlays-sheet.json","size":3734,"text":true,"image":false},{"path":"snapshots/overlays.json","url":"snapshots/overlays.json","size":2762,"text":true,"image":false},{"path":"snapshots/surfaces.json","url":"snapshots/surfaces.json","size":3573,"text":true,"image":false},{"path":"snapshots/text.json","url":"snapshots/text.json","size":2924,"text":true,"image":false},{"path":"ui-library.js","url":"ui-library.js","size":110,"text":true,"image":false},{"path":"ui/budo-ui.js","url":"ui/budo-ui.js","size":495,"text":true,"image":false},{"path":"ui/lib/color.js","url":"ui/lib/color.js","size":3772,"text":true,"image":false},{"path":"ui/lib/core.js","url":"ui/lib/core.js","size":30837,"text":true,"image":false},{"path":"ui/lib/focus.js","url":"ui/lib/focus.js","size":7074,"text":true,"image":false},{"path":"ui/lib/icons.js","url":"ui/lib/icons.js","size":4581,"text":true,"image":false},{"path":"ui/lib/layout.js","url":"ui/lib/layout.js","size":3228,"text":true,"image":false},{"path":"ui/lib/math.js","url":"ui/lib/math.js","size":1138,"text":true,"image":false},{"path":"ui/lib/motion.js","url":"ui/lib/motion.js","size":2440,"text":true,"image":false},{"path":"ui/lib/platform.js","url":"ui/lib/platform.js","size":5927,"text":true,"image":false},{"path":"ui/lib/theme.js","url":"ui/lib/theme.js","size":1684,"text":true,"image":false},{"path":"ui/lib/widgets/basic.js","url":"ui/lib/widgets/basic.js","size":13287,"text":true,"image":false},{"path":"ui/lib/widgets/choices.js","url":"ui/lib/widgets/choices.js","size":7403,"text":true,"image":false},{"path":"ui/lib/widgets/containers.js","url":"ui/lib/widgets/containers.js","size":31083,"text":true,"image":false},{"path":"ui/lib/widgets/content.js","url":"ui/lib/widgets/content.js","size":5233,"text":true,"image":false},{"path":"ui/lib/widgets/data.js","url":"ui/lib/widgets/data.js","size":18227,"text":true,"image":false},{"path":"ui/lib/widgets/feedback.js","url":"ui/lib/widgets/feedback.js","size":3247,"text":true,"image":false},{"path":"ui/lib/widgets/navigation.js","url":"ui/lib/widgets/navigation.js","size":8137,"text":true,"image":false},{"path":"ui/lib/widgets/overlays.js","url":"ui/lib/widgets/overlays.js","size":19110,"text":true,"image":false},{"path":"ui/lib/widgets/select.js","url":"ui/lib/widgets/select.js","size":5914,"text":true,"image":false},{"path":"ui/lib/widgets/text.js","url":"ui/lib/widgets/text.js","size":15858,"text":true,"image":false},{"path":"ui/lib/widgets/textarea.js","url":"ui/lib/widgets/textarea.js","size":26760,"text":true,"image":false},{"path":"ui/README.md","url":"ui/README.md","size":14437,"text":true,"image":false}]</script>
     <script>
         const DEMO_FILES = JSON.parse(document.getElementById('demo-files').textContent);
         const INITIAL_FILE = "main.js";

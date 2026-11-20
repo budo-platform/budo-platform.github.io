@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
     <title>Packaging and Deployment — Budo Documentation</title>
-    <meta name="description" content="Run Budo apps locally, export them to web, and package Android APK or AAB releases.">
+    <meta name="description" content="Run Budo apps locally, ship a single desktop executable, export to web, or package for Android.">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="../theme-base.css">
@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html" class="current">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -63,8 +64,8 @@
         <main class="doc-main">
             <article class="doc-article">
                 <h1 id="packaging-and-deployment" class="has-anchor">Packaging and Deployment <a class="heading-anchor" href="#packaging-and-deployment" aria-label="Copy link to this section" title="Copy link">#</a></h1>
-<p>A Budo app is a folder, and the same folder ships everywhere. You develop it with <code>budo run</code>, export it as a static website with <code>budo web-export</code>, and package it for Android with <code>budo android-apk</code> and <code>budo android-aab</code>. Every target reads the same entry file, the same project-relative assets, and the same <code>app.json</code>.</p>
-<p>This page walks that path in order: run on desktop, export to web, build an Android debug APK, then build Android releases.</p>
+<p>A Budo app starts as a folder. Develop it with <code>budo run</code>, distribute it as a desktop executable with <code>budo package</code>, export it as a static website with <code>budo web-export</code>, or build an Android package with <code>budo android-apk</code> and <code>budo android-aab</code>.</p>
+<p>Start by running it locally, then choose the distribution target you need.</p>
 <h2 id="step-1-run-on-desktop" class="has-anchor">Step 1: Run on desktop <a class="heading-anchor" href="#step-1-run-on-desktop" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>If you are starting from scratch, <code>budo init</code> writes a starter project: <code>main.js</code>, an <code>app.json</code> (it asks a few questions; press Enter to accept the defaults), and the editor files <code>jsconfig.json</code>, <code>budo.d.ts</code>, and <code>budo-llm.md</code> that give you autocompletion and an API reference.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project in my-app/.
@@ -77,6 +78,19 @@ budo run my-app --watch
 # Choose the window size and title.
 budo run my-app --width 1280 --height 720 --title &quot;My App&quot;</code></pre></div></div>
 <p><code>run</code> also accepts <code>--fullscreen</code>, <code>--no-vsync</code>, and <code>--file-root &lt;path&gt;</code>, which moves the writable <code>files/</code> folder of <code>sys.files</code> to another directory. Run <code>budo help</code> for the full list.</p>
+<h2 id="package-a-desktop-executable" class="has-anchor">Package a desktop executable <a class="heading-anchor" href="#package-a-desktop-executable" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p><code>budo package</code> embeds a JavaScript, TypeScript, Lua, or WebAssembly app in a single Budo executable. You don't need to ship the project folder separately.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Use the current Budo executable; no download needed.
+budo package my-app self --name my-app -o MyApp
+
+# Build for specific desktop targets.
+budo package my-app linux --name my-app -o MyApp-linux
+budo package my-app macos --name my-app -o MyApp-macos
+budo package my-app windows --name my-app -o MyApp.exe</code></pre></div></div>
+<ul><li><code>self</code> inherits the current runtime's platform and dependencies. For distribution, start with a release binary; on Windows, <code>self</code> requires the standalone build.</li><li><code>linux</code>, <code>macos</code>, and <code>windows</code> use <code>curl</code> to download and verify the corresponding runtime from the latest GitHub release. The release must support desktop packaging. Use <code>--release TAG</code> to select a specific release. The release targets are Linux x86-64, macOS Apple Silicon, and Windows x64. macOS packages are not Developer ID signed or notarized.</li><li><code>-o FILE</code> sets the output path. By default the output is named after the app ID, with <code>.exe</code> added on Windows. Budo won't overwrite an existing file.</li></ul>
+<p>Run the packaged executable without arguments to launch the embedded app. For example, run <code>./MyApp-linux</code> on Linux or <code>.\MyApp.exe</code> in PowerShell. Explicit commands such as <code>--help</code> and <code>run &lt;DIRECTORY&gt;</code> still work.</p>
+<p>Keep the same <code>--name</code> across upgrades to preserve user files and SQLite databases. Budo keeps these in a per-user data directory keyed by the app ID, separate from the cached app files. The ID defaults to the lowercased project folder name. Use distinct IDs for unrelated apps.</p>
+<p>Packaging includes hidden files as well as assets and source files. Keep secrets and prior builds out of the project directory, and write the output next to the project rather than inside it. Symlinks, special files, and non-portable filenames (including non-ASCII names) are rejected.</p>
 <h2 id="step-2-export-to-web" class="has-anchor">Step 2: Export to web <a class="heading-anchor" href="#step-2-export-to-web" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p><code>budo web-export</code> turns the app into a self-contained static folder: an <code>index.html</code>, the Budo web runtime, and your project files. Upload that folder to any static host, or embed it in an existing site.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Export to dist/web (the default).
@@ -147,7 +161,7 @@ budo android-apk my-app --release</code></pre></div></div>
 <p>Budo keeps one Android build directory per app so that rebuilds are fast. <code>budo cache android inspect</code> lists them, and <code>budo cache android clean --all</code> (or <code>clean &lt;package&gt;</code>) removes them.</p>
 <h2 id="before-you-ship" class="has-anchor">Before you ship <a class="heading-anchor" href="#before-you-ship" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>Test the app on every target you plan to ship. Check that it degrades gracefully when a capability is missing, that every asset path resolves, and that <code>network</code> and <code>filesystem</code> in <code>app.json</code> grant only what the app needs. Check text and touch targets at the real display density, and remember that audio on web starts only after the user interacts with the page.</p>
-<p>For Android, install and try the release build on a real device before you upload the AAB. For web, test the exported folder over HTTP, the way your users will load it.</p>
+<p>For desktop, launch the packaged executable on the target OS without the source folder present. For Android, install and try the release build on a real device before you upload the AAB. For web, test the exported folder over HTTP, the way your users will load it.</p>
             </article>
 
             <nav class="doc-pager">

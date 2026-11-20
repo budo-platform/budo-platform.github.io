@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -296,7 +297,7 @@ const mic = sys.audio.openInput({ channels: 1 }, (samples, info) =&gt; {
 // -1 when the microphone is unavailable or permission is pending.
 if (mic &lt; 0) console.log(sys.audio.getError());</code></pre></div></div>
 <p>Recording needs the user's permission. On Android, list <code>RECORD_AUDIO</code> in the <code>permissions</code> of <code>app.json</code>. The first <code>openInput</code> asks the user and returns <code>-1</code>, so call it again once permission is granted, for example when the app regains focus. On the web, the page must be served over https (or from localhost), and the browser asks the user. Close the microphone with <code>closeInput</code> when you are done.</p>
-<p><code>examples/20_microphone</code> records, plays back, and monitors the microphone with input and output streams.</p>
+<p><code>examples/20_microphone</code> analyzes and optionally monitors the microphone live with input and output streams. Use headphones when enabling Monitor to avoid feedback; the app does not record or save audio.</p>
 <h2 id="decoders" class="has-anchor">Decoders <a class="heading-anchor" href="#decoders" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>A decoder turns a WAV, MP3, Ogg Vorbis, or FLAC file into samples a block at a time. Use one to play music of any length, or to process a file too large to hold in memory. Ask for the device's rate and channel count, and decode straight into an output stream's buffer.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Open a song for block reads, decoded at the device&#x27;s rate, in stereo.
@@ -375,7 +376,7 @@ sys.animation.requestFrame(frame);</code></pre></div></div>
 <ul><li><code>minFrequency</code> and <code>maxFrequency</code>: the range of pitches reported, 50 to 4000 Hz by default;</li><li><code>minClarity</code>: the clarity below which there is no pitch, 0.7 by default;</li><li><code>minLevel</code>: the RMS level, in dB, below which there is no pitch, -60 by default.</li></ul>
 <p><code>samples</code> holds 16 or more values. The lowest pitch it can find has a period of half the samples: 2048 samples at 48 kHz reach down to 47 Hz.</p>
 <p><code>fft(re, im, inverse)</code> transforms two <code>Float32Array</code>s, the real and imaginary parts, in place, for your own analysis. Both have the same power-of-two length (2 to 2^20). The inverse is scaled by <code>1 / length</code>, so a forward transform followed by an inverse one gives back the input.</p>
-<p><code>examples/20_microphone</code> uses these functions for a spectrogram, a pitch readout, and a tuner.</p>
+<p><code>examples/20_microphone</code> uses these functions for a spectrogram, a pitch readout, and a tuner. The spectrogram labels each continuous detected fundamental with its note letter (such as G#); the labels scroll with the audio history, with gaps for silence. The bottom toolbar groups Time, the FFT dropdown, and Monitor. The Time buttons select the original span (about 4.1 seconds at 48 kHz), 5s, 10s, or 30s for both graphs. History is retained for the longest span, so switching spans does not clear it. The FFT dropdown opens upward; select a size, Auto, or Off, or dismiss it by tapping outside or pressing Escape.</p>
 <h2 id="midi-devices" class="has-anchor">MIDI devices <a class="heading-anchor" href="#midi-devices" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p><code>sys.midi</code> reads from and sends to MIDI devices: keyboards, controllers, synthesizers, and other apps. Start by scanning for devices.</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">main.js</span></div><div class="code-body"><pre><code class="language-javascript">// Scan for devices before showing a picker.

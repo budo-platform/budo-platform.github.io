@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -132,7 +133,7 @@ sys.animation.requestFrame(frame);"><div class="code-header"><span class="circle
 }</code></pre></div></div>
 <p>Mind the units: the frame timestamp and <code>sys.timer</code> delays are in milliseconds, while <code>input.deltaTime</code> and <code>input.totalTime</code> are in seconds.</p>
 <h3 id="drawing-only-when-needed" class="has-anchor">Drawing only when needed <a class="heading-anchor" href="#drawing-only-when-needed" aria-label="Copy link to this section" title="Copy link">#</a></h3>
-<p>Interfaces and tools are still most of the time. For those frames, end with <code>sys.animation.waitForInput(frame, timeoutMs)</code> instead of <code>requestFrame</code>: the callback runs again on the next input event, when the canvas is resized, or after <code>timeoutMs</code> if you pass one. Until then the last frame stays on screen and Budo saves power: desktop builds sleep until an event arrives, Android stops rendering, and the web skips drawing. JavaScript timers still fire on time.</p>
+<p>Interfaces and tools are still most of the time. For those frames, end with <code>sys.animation.waitForInput(frame, timeoutMs)</code> instead of <code>requestFrame</code>: the callback runs again on the next input event, when the canvas is resized, or after <code>timeoutMs</code> if you pass one. Until then the last frame stays on screen, including any GL overlays drawn directly to it. JavaScript timers and background work continue while the app waits.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="let clicks = 0;
 let flash = 0;
 function frame(timestamp) {
@@ -342,7 +343,7 @@ function frame() {
 <p><code>input.textEdit</code> is a complete replacement of the value and selection. It covers typing, deletion, selection replacement, paste, autocorrection, and soft keyboard edits, so always apply it before calling <code>updateTextInput</code>: sending the old value back first would overwrite the platform's edit. <code>input.composition</code> holds <code>{ active, changed, text, selectionStart, selectionEnd }</code> for the text an input method is composing; it persists across frames, and only <code>changed</code> is per frame. Selection offsets count UTF-16 code units, and the caret rectangle is in the same physical pixels as canvas drawing, so the platform can place its candidate window next to it.</p>
 <p>On the web and on Android, the platform edits the field itself: paste, selection, and editing shortcuts already arrive as <code>textEdit</code>, and <code>input.nativeTextEditing</code> is <code>true</code>. On desktop it is <code>false</code>, so an editor implements its own shortcuts, using <code>sys.device.setClipboardText</code> and <code>sys.device.getClipboardText</code> for copy, cut, and paste (see <a href="sensors.html#clipboard">Clipboard</a>).</p>
 <p>On Android, starting a session shows the soft keyboard. Back and Done (or Return in a single-line field) finish any composition and deliver the final <code>textEdit</code> before the keyboard closes.</p>
-<p><code>examples/budo-ui</code> (<code>lib/widgets/text.js</code>) has a complete text field: focus, a blinking caret, navigation, selection, clipboard shortcuts, full replacement edits, underlined composition text, and candidate window placement.</p>
+<p><code>examples/budo-ui/ui/lib/widgets/text.js</code> has a complete text field: focus, a blinking caret, navigation, selection, clipboard shortcuts, full replacement edits, underlined composition text, and candidate window placement.</p>
 <h2 id="focus" class="has-anchor">Focus <a class="heading-anchor" href="#focus" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>The input snapshot's <code>focused</code> is <code>false</code> while the app's window does not have focus. Use it to pause what should not continue in the background.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="function drawPausedOverlay() {

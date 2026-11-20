@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../budo-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+    <title>Asynchronous Images — Budo Documentation</title>
+    <meta name="description" content="Background image loading with early metadata, explicit cancellation, and normal GL texture handles.">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="../theme-base.css">
+    <link rel="stylesheet" href="../theme-playful.css">
+    <link rel="stylesheet" href="./doc.css">
+</head>
+
+<body>
+
+    <nav>
+        <div class="nav-inner">
+            <div class="nav-logo"><a href="../index.html"><img src="../budo-icon.svg" alt=""
+                        aria-hidden="true"> Budo</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html#features">Features</a></li>
+                <li><a href="./index.html" class="active">Documentation</a></li>
+                <li><a href="../playground.html">Playground</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#pricing">Pricing</a></li>
+                <li><a href="../index.html#download">Download</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="doc-layout">
+        <aside class="doc-sidebar">
+            <div class="doc-sidebar-inner">
+                <div class="doc-sidebar-title">Documentation</div>
+                <ul class="doc-nav">
+                    <li><a href="index.html">Introduction</a></li>
+                    <li><a href="installation.html">Installation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="project-model.html">Project Model</a></li>
+                    <li><a href="drawing-and-layout.html">Drawing and Layout</a></li>
+                    <li><a href="building-interfaces.html">Building Interfaces</a></li>
+                    <li><a href="rendering-and-shaders.html">Rendering and Shaders</a></li>
+                    <li><a href="input-time-state.html">Input, Time, and State</a></li>
+                    <li><a href="data-files-network.html">Data, Files, and Network</a></li>
+                    <li><a href="audio-midi.html">Audio and MIDI</a></li>
+                    <li><a href="sensors.html">Sensors and Device</a></li>
+                    <li><a href="ai-inference.html">AI Inference</a></li>
+                    <li><a href="accessibility.html">Accessibility</a></li>
+                    <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
+                    <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
+                    <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html" class="current">Asynchronous Images</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="doc-main">
+            <article class="doc-article">
+                <h1 id="asynchronous-images" class="has-anchor">Asynchronous Images <a class="heading-anchor" href="#asynchronous-images" aria-label="Copy link to this section" title="Copy link">#</a></h1>
+<p>Native JavaScript/TypeScript and Lua can read, probe, decode, and resize images on a bounded worker pool, then upload pixels on the graphics thread. Rendering never waits for decoding: draw a placeholder until completion. The existing synchronous <code>loadTexture2D</code> and <code>loadTexture2DFromBuffer</code> APIs remain unchanged. Desktop Wasmtime exposes the same worker service through the polling ABI below. Web JavaScript and Lua use the same request/upload scheduler with a separate Worker-backed WebAssembly decoder, described under Browser Backend.</p>
+<h2 id="api" class="has-anchor">API <a class="heading-anchor" href="#api" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-typescript">sys.gl.isAsyncTextureLoadingAvailable(): boolean;
+sys.gl.loadTexture2DAsync(path: string, options: TextureLoadOptions, callbacks: TextureLoadCallbacks): number;
+sys.gl.loadTexture2DFromBufferAsync(bytes: ArrayBuffer | ArrayBufferView, options: TextureLoadOptions, callbacks: TextureLoadCallbacks): number;
+sys.gl.cancelTextureLoad(requestId: number): boolean;</code></pre></div></div>
+<p>Both load functions return a <strong>request ID</strong>, not a texture, promise, or lazy pixel object. Supply an options object (<code>{}</code> for defaults) and callbacks:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-typescript">interface TextureLoadOptions {
+    mount?: &#x27;assets&#x27; | &#x27;files&#x27;;
+    maxWidth?: number;
+    maxHeight?: number;
+    maxBytes?: number;
+    maxPixels?: number;
+}
+interface TextureLoadInfo {
+    readonly width: number;
+    readonly height: number;
+    readonly sourceWidth: number;
+    readonly sourceHeight: number;
+}
+interface TextureLoadError { readonly code: string; readonly message: string; }
+interface TextureLoadCallbacks {
+    onMetadata?(info: TextureLoadInfo): void;
+    onComplete(textureId: number, info: TextureLoadInfo): void;
+    onError(error: TextureLoadError): void;
+}</code></pre></div></div>
+<p><code>onComplete</code> and <code>onError</code> are required. Callbacks run during polling on the owning runtime thread, never on a worker and never before the load call returns. Keep the callbacks object unchanged until completion or cancellation. Lua uses the same names and fields, with tables for options and callbacks and a binary string for encoded bytes:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-lua">sys.gl.loadTexture2DAsync(&#x27;photos/coast.jpg&#x27;, {maxWidth = 256}, {
+    onMetadata = function(info) print(info.sourceWidth, info.sourceHeight) end,
+    onComplete = function(texture, info) sys.gl.destroyTexture(texture) end,
+    onError = function(err) print(err.code, err.message) end
+})</code></pre></div></div>
+<h2 id="loading-a-thumbnail" class="has-anchor">Loading A Thumbnail <a class="heading-anchor" href="#loading-a-thumbnail" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">let texture = 0;
+let request = 0;
+let dimensions = null;
+let errorMessage = &#x27;&#x27;;
+
+if (sys.gl.isAsyncTextureLoadingAvailable()) {
+    request = sys.gl.loadTexture2DAsync(&#x27;photos/coast.jpg&#x27;, {
+        maxWidth: 256,
+        maxHeight: 256
+    }, {
+        onMetadata(info) { dimensions = info; },
+        onComplete(id, info) {
+            request = 0;
+            texture = id;
+            dimensions = info;
+        },
+        onError(error) {
+            request = 0;
+            errorMessage = error.message;
+        }
+    });
+}</code></pre></div></div>
+<p>Default paths are project-relative, just like synchronous <code>loadTexture2D</code>: <code>photos/coast.jpg</code> refers to that physical project file, and <code>assets/coast.jpg</code> refers to a real project subdirectory named <code>assets</code>. Absolute paths, traversal, and symlink escapes are rejected.</p>
+<p>For host files mounted with <code>--file-root</code>, use <code>loadTexture2DAsync(&#x27;album/coast.jpg&#x27;, { mount: &#x27;files&#x27; }, callbacks)</code>. Omit the <code>files/</code> prefix from the path; <code>mount: &#x27;assets&#x27;</code> is the default project mount. Each request snapshots the sandbox's opened roots before worker I/O. No filesystem or network metadata permission is needed for ordinary mounts.</p>
+<p>The buffer variant copies the provided bytes before returning, including only a typed array's selected range. The caller may immediately modify or release its buffer. That initial copy runs on the calling thread; file loading avoids it. <code>mount</code> is ignored for buffer sources. No image bytes or pixels cross into JS unless the application explicitly reads the source itself.</p>
+<h2 id="metadata-completion-and-ownership" class="has-anchor">Metadata, Completion, And Ownership <a class="heading-anchor" href="#metadata-completion-and-ownership" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Workers probe file chunks until dimensions are known, or until the file has been read. Valid metadata is delivered before completion for the same request; an image whose header is valid may still fail during subsequent reading/decoding. There is no ordering guarantee between different requests.</p>
+<p><code>sourceWidth</code>/<code>sourceHeight</code> describe stored pixels. <code>width</code>/<code>height</code> describe the output texture. Output bounds preserve aspect ratio, round down to positive dimensions, and never enlarge the source. Omitting both bounds preserves source dimensions. EXIF orientation and ICC color transforms are not applied.</p>
+<p>Completion transfers a normal texture handle to the app. Use existing texture binding/drawing calls and release it with <code>sys.gl.destroyTexture(texture)</code>. Pending requests own their buffers and partially uploaded textures; cancellation or runtime teardown releases these. Runtime teardown releases remaining GL resources as usual. There is no implicit join when drawing an image.</p>
+<p>Accepted requests receive exactly one terminal callback, unless cancelled or the owning runtime shuts down. Exceptions thrown by callbacks are logged using normal runtime callback error reporting; they do not stop other requests. The app still owns a completed texture if its <code>onComplete</code> throws.</p>
+<h2 id="cancellation-and-scheduling" class="has-anchor">Cancellation And Scheduling <a class="heading-anchor" href="#cancellation-and-scheduling" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">if (request) {
+    sys.gl.cancelTextureLoad(request);
+    request = 0;
+}
+if (texture) {
+    sys.gl.destroyTexture(texture);
+    texture = 0;
+}</code></pre></div></div>
+<p>Cancellation returns immediately and suppresses subsequent callbacks, including completion after metadata. It returns false for an already cancelled, completed, or unknown ID. IDs belong to one runtime and are not texture IDs. A callback already executing cannot be undone. Cancel obsolete requests when navigating; bound any application-side queue as well.</p>
+<p>Native reduced-resolution JPEG decoding checks cancellation between batches of 16 decoded rows, allowing obsolete thumbnail jobs to release workers before the whole image is decoded. Codec initialization (including progressive JPEG input processing), other decode paths, and an in-progress OS read cannot be preempted safely. Their results are discarded at the next cancellation check; request capacity and memory may remain occupied until then. Runtime destruction joins owned workers, so shutdown can wait for those operations. Cancellation during upload destroys the partial texture. No detached worker retains a VM, Window, or JS callback.</p>
+<p>Pending requests participate in managed runtime polling and keep window-less work alive. A GL call activates graphics under the existing lazy-window policy. While image work is pending, native input-wait sleeps are capped at 16 ms so metadata, uploads, and terminal callbacks progress without an active animation. Completion callbacks should request a redraw when needed. This API does not change the existing mixed canvas/GL idle-presentation contract.</p>
+<h2 id="limits-and-errors" class="has-anchor">Limits And Errors <a class="heading-anchor" href="#limits-and-errors" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Each runtime has two workers, started on first use, and at most eight active requests, including uploads. Encoded storage is capped at 64 MiB total; pixel reservations are capped at 2048 MiB, accounting for the source and resized output while both exist, including completed pixels waiting for upload. Decoder-internal scratch, allocator overhead, caller-owned buffers, and GPU resources are additional.</p>
+<p><code>maxBytes</code> defaults to 64 MiB and cannot exceed 64 MiB. <code>maxPixels</code> defaults to 256,000,000 and may be lowered but not raised. Each source axis is limited to 32768 pixels; explicit <code>maxWidth</code> and <code>maxHeight</code> output bounds remain limited to 16384. Request smaller output for large sources to fit device texture and memory limits. The reservation ceiling is not preallocated and does not guarantee that the device has enough memory. Specified options must be positive integers. Queue/buffer capacity, invalid arguments/paths, and worker creation errors throw at submission, before a request is accepted. File errors, pixel limits, decode failures, and memory pressure discovered after acceptance use <code>onError</code>.</p>
+<p>Error codes are <code>image.read_failed</code>, <code>image.byte_limit</code>, <code>image.pixel_limit</code>, <code>image.invalid_data</code>, <code>image.decode_failed</code>, <code>image.capacity</code>, <code>image.out_of_memory</code>, and <code>image.upload_failed</code>. Capacity errors are not an invitation to retry every frame; reduce outstanding work or retry deliberately.</p>
+<p>Uploads advance by at most 4 MiB of rows per runtime poll, one image at a time. This is a byte budget, not a hard frame-time guarantee: texture allocation and driver calls may stall. Bounded JPEG requests use Skia's existing JPEG codec to decode at a supported half, quarter, or eighth resolution when that still covers the requested output. A final worker-side bilinear resize produces the exact output dimensions. Full-resolution requests and other formats retain the STB path; JPEG codec failures also fall back to it. Scaled JPEG pixels need not be identical to a full decode followed by resizing.</p>
+<p>Source pixel limits are checked before either decoder runs. Native admission reserves the full source plus output conservatively, then releases the excess after a successful scaled decode. Smaller RGBA buffers reduce working memory, but decoder scratch (including progressive JPEG coefficients) can still depend on the full source dimensions. Higher-quality minification and EXIF/ICC handling remain follow-ups. The <code>image_decode_benchmark</code> target compares full and scaled decoding using identical encoded bytes and reports decoded RGBA buffer sizes. Use <code>image_decode_benchmark photo.jpg 256 cancellable</code> to measure the native worker's scanline path, or <code>image_decode_benchmark photo.jpg 256 cancel</code> to measure cancellation after its first row batch. The latter requires a JPEG that can be reduced and produces more than 16 decoded rows. Compare <code>scaled</code> and <code>cancellable</code> checksums to check output parity; cancellation timings are not end-to-end gallery latency measurements.</p>
+<h2 id="desktop-wasmtime-abi" class="has-anchor">Desktop Wasmtime ABI <a class="heading-anchor" href="#desktop-wasmtime-abi" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>These <code>env</code> imports use <code>i32</code> arguments and results. Request IDs are opaque 32-bit values; zero indicates submission failure. The guest must export memory.</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code>gl_image_load_async(ptr, len, mode, maxWidth, maxHeight, maxBytes, maxPixels) -&gt; request
+gl_image_status(request, resultPtr) -&gt; 0 or -1
+gl_image_take_texture(request) -&gt; texture or 0
+gl_image_release(request) -&gt; 1 or 0</code></pre></div></div>
+<p>Mode 0 reads an assets/project-relative path, mode 1 reads a files-mount path, and mode 2 copies <code>len</code> encoded bytes from guest memory before returning. Paths omit the mount prefix. Zero options select defaults; other limits match the native APIs. Invalid inputs, unavailable capacity, and startup failures return zero before acceptance. No guest-memory pointer is retained.</p>
+<p><code>gl_image_status</code> writes a 312-byte snapshot to a range checked on every call, returning -1 for an invalid request or range without consuming the record. The record is little-endian: six 32-bit words at offsets 0, 4, 8, 12, 16, and 20 hold status (0 pending, 1 complete, 2 error), metadata-available (0 or 1), width, height, source width, and source height. At offset 24 is a 32-byte NUL-terminated error code; at offset 56 is a 256-byte NUL-terminated message. Metadata may be observed while pending, but a guest polling infrequently may first observe it together with a terminal status.</p>
+<p>For a completed request, <code>gl_image_take_texture</code> transfers its ordinary texture exactly once; destroy it with <code>gl_destroy_texture</code>. Release every request using <code>gl_image_release</code>, including errors and results whose texture was taken. It returns 0 for an invalid or released ID. Releasing pending work cancels it; releasing an unclaimed completion destroys its texture. A completed record occupies one of eight slots until released, even after its texture is taken. Runtime teardown cancels and joins workers and releases unclaimed textures. The host advances uploads while the app runs; the guest must poll status in its own frame logic to observe results. Status never blocks or invokes guest code.</p>
+<h2 id="browser-backend" class="has-anchor">Browser Backend <a class="heading-anchor" href="#browser-backend" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Web JS/TS and Lua use two classic Blob Workers, each running a standalone STB/Skia JPEG WebAssembly decoder embedded in the main runtime. No additional worker URL, SharedArrayBuffer, COOP/COEP headers, or cross-origin isolation is needed. The host needs Worker, WebAssembly, Blob, and Blob URL APIs. CSP must allow <code>worker-src blob:</code> and WebAssembly compilation (for example <code>wasm-unsafe-eval</code> in <code>script-src</code>, subject to browser policy). The availability probe checks APIs; worker construction or startup can still fail. Construction failures throw before acceptance; later worker/startup/message failures use <code>onError</code>. There is no main-thread decoding fallback.</p>
+<p>Workers cannot access mounted files. The host snapshots the authorized sandbox roots and reads virtual files in blocks of at most 64 KiB per service poll before transferring encoded bytes. These in-memory VFS reads and initial buffer copies are synchronous; probing, JPEG scaled decoding, STB fallback, and bilinear resizing run only in Workers. Browser file metadata becomes available after the file is read, but before decoding. A metadata callback can cancel before decoding is granted. Formats, stored-pixel orientation, and lack of EXIF/ICC transforms match the native backend rather than browser image-decoder policies.</p>
+<p>The same eight-request, 64 MiB encoded, 2048 MiB pixel, and 4 MiB upload budgets apply. Browser encoded reservations include two copies of each source, so a single source has an effective 32 MiB ceiling even if <code>maxBytes</code> is larger. Pixel reservations cover source plus output, including transfer/copy overlap; source pixels are freed before copying a resized result. Decoder scratch, retained Worker WebAssembly heap capacity, mounted file storage, browser/allocator overhead, and GPU memory are outside these budgets. Worker heaps grow up to 512 MiB each and are released when the Worker is terminated.</p>
+<p>Cancellation terminates an assigned Worker without waiting; its replacement is created only when needed. Generation and Worker identity checks discard late messages after cancellation or teardown. Page teardown terminates all owned Workers and revokes their Blob URL. Managed WebGL context loss stops the app with status 1 and releases pending work; reload is required, not transparent texture restoration. Hidden tabs may throttle/pause frame polling: results remain bounded until polling resumes. There are no new permission or network grants.</p>
+<h2 id="platforms-and-tests" class="has-anchor">Platforms And Tests <a class="heading-anchor" href="#platforms-and-tests" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>Desktop JS/TS, Lua, and Wasmtime are implemented. Android JS/TS and Lua use the same native service, but require device validation. Web JS/TS and Lua have been functionally checked in Chromium using the Worker backend; other browsers and mobile devices still require validation. There is no blocking web fallback. Browser-native WebAssembly and the public native SDK do not expose these async functions. Their synchronous image loading remains unchanged.</p>
+<p>The <code>image_async</code> CTest covers probing, resize, scaled JPEG dimensions and colors, full-size compatibility, source ownership, failure limits, queue saturation, cancellation, sandbox paths, and teardown. The gallery's opt-in native test also checks public callbacks, ordering, cancellation, errors, and synchronous compatibility:</p>
+<div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-sh">BUDO_GALLERY_NATIVE=1 node --test examples-private/gallery/gallery.test.mjs</code></pre></div></div>
+<p><code>web_image_bridge</code> runs bounded-worker, byte-range, startup/error, cancellation, peer teardown, and late-message regressions under Node. After building the web runtime, serve the repository and open <code>tests/web_image_test.html</code> for the real JS fixture, <code>?runtime=lua</code> for Lua, and <code>?unavailable=1</code> for missing capabilities. <code>?pending=1&amp;contextloss=1</code> and <code>?pending=1&amp;pagehide=1</code> exercise teardown during pending work. The fixture records actual GPU texture readbacks in <code>imageTestUploads</code> and reports completion through the <code>budoexit</code> event. Hidden-tab automation must keep animation-frame polling active to reach the teardown trigger.</p>
+            </article>
+
+            <nav class="doc-pager">
+                <a href="api-reference.html" class="prev"><small>← Previous</small><span>API Reference</span></a>
+            </nav>
+        </main>
+    </div>
+
+    <footer>
+        <div class="section-inner">
+            <p>&copy; 2026 Budo — Solzilio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        hljs.configure({ ignoreUnescapedHTML: true });
+        document.querySelectorAll('pre code').forEach(function (block) {
+            hljs.highlightElement(block);
+        });
+
+        // Click a heading anchor (#) to copy its absolute URL.
+        (function () {
+            function showCopied(el) {
+                el.classList.add('copied');
+                setTimeout(function () { el.classList.remove('copied'); }, 1200);
+            }
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                document.body.removeChild(ta);
+            }
+            document.querySelectorAll('.doc-article .heading-anchor').forEach(function (a) {
+                a.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    var hash = a.getAttribute('href');
+                    var url = window.location.href.split('#')[0] + hash;
+                    history.replaceState(null, '', hash);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(url).then(
+                            function () { showCopied(a); },
+                            function () { fallbackCopy(url); showCopied(a); }
+                        );
+                    } else {
+                        fallbackCopy(url);
+                        showCopied(a);
+                    }
+                });
+            });
+        })();
+
+        // Run Budo entry-file snippets in place through the shared web runtime.
+        (function () {
+            var RUN_TEXT = 'run';
+            var STOP_TEXT = 'stop and see the code';
+            var runtimeCacheKey = String(Date.now());
+            var activeRun = null;
+
+            function setButton(button, running) {
+                button.textContent = running ? STOP_TEXT : RUN_TEXT;
+                button.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function stopBlock(block) {
+                if (!block) return;
+                var button = block.querySelector('.code-run-button');
+                var pre = block.querySelector('.code-body pre');
+                var runner = block.querySelector('.code-runner');
+                if (runner) runner.remove();
+                if (pre) pre.hidden = false;
+                block.classList.remove('is-running');
+                block.classList.remove('has-runner-error');
+                if (button) setButton(button, false);
+                if (activeRun && activeRun.block === block) {
+                    window.removeEventListener('message', activeRun.onMessage);
+                    activeRun = null;
+                }
+            }
+
+            function startBlock(block, button) {
+                if (activeRun) stopBlock(activeRun.block);
+
+                var codeEl = block.querySelector('pre code');
+                var pre = block.querySelector('.code-body pre');
+                var body = block.querySelector('.code-body');
+                if (!codeEl || !pre || !body) return;
+
+                var code = block.getAttribute('data-budo-code') || codeEl.textContent;
+                var entryName = block.getAttribute('data-budo-entry') || 'main.js';
+                var runner = document.createElement('div');
+                runner.className = 'code-runner';
+
+                var iframe = document.createElement('iframe');
+                iframe.className = 'code-runner-frame';
+                iframe.src = '../playground-runner.html?v=' + encodeURIComponent(runtimeCacheKey);
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+                iframe.setAttribute('title', 'Budo snippet preview');
+
+                runner.appendChild(iframe);
+                pre.hidden = true;
+                body.appendChild(runner);
+                block.classList.add('is-running');
+                setButton(button, true);
+
+                var codeSent = false;
+                function onMessage(event) {
+                    if (!event.data || event.data.source !== 'budo-runner') return;
+                    if (event.source !== iframe.contentWindow) return;
+                    if (event.data.type === 'iframe-ready' && !codeSent) {
+                        codeSent = true;
+                        // Same message as the playground: a project of files
+                        // (path relative to the app root, contents as bytes).
+                        iframe.contentWindow.postMessage({
+                            source: 'budo-playground',
+                            type: 'run',
+                            files: [{
+                                path: entryName,
+                                data: new TextEncoder().encode(code).buffer
+                            }]
+                        }, '*');
+                    }
+                    if (event.data.type === 'error') {
+                        block.classList.add('has-runner-error');
+                    }
+                }
+
+                activeRun = { block: block, onMessage: onMessage };
+                window.addEventListener('message', onMessage);
+            }
+
+            document.querySelectorAll('.code-block[data-budo-entry] .code-run-button').forEach(function (button) {
+                setButton(button, false);
+                button.addEventListener('click', function () {
+                    var block = button.closest('.code-block');
+                    if (!block) return;
+                    if (block.classList.contains('is-running')) {
+                        stopBlock(block);
+                    } else {
+                        startBlock(block, button);
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

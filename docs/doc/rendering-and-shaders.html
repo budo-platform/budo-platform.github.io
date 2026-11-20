@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -524,7 +525,7 @@ sys.gl.drawMesh(program, layout, {
 <p>For the matrix math of 3D (perspective, look-at, rotations), <code>sys.math</code> works in place on <code>Float32Array</code> storage; see the <a href="api-reference.html">API reference</a>.</p>
 <h2 id="passes-over-other-sources" class="has-anchor">Passes over other sources <a class="heading-anchor" href="#passes-over-other-sources" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>The plain draw calls cover most needs. Three variants give finer control over where a pass reads and writes:</p>
-<ul><li><code>sys.gl.drawFullscreenImmediate(program, source)</code> runs a fullscreen pass that reads <code>source</code>, a texture handle or a canvas texture, as <code>u_canvas</code>, and draws into the currently bound framebuffer.</li><li><code>sys.gl.drawRegionImmediate(program, x, y, width, height, target)</code> takes the same arguments as <code>drawRegion</code>. Like it, it draws over the canvas when it targets the screen.</li><li><code>sys.gl.drawMeshImmediate(program, layout, options)</code> takes the same arguments as <code>drawMesh</code>.</li></ul>
+<ul><li><code>sys.gl.drawFullscreenImmediate(program, source)</code> runs a fullscreen pass that reads <code>source</code>, a texture handle or a canvas texture, as <code>u_canvas</code>, and draws into the currently bound framebuffer. Use <code>bindRenderTarget(target)</code> to draw offscreen or <code>bindScreen()</code> to draw to the screen. <code>u_resolution</code> is the current viewport size, and an offscreen draw does not replace the default canvas presentation.</li><li><code>sys.gl.drawRegionImmediate(program, x, y, width, height, target)</code> takes the same arguments as <code>drawRegion</code>. Like it, it draws over the canvas when it targets the screen.</li><li><code>sys.gl.drawMeshImmediate(program, layout, options)</code> takes the same arguments as <code>drawMesh</code>.</li></ul>
 <h2 id="errors" class="has-anchor">Errors <a class="heading-anchor" href="#errors" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>Every <code>sys.gl</code> call that fails throws an error whose message explains why: a shader that does not compile (with the compiler's message), a missing file, an unknown uniform, or an invalid handle. <code>sys.gl.getLastError()</code> returns the last error message, or an empty string.</p>
 <div class="code-block" data-budo-entry="main.js" data-budo-code="// Show the result on the canvas.

@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -87,7 +88,7 @@ export PATH=&quot;$HOME/.local/bin:$PATH&quot;</code></pre></div></div>
 <p>Open a new terminal and check that the command works:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Print the installed version and build details.
 budo version</code></pre></div></div>
-<p>On Windows, you can download the latest <a href="https://github.com/budo-platform/budo/releases/latests/download/budo-windows-x86_64.zip">budo-windows-x86_64.zip</a>, extract it and run the <code>budo.exe</code> file from a terminal.</p>
+<p>On Windows, download the standalone <a href="https://github.com/budo-platform/budo/releases/latest/download/budo-windows-x86_64.exe">budo-windows-x86_64.exe</a> and run it from a terminal. The standalone executable is available starting with releases that support desktop packaging.</p>
 <h2 id="the-budo-command" class="has-anchor">The budo command <a class="heading-anchor" href="#the-budo-command" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>These are the commands you will use most:</p>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span><span class="code-title">Terminal</span></div><div class="code-body"><pre><code class="language-bash"># Create a starter project in my-app/.
@@ -98,6 +99,9 @@ budo run my-app
 
 # Run it, and restart it whenever a project file changes.
 budo run my-app --watch
+
+# Distribute a desktop app as one executable.
+budo package my-app self
 
 # Export a self-contained web build to dist/web.
 budo web-export my-app
@@ -120,6 +124,7 @@ budo budo-llm.md
 # List every command and option.
 budo help</code></pre></div></div>
 <p><code>budo my-app</code> is a shorthand for <code>budo run my-app</code>. You can also run a single source file without a project folder, as in <code>budo sketch.js</code>.</p>
+<p>See <a href="packaging-and-deployment.html#package-a-desktop-executable">Package a desktop executable</a> for cross-platform builds and upgrade behavior.</p>
 <p>Android packaging is a Budo Pro feature, included for free in the released binaries during Budo's public launch; a later release will make it paid. <a href="packaging-and-deployment.html">Packaging and deployment</a> covers web export, Android builds, and their options.</p>
 <p>Next, build your first app in <a href="getting-started.html">Getting started</a>.</p>
             </article>

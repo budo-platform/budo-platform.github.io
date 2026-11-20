@@ -56,6 +56,7 @@
                     <li><a href="lua-and-wasm.html">Lua and WebAssembly</a></li>
                     <li><a href="packaging-and-deployment.html">Packaging and Deployment</a></li>
                     <li><a href="api-reference.html" class="current">API Reference</a></li>
+                    <li><a href="async-images.html">Asynchronous Images</a></li>
                 </ul>
             </div>
         </aside>
@@ -70,6 +71,7 @@
 budo run --from-input js|ts|lua|wat|wasm [--width N] [--height N] [--title STR] [--fullscreen] [--no-vsync] [--file-root PATH]
 budo &lt;DIRECTORY&gt;
 budo init &lt;DIRECTORY&gt; [--template ui | --language c [--template canvas|gpu]]
+budo package &lt;DIRECTORY&gt; &lt;self|linux|macos|windows&gt; [--name ID] [--release TAG] [-o FILE]
 budo web-serve &lt;DIRECTORY&gt;
 budo web-export &lt;DIRECTORY&gt; [-o DIR]
 budo android-apk &lt;DIRECTORY&gt; [--release|--debug] [--install] [--no-build] [--clean] [-o DIR]
@@ -78,6 +80,7 @@ budo budo.d.ts
 budo budo-llm.md
 budo version          # also --version, -v
 budo help</code></pre></div></div>
+<p>See <a href="packaging-and-deployment.html#package-a-desktop-executable">Package a desktop executable</a> for target requirements and upgrade behavior.</p>
 <h2 id="javascript-globals" class="has-anchor">JavaScript globals <a class="heading-anchor" href="#javascript-globals" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <p>JavaScript and TypeScript apps run in QuickJS. Budo injects <code>sys</code>, <code>console</code>, <code>fetch</code>, and subsystem aliases where documented.</p>
 <p>The <code>sys</code> tree contains <code>canvas</code>, <code>transform</code>, <code>path</code>, <code>svg</code>, <code>font</code>, <code>graphics</code>, <code>gl</code>, <code>math</code>, <code>input</code>, <code>window</code>, <code>animation</code>, <code>timer</code>, <code>audio</code>, <code>midi</code>, <code>db</code>, <code>file</code>, <code>network</code>, <code>udp</code>, <code>magneto</code>, <code>device</code>, <code>neural</code>, and <code>capabilities</code>.</p>
@@ -86,7 +89,9 @@ budo help</code></pre></div></div>
 sys.animation.waitForInput(callback, timeoutMs)
 sys.animation.cancelFrame(handle)</code></pre></div></div>
 <p>Register one frame callback. The callback receives a timestamp in milliseconds.</p>
-<p><code>waitForInput</code> registers the callback like <code>requestFrame</code>, but it runs only on the next input event, canvas resize, or after <code>timeoutMs</code> (optional). Until then the last frame stays on screen and Budo stops drawing: desktop builds sleep on window events and Android renders only when needed. End a frame with <code>waitForInput</code> when nothing animates and <code>requestFrame</code> while something moves; an app with <code>sys.gl</code> passes that draw to the screen after the canvas keeps calling <code>requestFrame</code>.</p>
+<p><code>waitForInput</code> registers the callback like <code>requestFrame</code>, but it runs only on the next input event, canvas resize, or after <code>timeoutMs</code> (optional). Until then the last frame stays on screen, including any GL overlays, and background work such as timers continues. End a frame with <code>waitForInput</code> when nothing animates and <code>requestFrame</code> while something moves.</p>
+<h2 id="asynchronous-textures" class="has-anchor">Asynchronous Textures <a class="heading-anchor" href="#asynchronous-textures" aria-label="Copy link to this section" title="Copy link">#</a></h2>
+<p>For worker-backed texture reads/decodes, metadata callbacks, cancellation, and the unchanged synchronous alternatives, see <a href="async-images">Asynchronous Images</a>.</p>
 <h2 id="systimer" class="has-anchor"><code>sys.timer</code> <a class="heading-anchor" href="#systimer" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.timer.once(delay, callback)
 sys.timer.every(interval, callback)
@@ -249,6 +254,7 @@ sys.math.quatToMat4(out, q)</code></pre></div></div>
 <h2 id="sysaudio" class="has-anchor"><code>sys.audio</code> <a class="heading-anchor" href="#sysaudio" aria-label="Copy link to this section" title="Copy link">#</a></h2>
 <div class="code-block"><div class="code-header"><span class="circle" style="background:#ff5f57;"></span><span class="circle" style="background:#febc2e;"></span><span class="circle" style="background:#28c840;"></span></div><div class="code-body"><pre><code class="language-javascript">sys.audio.start()
 sys.audio.stop()
+sys.audio.pause()
 sys.audio.isPlaying()
 sys.audio.setMasterGain(gain)
 sys.audio.getMasterGain()
@@ -427,6 +433,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tbody>
 <tr><td><code>start</code></td><td>() -&gt; void</td><td><code>sys.audio.start</code></td><td><code>sys.audio.start</code></td><td><code>env.audio_start</code></td><td>-</td></tr>
 <tr><td><code>stop</code></td><td>() -&gt; void</td><td><code>sys.audio.stop</code></td><td><code>sys.audio.stop</code></td><td><code>env.audio_stop</code></td><td>-</td></tr>
+<tr><td><code>pause</code></td><td>() -&gt; void</td><td><code>sys.audio.pause</code></td><td><code>sys.audio.pause</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>is_playing</code></td><td>() -&gt; bool</td><td><code>sys.audio.isPlaying</code></td><td><code>sys.audio.isPlaying</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>set_master_gain</code></td><td>(gain: f32) -&gt; void</td><td><code>sys.audio.setMasterGain</code></td><td><code>sys.audio.setMasterGain</code></td><td><code>env.audio_set_master_gain</code></td><td>-</td></tr>
 <tr><td><code>get_master_gain</code></td><td>() -&gt; f32</td><td><code>sys.audio.getMasterGain</code></td><td><code>sys.audio.getMasterGain</code></td><td>-</td><td>-</td></tr>
@@ -652,6 +659,9 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>write_text</code></td><td>(path: files/ virtual path, text: string) -&gt; absolute_path|null</td><td><code>sys.files.writeText</code></td><td><code>sys.files.writeText</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>write_binary</code></td><td>(path: files/ virtual path, data: bytes) -&gt; absolute_path|null</td><td><code>sys.files.writeBinary</code></td><td><code>sys.files.writeBinary</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>append_binary</code></td><td>(path: files/ virtual path, data: bytes) -&gt; absolute_path|null</td><td><code>sys.files.appendBinary</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>open_atomic_write</code></td><td>(path: files/ virtual path in existing parent) -&gt; writer|null</td><td><code>sys.files.openAtomicWrite</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>write_block</code></td><td>(writer, data: bytes) -&gt; bool</td><td><code>sys.files.writeBlock</code></td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td><code>finish_atomic_write</code></td><td>(writer, commit: bool) -&gt; bool; consumes writer</td><td><code>sys.files.finishAtomicWrite</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>pick_text</code></td><td>(callback, extension?: string) -&gt; bool</td><td><code>sys.files.pickText</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>save_text</code></td><td>(name: string, text: string, callback) -&gt; bool</td><td><code>sys.files.saveText</code></td><td>-</td><td>-</td><td>-</td></tr>
 <tr><td><code>get_error</code></td><td>() -&gt; string</td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td><code>sys.files.getError</code><br><code>sys.assets.getError</code></td><td>-</td><td>-</td></tr>
@@ -700,6 +710,14 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <tr><td><code>create_texture_2d</code></td><td>(width, height, format, optional RGBA bytes) -&gt; texture id or -1</td><td><code>sys.gl.createTexture2D</code></td><td><code>sys.gl.createTexture2D</code></td><td><code>env.gl_create_texture_2d</code></td><td>-</td></tr>
 <tr><td><code>load_texture_2d</code></td><td>(safe project-relative image path) -&gt; texture id or -1</td><td><code>sys.gl.loadTexture2D</code></td><td><code>sys.gl.loadTexture2D</code></td><td><code>env.gl_load_texture_2d</code></td><td>-</td></tr>
 <tr><td><code>load_texture_2d_from_buffer</code></td><td>(encoded image bytes) -&gt; texture id or -1</td><td><code>sys.gl.loadTexture2DFromBuffer</code></td><td><code>sys.gl.loadTexture2DFromBuffer</code></td><td><code>env.gl_load_texture_2d_from_buffer</code></td><td>-</td></tr>
+<tr><td><code>load_texture_2d_async</code></td><td>(project-relative path, options including optional mount, callbacks) -&gt; request id; worker probe/decode and bounded graphics-thread upload; native worker I/O or chunked browser-host VFS reads</td><td><code>sys.gl.loadTexture2DAsync</code></td><td><code>sys.gl.loadTexture2DAsync</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>load_texture_2d_from_buffer_async</code></td><td>(encoded bytes, options, callbacks) -&gt; request id; copies bytes before returning; worker decode and bounded upload on native and web JS/Lua</td><td><code>sys.gl.loadTexture2DFromBufferAsync</code></td><td><code>sys.gl.loadTexture2DFromBufferAsync</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>cancel_texture_load</code></td><td>(request id) -&gt; bool; suppress callbacks and discard work without waiting</td><td><code>sys.gl.cancelTextureLoad</code></td><td><code>sys.gl.cancelTextureLoad</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>async_texture_loading_available</code></td><td>() -&gt; bool; true on native JS/Lua or when browser worker capabilities exist; startup may still fail; Wasmtime uses a separate polling ABI</td><td><code>sys.gl.isAsyncTextureLoadingAvailable</code></td><td><code>sys.gl.isAsyncTextureLoadingAvailable</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>wasmtime_image_load_async</code></td><td>(source pointer, length, mode, max width, max height, max bytes, max pixels) -&gt; request id or 0; copies buffer input</td><td>-</td><td>-</td><td><code>env.gl_image_load_async</code></td><td>-</td></tr>
+<tr><td><code>wasmtime_image_status</code></td><td>(request id, 312-byte result pointer) -&gt; 0 or -1; nonblocking snapshot</td><td>-</td><td>-</td><td><code>env.gl_image_status</code></td><td>-</td></tr>
+<tr><td><code>wasmtime_image_take_texture</code></td><td>(request id) -&gt; texture id or 0; transfers a completed texture once</td><td>-</td><td>-</td><td><code>env.gl_image_take_texture</code></td><td>-</td></tr>
+<tr><td><code>wasmtime_image_release</code></td><td>(request id) -&gt; bool; cancel pending work or release a result and any unclaimed texture</td><td>-</td><td>-</td><td><code>env.gl_image_release</code></td><td>-</td></tr>
 <tr><td><code>load_texture_cube</code></td><td>(six safe project-relative image paths) -&gt; cubemap id or -1</td><td><code>sys.gl.loadTextureCube</code></td><td><code>sys.gl.loadTextureCube</code></td><td><code>env.gl_load_texture_cube</code></td><td>-</td></tr>
 <tr><td><code>load_texture_cube_from_buffer</code></td><td>(six encoded image buffers) -&gt; cubemap id or -1</td><td><code>sys.gl.loadTextureCubeFromBuffer</code></td><td><code>sys.gl.loadTextureCubeFromBuffer</code></td><td><code>env.gl_load_texture_cube_from_buffer</code></td><td>-</td></tr>
 <tr><td><code>update_texture_2d</code></td><td>(texture_id, x, y, width, height, pixels) -&gt; bool</td><td><code>sys.gl.updateTexture2D</code></td><td><code>sys.gl.updateTexture2D</code></td><td><code>env.gl_update_texture_2d</code></td><td>-</td></tr>
@@ -731,7 +749,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 <table>
 <thead><tr><th>Operation</th><th>Signature</th><th>JavaScript</th><th>Lua</th><th>Wasmtime</th><th>Browser WASM</th></tr></thead>
 <tbody>
-<tr><td><code>input_snapshot</code></td><td>() -&gt; per-frame input snapshot containing mouse, pointer(s), modifiers, text/edit/composition, timing, frame count, and focus</td><td><code>sys.input.get</code></td><td><code>sys.input.get</code></td><td>-</td><td>-</td></tr>
+<tr><td><code>input_snapshot</code></td><td>() -&gt; per-frame input snapshot containing mouse, pointer(s), pinch, modifiers, text/edit/composition, timing, frame count, and focus</td><td><code>sys.input.get</code></td><td><code>sys.input.get</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>key_down</code></td><td>(SDL scancode:i32) -&gt; bool currently held</td><td><code>sys.input.isKeyDown</code></td><td><code>sys.input.isKeyDown</code></td><td><code>env.input_get_key_down</code></td><td>-</td></tr>
 <tr><td><code>key_pressed</code></td><td>(SDL scancode:i32) -&gt; bool pressed during current frame</td><td><code>sys.input.isKeyPressed</code></td><td><code>sys.input.isKeyPressed</code></td><td>-</td><td>-</td></tr>
 <tr><td><code>start_text_input</code></td><td>(text, UTF-16 selection start/end, multiline) -&gt; bool</td><td><code>sys.input.startTextInput</code></td><td><code>sys.input.startTextInput</code></td><td>-</td><td>-</td></tr>
@@ -976,6 +994,7 @@ sys.animation.requestFrame(frame)</code></pre></div></div>
 
             <nav class="doc-pager">
                 <a href="packaging-and-deployment.html" class="prev"><small>← Previous</small><span>Packaging and Deployment</span></a>
+                <a href="async-images.html" class="next"><small>Next →</small><span>Asynchronous Images</span></a>
             </nav>
         </main>
     </div>
